@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SU Bar Rota — My Shifts</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0d0d0d;
+      --surface:  #161616;
+      --surface2: #1e1e1e;
+      --border:   #2a2a2a;
+      --accent:   #c8f557;
+      --text:     #f0ede6;
+      --muted:    #6b6b6b;
+      --error:    #ff6b6b;
+      --green:    #4ade80;
+      --amber:    #fbbf24;
+      --purple:   #a78bfa;
+      --orange:   #fb923c;
+      --radius:   10px;
+      --nav-w:    240px;
+    }
+
+    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-weight: 300; }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      opacity: 0.03; pointer-events: none; z-index: 0;
+    }
+
+    .app { position: relative; z-index: 1; display: flex; min-height: 100vh; }
+
+    /* ── Sidebar ── */
+    .nav { width: var(--nav-w); background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; padding: 1.75rem 1rem; z-index: 10; }
+    .nav-logo { font-family: 'DM Serif Display', serif; font-size: 1rem; padding: 0 0.5rem; margin-bottom: 2rem; }
+    .nav-logo span { color: var(--accent); }
+    .nav-section { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); padding: 0 0.5rem; margin: 1rem 0 0.4rem; }
+    .nav-link { display: flex; align-items: center; gap: 0.65rem; padding: 0.6rem 0.75rem; border-radius: 8px; color: var(--muted); text-decoration: none; font-size: 0.88rem; transition: background 0.15s, color 0.15s; cursor: pointer; border: none; background: none; width: 100%; text-align: left; }
+    .nav-link:hover { background: var(--surface2); color: var(--text); }
+    .nav-link.active { background: rgba(200,245,87,0.1); color: var(--accent); }
+    .nav-link .icon { font-size: 1rem; width: 1.2rem; text-align: center; }
+    .nav-bottom { margin-top: auto; }
+    .nav-user { display: flex; align-items: center; gap: 0.65rem; padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 0.5rem; }
+    .nav-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--accent); color: #0d0d0d; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 500; flex-shrink: 0; }
+    .nav-user-name { font-size: 0.85rem; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .nav-user-role { font-size: 0.72rem; color: var(--muted); text-transform: capitalize; }
+
+    /* ── Main ── */
+    .main { margin-left: var(--nav-w); flex: 1; padding: 2.5rem; max-width: 860px; }
+
+    .page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 2rem; animation: fadeUp 0.4s ease both; flex-wrap: wrap; gap: 1rem; }
+    .page-title { font-family: 'DM Serif Display', serif; font-size: 2rem; font-weight: 400; }
+    .page-subtitle { color: var(--muted); font-size: 0.9rem; margin-top: 0.25rem; }
+
+    /* ── Stat row ── */
+    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 2rem; animation: fadeUp 0.4s 0.05s ease both; }
+    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.1rem 1.25rem; }
+    .stat-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 0.4rem; }
+    .stat-value { font-family: 'DM Serif Display', serif; font-size: 1.9rem; line-height: 1; }
+    .stat-sub   { font-size: 0.75rem; color: var(--muted); margin-top: 0.25rem; }
+    .accent { color: var(--accent); }
+    .green  { color: var(--green); }
+    .amber  { color: var(--amber); }
+
+    /* ── Week filter ── */
+    .filter-bar { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem; flex-wrap: wrap; animation: fadeUp 0.4s 0.08s ease both; }
+    .filter-btn { padding: 0.45rem 1rem; border-radius: 20px; border: 1px solid var(--border); background: var(--surface); color: var(--muted); font-family: 'DM Sans', sans-serif; font-size: 0.82rem; cursor: pointer; transition: all 0.15s; }
+    .filter-btn:hover { border-color: var(--text); color: var(--text); }
+    .filter-btn.active { background: rgba(200,245,87,0.1); border-color: var(--accent); color: var(--accent); }
+
+    /* ── Shift cards ── */
+    .shifts-list { display: flex; flex-direction: column; gap: 0.75rem; animation: fadeUp 0.4s 0.1s ease both; }
+
+    .shift-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.1rem 1.25rem;
+      display: grid;
+      grid-template-columns: 72px 1fr auto;
+      gap: 1rem;
+      align-items: center;
+      transition: border-color 0.15s;
+    }
+
+    .shift-card:hover { border-color: var(--border); }
+    .shift-card.upcoming  { border-left-color: var(--accent); }
+    .shift-card.today     { border-left-color: var(--green); background: rgba(74,222,128,0.04); }
+    .shift-card.past      { border-left-color: var(--border); opacity: 0.6; }
+    .shift-card.swapped   { border-left-color: var(--amber); }
+    .shift-card.cancelled { border-left-color: var(--error); opacity: 0.5; }
+
+    .shift-date-col { text-align: center; }
+    .shift-weekday { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+    .shift-day-num { font-family: 'DM Serif Display', serif; font-size: 1.8rem; line-height: 1; color: var(--accent); }
+    .shift-month   { font-size: 0.72rem; color: var(--muted); }
+
+    .shift-info-col { display: flex; flex-direction: column; gap: 0.3rem; }
+    .shift-name { font-size: 1rem; font-weight: 400; }
+    .shift-meta { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+    .shift-time { font-size: 0.82rem; color: var(--muted); }
+    .shift-area { font-size: 0.75rem; padding: 0.15rem 0.55rem; border-radius: 10px; font-weight: 400; }
+
+    .area-main_bar { background: rgba(200,245,87,0.1);  color: var(--accent); }
+    .area-wee_bar  { background: rgba(251,191,36,0.1);  color: var(--amber); }
+    .area-mandela  { background: rgba(167,139,250,0.1); color: var(--purple); }
+    .area-floor    { background: rgba(74,222,128,0.1);  color: var(--green); }
+    .area-kitchen  { background: rgba(249,115,22,0.1);  color: var(--orange); }
+
+    .shift-actions-col { display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem; }
+
+    .badge { font-size: 0.7rem; padding: 0.2rem 0.6rem; border-radius: 20px; font-weight: 400; white-space: nowrap; }
+    .badge-upcoming  { background: rgba(200,245,87,0.1);  color: var(--accent); }
+    .badge-today     { background: rgba(74,222,128,0.15); color: var(--green); font-weight: 500; }
+    .badge-past      { background: rgba(107,107,107,0.1); color: var(--muted); }
+    .badge-swapped   { background: rgba(251,191,36,0.1);  color: var(--amber); }
+    .badge-cancelled { background: rgba(255,107,107,0.1); color: var(--error); }
+
+    .btn-swap {
+      font-size: 0.78rem;
+      padding: 0.35rem 0.85rem;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: 'DM Sans', sans-serif;
+      white-space: nowrap;
+    }
+    .btn-swap:hover { border-color: var(--amber); color: var(--amber); }
+
+    /* ── Week section headers ── */
+    .week-header {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      padding: 0.5rem 0.25rem;
+      margin-top: 1.25rem;
+      margin-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+    }
+    .week-header:first-child { margin-top: 0; }
+    .week-hours { color: var(--accent); }
+
+    /* ── Empty state ── */
+    .empty { text-align: center; padding: 4rem 2rem; color: var(--muted); }
+    .empty .big { font-family: 'DM Serif Display', serif; font-size: 3rem; margin-bottom: 0.75rem; }
+    .empty p { font-size: 0.9rem; line-height: 1.6; }
+
+    /* ── Skeleton ── */
+    .skeleton { background: linear-gradient(90deg, var(--surface2) 25%, var(--border) 50%, var(--surface2) 75%); background-size: 200% 100%; animation: shimmer 1.2s infinite; border-radius: var(--radius); height: 80px; margin-bottom: 0.75rem; }
+    @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+    @keyframes fadeUp  { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+    @media (max-width: 768px) {
+      .nav { display: none; }
+      .main { margin-left: 0; padding: 1.5rem 1rem; }
+      .stats-row { grid-template-columns: 1fr 1fr; }
+      .shift-card { grid-template-columns: 56px 1fr; }
+      .shift-actions-col { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app">
+
+  <nav class="nav">
+    <div class="nav-logo">SU Bar <span>Rota</span></div>
+    <span class="nav-section">Staff</span>
+    <a class="nav-link" href="index.html"><span class="icon">⊞</span> Dashboard</a>
+    <a class="nav-link" href="availability.html"><span class="icon">📅</span> Availability</a>
+    <a class="nav-link active" href="my-shifts.html"><span class="icon">🕐</span> My Shifts</a>
+    <a class="nav-link" href="swaps.html"><span class="icon">↔</span> Swap Requests</a>
+    <span class="nav-section" id="manager-nav-section" style="display:none">Manager</span>
+    <a class="nav-link" id="nav-manager" href="manager.html" style="display:none"><span class="icon">⚙</span> Rota Builder</a>
+    <div class="nav-bottom">
+      <div class="nav-user">
+        <div class="nav-avatar" id="nav-avatar">?</div>
+        <div class="nav-user-info">
+          <div class="nav-user-name" id="nav-name">Loading…</div>
+          <div class="nav-user-role" id="nav-role">—</div>
+        </div>
+      </div>
+      <button class="nav-link" onclick="handleSignOut()"><span class="icon">→</span> Sign out</button>
+    </div>
+  </nav>
+
+  <main class="main">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">My Shifts</h1>
+        <p class="page-subtitle" id="page-subtitle">Loading your schedule…</p>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">This week</div>
+        <div class="stat-value accent" id="stat-this-week">—</div>
+        <div class="stat-sub" id="stat-this-hours">shifts</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Next shift</div>
+        <div class="stat-value green" id="stat-next">—</div>
+        <div class="stat-sub" id="stat-next-sub">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total upcoming</div>
+        <div class="stat-value amber" id="stat-total">—</div>
+        <div class="stat-sub">shifts scheduled</div>
+      </div>
+    </div>
+
+    <!-- Filter -->
+    <div class="filter-bar">
+      <button class="filter-btn active" onclick="setFilter('upcoming', this)">Upcoming</button>
+      <button class="filter-btn" onclick="setFilter('all', this)">All shifts</button>
+      <button class="filter-btn" onclick="setFilter('past', this)">Past</button>
+    </div>
+
+    <!-- Loading skeletons -->
+    <div id="loading">
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+    </div>
+
+    <!-- Shifts list -->
+    <div class="shifts-list" id="shifts-list" style="display:none"></div>
+
+    <!-- Empty state -->
+    <div class="empty" id="empty-state" style="display:none">
+      <div class="big">📭</div>
+      <p id="empty-msg">No shifts found.<br>Check back once the rota is published.</p>
+    </div>
+
+  </main>
+</div>
+
+<script src="env.js"></script>
+<script type="module">
+  import { supabase, requireAuth, isManager } from './src/lib/supabase.js'
+
+  let currentUser = null
+  let allShifts   = []
+  let currentFilter = 'upcoming'
+  const todayStr  = new Date().toISOString().split('T')[0]
+
+  // ── Auth ──
+  currentUser = await requireAuth()
+  if (!currentUser) throw new Error('Not authenticated')
+
+  const initials = currentUser.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2)
+  document.getElementById('nav-avatar').textContent = initials
+  document.getElementById('nav-name').textContent   = currentUser.name
+  document.getElementById('nav-role').textContent   = currentUser.role
+
+  if (isManager(currentUser)) {
+    document.getElementById('manager-nav-section').style.display = 'block'
+    document.getElementById('nav-manager').style.display         = 'flex'
+  }
+
+  window.handleSignOut = async () => {
+    await supabase.auth.signOut()
+    window.location.href = '/login.html'
+  }
+
+  // ── Load all shifts ──
+  const { data: shiftsData } = await supabase
+    .from('rota_shifts')
+    .select('*, shift_templates(*), fortnights!inner(*)')
+    .eq('user_id', currentUser.id)
+    .eq('fortnights.status', 'published')
+    .order('shift_date', { ascending: true })
+
+  allShifts = (shiftsData ?? []).filter(s => s.status !== 'cancelled')
+
+  document.getElementById('loading').style.display = 'none'
+
+  // ── Stats ──
+  const today     = new Date()
+  const weekStart = new Date(today)
+  const weekEnd   = new Date(today)
+
+  // Find current week bounds (Sat–Fri)
+  const dayOfWeek = today.getDay()
+  const diffToSat = (dayOfWeek + 1) % 7
+  weekStart.setDate(today.getDate() - diffToSat)
+  weekEnd.setDate(weekStart.getDate() + 6)
+
+  const weekStartStr = weekStart.toISOString().split('T')[0]
+  const weekEndStr   = weekEnd.toISOString().split('T')[0]
+
+  const thisWeekShifts = allShifts.filter(s => s.shift_date >= weekStartStr && s.shift_date <= weekEndStr)
+  const upcomingShifts = allShifts.filter(s => s.shift_date >= todayStr)
+  const nextShift      = upcomingShifts[0]
+
+  document.getElementById('stat-this-week').textContent = thisWeekShifts.length
+  document.getElementById('stat-this-hours').textContent = thisWeekShifts.length === 1 ? 'shift this week' : 'shifts this week'
+  document.getElementById('stat-total').textContent = upcomingShifts.length
+
+  if (nextShift) {
+    const d = new Date(nextShift.shift_date)
+    document.getElementById('stat-next').textContent    = d.toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short' })
+    document.getElementById('stat-next-sub').textContent = `${nextShift.shift_templates.name} · ${nextShift.shift_templates.start_time.slice(0,5)}`
+  } else {
+    document.getElementById('stat-next').textContent    = 'None'
+    document.getElementById('stat-next-sub').textContent = 'Nothing scheduled'
+  }
+
+  const fmt = d => new Date(d).toLocaleDateString('en-GB', { day:'numeric', month:'short' })
+  document.getElementById('page-subtitle').textContent = `${allShifts.length} shift${allShifts.length !== 1 ? 's' : ''} across all weeks`
+
+  // ── Render ──
+  window.setFilter = (filter, btn) => {
+    currentFilter = filter
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'))
+    btn.classList.add('active')
+    renderShifts()
+  }
+
+  function renderShifts() {
+    const list = document.getElementById('shifts-list')
+    const empty = document.getElementById('empty-state')
+    list.innerHTML = ''
+
+    let filtered = allShifts
+    if (currentFilter === 'upcoming') filtered = allShifts.filter(s => s.shift_date >= todayStr)
+    if (currentFilter === 'past')     filtered = allShifts.filter(s => s.shift_date < todayStr).reverse()
+
+    if (filtered.length === 0) {
+      list.style.display  = 'none'
+      empty.style.display = 'block'
+      document.getElementById('empty-msg').innerHTML =
+        currentFilter === 'past'     ? 'No past shifts found.'
+        : currentFilter === 'upcoming' ? 'No upcoming shifts.<br>Check back once the rota is published.'
+        : 'No shifts found.'
+      return
+    }
+
+    list.style.display  = 'flex'
+    empty.style.display = 'none'
+
+    // Group by week
+    const groups = {}
+    filtered.forEach(shift => {
+      const d      = new Date(shift.shift_date)
+      const sat    = new Date(d)
+      const dow    = d.getDay()
+      const toSat  = (dow + 1) % 7
+      sat.setDate(d.getDate() - toSat)
+      const key = sat.toISOString().split('T')[0]
+      if (!groups[key]) groups[key] = []
+      groups[key].push(shift)
+    })
+
+    Object.entries(groups).forEach(([weekKey, shifts]) => {
+      const wStart = new Date(weekKey)
+      const wEnd   = new Date(weekKey)
+      wEnd.setDate(wEnd.getDate() + 6)
+
+      const fmtW    = d => d.toLocaleDateString('en-GB', { day:'numeric', month:'short' })
+      const isCurrentWeek = weekKey === weekStartStr
+
+      // Calculate hours for the week
+      let totalMins = 0
+      shifts.forEach(s => {
+        const [sh, sm] = s.shift_templates.start_time.slice(0,5).split(':').map(Number)
+        let   [eh, em] = s.shift_templates.end_time.slice(0,5).split(':').map(Number)
+        let mins = (eh * 60 + em) - (sh * 60 + sm)
+        if (mins < 0) mins += 24 * 60
+        totalMins += mins
+      })
+      const hours = (totalMins / 60).toFixed(1)
+
+      const header = document.createElement('div')
+      header.className = 'week-header'
+      header.innerHTML = `
+        <span>${isCurrentWeek ? '📍 This week · ' : ''}${fmtW(wStart)} – ${fmtW(wEnd)}</span>
+        <span class="week-hours">${hours}h · ${shifts.length} shift${shifts.length !== 1 ? 's' : ''}</span>`
+      list.appendChild(header)
+
+      shifts.forEach(shift => {
+        const d        = new Date(shift.shift_date)
+        const isToday  = shift.shift_date === todayStr
+        const isPast   = shift.shift_date < todayStr
+        const cardClass = isToday ? 'today' : isPast ? 'past' : shift.status === 'swapped' ? 'swapped' : 'upcoming'
+
+        const areaLabels = { main_bar:'Main Bar', wee_bar:'Wee Bar', mandela:'Mandela', floor:'Floor', kitchen:'Kitchen' }
+        const area = shift.venue_area ?? 'main_bar'
+
+        const statusBadge = isToday  ? '<span class="badge badge-today">Today</span>'
+                          : isPast   ? '<span class="badge badge-past">Completed</span>'
+                          : shift.status === 'swapped' ? '<span class="badge badge-swapped">Swapped</span>'
+                          : '<span class="badge badge-upcoming">Upcoming</span>'
+
+        const canSwap = !isPast && shift.status === 'scheduled' && !isToday
+
+        const card = document.createElement('div')
+        card.className = `shift-card ${cardClass}`
+        card.innerHTML = `
+          <div class="shift-date-col">
+            <div class="shift-weekday">${d.toLocaleDateString('en-GB', { weekday:'short' })}</div>
+            <div class="shift-day-num">${d.getDate()}</div>
+            <div class="shift-month">${d.toLocaleDateString('en-GB', { month:'short' })}</div>
+          </div>
+          <div class="shift-info-col">
+            <div class="shift-name">${shift.shift_templates.name}</div>
+            <div class="shift-meta">
+              <span class="shift-time">${shift.shift_templates.start_time.slice(0,5)} – ${shift.shift_templates.end_time.slice(0,5)}</span>
+              <span class="shift-area area-${area}">${areaLabels[area] ?? area}</span>
+            </div>
+          </div>
+          <div class="shift-actions-col">
+            ${statusBadge}
+            ${canSwap ? `<button class="btn-swap" onclick="requestSwap('${shift.id}')">Request swap</button>` : ''}
+          </div>`
+
+        list.appendChild(card)
+      })
+    })
+  }
+
+  // ── Request swap ──
+  window.requestSwap = (shiftId) => {
+    window.location.href = `swaps.html?shift=${shiftId}`
+  }
+
+  renderShifts()
+</script>
+
+</body>
+</html>

@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SU Bar Rota — Swap Requests</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0d0d0d;
+      --surface:  #161616;
+      --surface2: #1e1e1e;
+      --border:   #2a2a2a;
+      --accent:   #c8f557;
+      --text:     #f0ede6;
+      --muted:    #6b6b6b;
+      --error:    #ff6b6b;
+      --green:    #4ade80;
+      --amber:    #fbbf24;
+      --purple:   #a78bfa;
+      --radius:   10px;
+      --nav-w:    240px;
+    }
+
+    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-weight: 300; }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      opacity: 0.03; pointer-events: none; z-index: 0;
+    }
+
+    .app { position: relative; z-index: 1; display: flex; min-height: 100vh; }
+
+    /* ── Sidebar ── */
+    .nav { width: var(--nav-w); background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; padding: 1.75rem 1rem; z-index: 10; }
+    .nav-logo { font-family: 'DM Serif Display', serif; font-size: 1rem; padding: 0 0.5rem; margin-bottom: 2rem; }
+    .nav-logo span { color: var(--accent); }
+    .nav-section { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); padding: 0 0.5rem; margin: 1rem 0 0.4rem; }
+    .nav-link { display: flex; align-items: center; gap: 0.65rem; padding: 0.6rem 0.75rem; border-radius: 8px; color: var(--muted); text-decoration: none; font-size: 0.88rem; transition: background 0.15s, color 0.15s; cursor: pointer; border: none; background: none; width: 100%; text-align: left; }
+    .nav-link:hover { background: var(--surface2); color: var(--text); }
+    .nav-link.active { background: rgba(200,245,87,0.1); color: var(--accent); }
+    .nav-link .icon { font-size: 1rem; width: 1.2rem; text-align: center; }
+    .nav-bottom { margin-top: auto; }
+    .nav-user { display: flex; align-items: center; gap: 0.65rem; padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 0.5rem; }
+    .nav-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--accent); color: #0d0d0d; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 500; flex-shrink: 0; }
+    .nav-user-name { font-size: 0.85rem; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .nav-user-role { font-size: 0.72rem; color: var(--muted); text-transform: capitalize; }
+
+    /* ── Main ── */
+    .main { margin-left: var(--nav-w); flex: 1; padding: 2.5rem; max-width: 900px; }
+
+    .page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 2rem; animation: fadeUp 0.4s ease both; flex-wrap: wrap; gap: 1rem; }
+    .page-title { font-family: 'DM Serif Display', serif; font-size: 2rem; font-weight: 400; }
+    .page-subtitle { color: var(--muted); font-size: 0.9rem; margin-top: 0.25rem; }
+
+    /* ── Tabs ── */
+    .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 2rem; animation: fadeUp 0.4s 0.05s ease both; }
+    .tab { padding: 0.75rem 1.25rem; font-size: 0.88rem; color: var(--muted); cursor: pointer; border: none; background: none; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.15s; font-family: 'DM Sans', sans-serif; display: flex; align-items: center; gap: 0.5rem; }
+    .tab:hover { color: var(--text); }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .tab-count { background: var(--surface2); border-radius: 10px; padding: 0.1rem 0.45rem; font-size: 0.72rem; }
+    .tab.active .tab-count { background: rgba(200,245,87,0.15); color: var(--accent); }
+
+    /* ── New request form ── */
+    .request-form {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      animation: fadeUp 0.4s 0.08s ease both;
+    }
+
+    .form-title { font-family: 'DM Serif Display', serif; font-size: 1.2rem; margin-bottom: 1.25rem; }
+
+    .form-field { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem; }
+    .form-field label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); }
+    .form-field select, .form-field textarea, .form-field input {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.9rem;
+      padding: 0.65rem 0.85rem;
+      outline: none;
+      transition: border-color 0.15s;
+      width: 100%;
+    }
+    .form-field select:focus, .form-field textarea:focus { border-color: var(--accent); }
+    .form-field textarea { resize: vertical; min-height: 80px; }
+    .form-field select option { background: var(--surface2); }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+    .btn-submit {
+      padding: 0.7rem 1.5rem;
+      background: var(--accent);
+      color: #0d0d0d;
+      border: none;
+      border-radius: 8px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-submit:hover { background: #d4f96e; }
+    .btn-submit:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; }
+
+    /* ── Swap cards ── */
+    .swaps-list { display: flex; flex-direction: column; gap: 0.75rem; animation: fadeUp 0.4s 0.1s ease both; }
+
+    .swap-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .swap-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .swap-card-who { font-size: 0.88rem; }
+    .swap-card-who strong { color: var(--text); }
+    .swap-card-who span  { color: var(--muted); }
+
+    .badge { font-size: 0.7rem; padding: 0.2rem 0.6rem; border-radius: 20px; white-space: nowrap; }
+    .badge-pending  { background: rgba(251,191,36,0.12); color: var(--amber); }
+    .badge-accepted { background: rgba(74,222,128,0.12); color: var(--green); }
+    .badge-rejected { background: rgba(255,107,107,0.12); color: var(--error); }
+    .badge-expired  { background: rgba(107,107,107,0.12); color: var(--muted); }
+    .badge-cancelled{ background: rgba(107,107,107,0.12); color: var(--muted); }
+
+    .swap-card-body { padding: 1rem 1.25rem; display: grid; grid-template-columns: 1fr auto; gap: 1rem; align-items: start; }
+
+    .swap-shift-info { display: flex; flex-direction: column; gap: 0.3rem; }
+    .swap-shift-name { font-size: 1rem; }
+    .swap-shift-meta { font-size: 0.82rem; color: var(--muted); }
+    .swap-reason { font-size: 0.82rem; color: var(--muted); margin-top: 0.4rem; font-style: italic; }
+    .swap-time { font-size: 0.75rem; color: var(--muted); }
+
+    .swap-actions { display: flex; flex-direction: column; gap: 0.5rem; align-items: flex-end; }
+
+    .btn-accept {
+      padding: 0.45rem 1rem;
+      background: rgba(74,222,128,0.12);
+      color: var(--green);
+      border: 1px solid rgba(74,222,128,0.3);
+      border-radius: 6px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .btn-accept:hover { background: rgba(74,222,128,0.2); }
+
+    .btn-decline {
+      padding: 0.45rem 1rem;
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .btn-decline:hover { border-color: var(--error); color: var(--error); }
+
+    .btn-cancel {
+      padding: 0.45rem 1rem;
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-cancel:hover { border-color: var(--error); color: var(--error); }
+
+    /* ── Empty state ── */
+    .empty { text-align: center; padding: 3rem 2rem; color: var(--muted); }
+    .empty .big { font-size: 2.5rem; margin-bottom: 0.5rem; }
+    .empty p { font-size: 0.88rem; }
+
+    /* ── Tab panels ── */
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── Toast ── */
+    .toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(20px); padding: 0.65rem 1.5rem; border-radius: 8px; font-size: 0.88rem; font-weight: 500; opacity: 0; transition: all 0.3s ease; pointer-events: none; z-index: 100; }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast.success { background: var(--green); color: #0d0d0d; }
+    .toast.error   { background: var(--error); color: #fff; }
+
+    .skeleton { background: linear-gradient(90deg, var(--surface2) 25%, var(--border) 50%, var(--surface2) 75%); background-size: 200% 100%; animation: shimmer 1.2s infinite; border-radius: var(--radius); height: 100px; margin-bottom: 0.75rem; }
+    @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+    @keyframes fadeUp  { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+    @media (max-width: 768px) {
+      .nav { display: none; }
+      .main { margin-left: 0; padding: 1.5rem 1rem; }
+      .form-row { grid-template-columns: 1fr; }
+      .swap-card-body { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app">
+  <nav class="nav">
+    <div class="nav-logo">SU Bar <span>Rota</span></div>
+    <span class="nav-section">Staff</span>
+    <a class="nav-link" href="index.html"><span class="icon">⊞</span> Dashboard</a>
+    <a class="nav-link" href="availability.html"><span class="icon">📅</span> Availability</a>
+    <a class="nav-link" href="my-shifts.html"><span class="icon">🕐</span> My Shifts</a>
+    <a class="nav-link active" href="swaps.html"><span class="icon">↔</span> Swap Requests</a>
+    <span class="nav-section" id="manager-nav-section" style="display:none">Manager</span>
+    <a class="nav-link" id="nav-manager" href="manager.html" style="display:none"><span class="icon">⚙</span> Rota Builder</a>
+    <div class="nav-bottom">
+      <div class="nav-user">
+        <div class="nav-avatar" id="nav-avatar">?</div>
+        <div class="nav-user-info">
+          <div class="nav-user-name" id="nav-name">Loading…</div>
+          <div class="nav-user-role" id="nav-role">—</div>
+        </div>
+      </div>
+      <button class="nav-link" onclick="handleSignOut()"><span class="icon">→</span> Sign out</button>
+    </div>
+  </nav>
+
+  <main class="main">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Swap Requests</h1>
+        <p class="page-subtitle">Can't make a shift? Request a swap and let a colleague cover.</p>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('open', this)">
+        Open requests <span class="tab-count" id="count-open">0</span>
+      </button>
+      <button class="tab" onclick="switchTab('mine', this)">
+        My requests <span class="tab-count" id="count-mine">0</span>
+      </button>
+      <button class="tab" onclick="switchTab('new', this)">
+        + New request
+      </button>
+    </div>
+
+    <!-- Open requests tab (requests from others I can cover) -->
+    <div class="tab-panel active" id="panel-open">
+      <div id="loading-open">
+        <div class="skeleton"></div>
+        <div class="skeleton"></div>
+      </div>
+      <div class="swaps-list" id="list-open"></div>
+      <div class="empty" id="empty-open" style="display:none">
+        <div class="big">✓</div>
+        <p>No open swap requests right now.<br>Check back later.</p>
+      </div>
+    </div>
+
+    <!-- My requests tab -->
+    <div class="tab-panel" id="panel-mine">
+      <div id="loading-mine">
+        <div class="skeleton"></div>
+        <div class="skeleton"></div>
+      </div>
+      <div class="swaps-list" id="list-mine"></div>
+      <div class="empty" id="empty-mine" style="display:none">
+        <div class="big">↔</div>
+        <p>You haven't made any swap requests yet.</p>
+      </div>
+    </div>
+
+    <!-- New request tab -->
+    <div class="tab-panel" id="panel-new">
+      <div class="request-form">
+        <h2 class="form-title">Request a shift swap</h2>
+        <div class="form-field">
+          <label>Which shift do you need covered?</label>
+          <select id="shift-select">
+            <option value="">Loading your shifts…</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Reason (optional — helps colleagues understand)</label>
+          <textarea id="swap-reason" placeholder="e.g. Exam on this day, family event…"></textarea>
+        </div>
+        <button class="btn-submit" id="btn-submit" onclick="submitSwapRequest()">Submit request</button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="env.js"></script>
+<script type="module">
+  import { supabase, requireAuth, isManager } from './src/lib/supabase.js'
+
+  let currentUser  = null
+  let myShifts     = []
+  let openRequests = []
+  let myRequests   = []
+  let allUsers     = {}
+
+  // ── Auth ──
+  currentUser = await requireAuth()
+  if (!currentUser) throw new Error('Not authenticated')
+
+  const initials = currentUser.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2)
+  document.getElementById('nav-avatar').textContent = initials
+  document.getElementById('nav-name').textContent   = currentUser.name
+  document.getElementById('nav-role').textContent   = currentUser.role
+
+  if (isManager(currentUser)) {
+    document.getElementById('manager-nav-section').style.display = 'block'
+    document.getElementById('nav-manager').style.display         = 'flex'
+  }
+
+  window.handleSignOut = async () => { await supabase.auth.signOut(); window.location.href = '/login.html' }
+
+  // ── Load all users for name lookup ──
+  const { data: usersData } = await supabase.from('users').select('id, name')
+  ;(usersData ?? []).forEach(u => { allUsers[u.id] = u.name })
+
+  // ── Load my upcoming shifts (for new request form) ──
+  const todayStr = new Date().toISOString().split('T')[0]
+  const { data: shiftsData } = await supabase
+    .from('rota_shifts')
+    .select('*, shift_templates(*), fortnights!inner(*)')
+    .eq('user_id', currentUser.id)
+    .eq('status', 'scheduled')
+    .eq('fortnights.status', 'published')
+    .gte('shift_date', todayStr)
+    .order('shift_date', { ascending: true })
+
+  myShifts = shiftsData ?? []
+
+  // Populate shift select
+  const shiftSel = document.getElementById('shift-select')
+  shiftSel.innerHTML = ''
+
+  if (myShifts.length === 0) {
+    shiftSel.innerHTML = '<option value="">No upcoming shifts found</option>'
+  } else {
+    shiftSel.innerHTML = '<option value="">Select a shift…</option>'
+    myShifts.forEach(s => {
+      const d   = new Date(s.shift_date)
+      const day = d.toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short' })
+      const opt = document.createElement('option')
+      opt.value       = s.id
+      opt.textContent = `${day} — ${s.shift_templates.name} (${s.shift_templates.start_time.slice(0,5)}–${s.shift_templates.end_time.slice(0,5)})`
+      shiftSel.appendChild(opt)
+    })
+  }
+
+  // ── Check for ?shift= param (from my-shifts page) ──
+  const params = new URLSearchParams(window.location.search)
+  const preselect = params.get('shift')
+  if (preselect) {
+    switchTab('new', document.querySelector('.tab:nth-child(3)'))
+    shiftSel.value = preselect
+  }
+
+  // ── Load open swap requests (from others, pending, same role) ──
+  const { data: openData } = await supabase
+    .from('swap_requests')
+    .select('*, rota_shifts!inner(*, shift_templates(*), fortnights!inner(*))')
+    .eq('status', 'pending')
+    .neq('requester_id', currentUser.id)
+    .eq('rota_shifts.fortnights.status', 'published')
+    .gte('rota_shifts.shift_date', todayStr)
+    .order('created_at', { ascending: false })
+
+  openRequests = openData ?? []
+  document.getElementById('loading-open').style.display = 'none'
+  document.getElementById('count-open').textContent = openRequests.length
+  renderOpenRequests()
+
+  // ── Load my swap requests ──
+  const { data: mineData } = await supabase
+    .from('swap_requests')
+    .select('*, rota_shifts!inner(*, shift_templates(*), fortnights(*))')
+    .eq('requester_id', currentUser.id)
+    .order('created_at', { ascending: false })
+
+  myRequests = mineData ?? []
+  document.getElementById('loading-mine').style.display = 'none'
+  document.getElementById('count-mine').textContent = myRequests.filter(r => r.status === 'pending').length
+  renderMyRequests()
+
+  // ── Render open requests ──
+  function renderOpenRequests() {
+    const list  = document.getElementById('list-open')
+    const empty = document.getElementById('empty-open')
+    list.innerHTML = ''
+
+    if (openRequests.length === 0) {
+      empty.style.display = 'block'
+      return
+    }
+
+    empty.style.display = 'none'
+    openRequests.forEach(req => {
+      const shift   = req.rota_shifts
+      const tpl     = shift.shift_templates
+      const d       = new Date(shift.shift_date)
+      const dayStr  = d.toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long' })
+      const reqName = allUsers[req.requester_id] ?? 'Someone'
+      const timeAgo = getTimeAgo(req.created_at)
+
+      const card = document.createElement('div')
+      card.className = 'swap-card'
+      card.innerHTML = `
+        <div class="swap-card-header">
+          <div class="swap-card-who">
+            <strong>${reqName}</strong>
+            <span> needs cover for their shift</span>
+          </div>
+          <span class="badge badge-pending">Open</span>
+        </div>
+        <div class="swap-card-body">
+          <div class="swap-shift-info">
+            <div class="swap-shift-name">${tpl.name}</div>
+            <div class="swap-shift-meta">${dayStr} · ${tpl.start_time.slice(0,5)} – ${tpl.end_time.slice(0,5)}</div>
+            ${req.reason ? `<div class="swap-reason">"${req.reason}"</div>` : ''}
+            <div class="swap-time">${timeAgo}</div>
+          </div>
+          <div class="swap-actions">
+            <button class="btn-accept" onclick="acceptSwap('${req.id}', '${shift.id}', '${req.requester_id}')">Accept swap</button>
+            <button class="btn-decline" onclick="declineSwap('${req.id}')">Decline</button>
+          </div>
+        </div>`
+
+      list.appendChild(card)
+    })
+  }
+
+  // ── Render my requests ──
+  function renderMyRequests() {
+    const list  = document.getElementById('list-mine')
+    const empty = document.getElementById('empty-mine')
+    list.innerHTML = ''
+
+    if (myRequests.length === 0) {
+      empty.style.display = 'block'
+      return
+    }
+
+    empty.style.display = 'none'
+    myRequests.forEach(req => {
+      const shift   = req.rota_shifts
+      const tpl     = shift.shift_templates
+      const d       = new Date(shift.shift_date)
+      const dayStr  = d.toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long' })
+      const timeAgo = getTimeAgo(req.created_at)
+      const acceptorName = req.acceptor_id ? (allUsers[req.acceptor_id] ?? 'Someone') : null
+
+      const badgeClass = `badge-${req.status}`
+      const badgeLabel = req.status.charAt(0).toUpperCase() + req.status.slice(1)
+
+      const card = document.createElement('div')
+      card.className = 'swap-card'
+      card.innerHTML = `
+        <div class="swap-card-header">
+          <div class="swap-card-who">
+            <strong>Your request</strong>
+            ${req.status === 'accepted' && acceptorName ? `<span> · Covered by <strong>${acceptorName}</strong></span>` : ''}
+          </div>
+          <span class="badge ${badgeClass}">${badgeLabel}</span>
+        </div>
+        <div class="swap-card-body">
+          <div class="swap-shift-info">
+            <div class="swap-shift-name">${tpl.name}</div>
+            <div class="swap-shift-meta">${dayStr} · ${tpl.start_time.slice(0,5)} – ${tpl.end_time.slice(0,5)}</div>
+            ${req.reason ? `<div class="swap-reason">"${req.reason}"</div>` : ''}
+            <div class="swap-time">${timeAgo}</div>
+          </div>
+          <div class="swap-actions">
+            ${req.status === 'pending' ? `<button class="btn-cancel" onclick="cancelSwap('${req.id}')">Cancel request</button>` : ''}
+          </div>
+        </div>`
+
+      list.appendChild(card)
+    })
+  }
+
+  // ── Submit swap request ──
+  window.submitSwapRequest = async () => {
+    const shiftId = document.getElementById('shift-select').value
+    const reason  = document.getElementById('swap-reason').value.trim()
+
+    if (!shiftId) { showToast('Please select a shift', 'error'); return }
+
+    // Check no pending request already exists for this shift
+    const existing = myRequests.find(r => r.rota_shift_id === shiftId && r.status === 'pending')
+    if (existing) { showToast('You already have a pending request for this shift', 'error'); return }
+
+    const btn = document.getElementById('btn-submit')
+    btn.disabled    = true
+    btn.textContent = 'Submitting…'
+
+    const { data, error } = await supabase
+      .from('swap_requests')
+      .insert({
+        rota_shift_id: shiftId,
+        requester_id:  currentUser.id,
+        reason:        reason || null,
+        status:        'pending',
+        needs_approval: false,
+      })
+      .select('*, rota_shifts!inner(*, shift_templates(*), fortnights(*))')
+      .single()
+
+    if (error) {
+      console.error(error)
+      showToast('Error submitting request', 'error')
+      btn.disabled    = false
+      btn.textContent = 'Submit request'
+      return
+    }
+
+    myRequests.unshift(data)
+    document.getElementById('count-mine').textContent = myRequests.filter(r => r.status === 'pending').length
+    renderMyRequests()
+
+    document.getElementById('swap-reason').value = ''
+    document.getElementById('shift-select').value = ''
+    showToast('Swap request submitted!', 'success')
+    switchTab('mine', document.querySelector('.tab:nth-child(2)'))
+
+    btn.disabled    = false
+    btn.textContent = 'Submit request'
+  }
+
+  // ── Accept swap ──
+  window.acceptSwap = async (reqId, shiftId, requesterId) => {
+    const confirmed = confirm('Accept this swap? The shift will be transferred to you and both you and the requester will be notified.')
+    if (!confirmed) return
+
+    // Update swap request
+    const { error: swapError } = await supabase
+      .from('swap_requests')
+      .update({ status: 'accepted', acceptor_id: currentUser.id, resolved_at: new Date().toISOString() })
+      .eq('id', reqId)
+
+    if (swapError) { showToast('Error accepting swap', 'error'); return }
+
+    // Transfer the rota shift to the acceptor, preserving original user
+    const { data: originalShift } = await supabase
+      .from('rota_shifts')
+      .select('user_id')
+      .eq('id', shiftId)
+      .single()
+
+    const { error: shiftError } = await supabase
+      .from('rota_shifts')
+      .update({
+        user_id:          currentUser.id,
+        status:           'swapped',
+        original_user_id: originalShift?.user_id ?? requesterId,
+        swapped_from_id:  reqId,
+      })
+      .eq('id', shiftId)
+
+    if (shiftError) { showToast('Error transferring shift', 'error'); return }
+
+    // Notify the requester
+    await supabase.from('notifications').insert({
+      user_id: requesterId,
+      type:    'swap_accepted',
+      message: `${currentUser.name} has accepted your swap request. Your shift is now covered!`,
+      read:    false,
+    })
+
+    // Notify the acceptor (self confirmation)
+    await supabase.from('notifications').insert({
+      user_id: currentUser.id,
+      type:    'swap_accepted',
+      message: `You accepted a swap request. Check My Shifts for the updated rota.`,
+      read:    false,
+    })
+
+    showToast('Swap accepted! Shift transferred to you.', 'success')
+
+    // Remove from open list
+    openRequests = openRequests.filter(r => r.id !== reqId)
+    document.getElementById('count-open').textContent = openRequests.length
+    renderOpenRequests()
+  }
+
+  // ── Decline swap ──
+  window.declineSwap = async (reqId) => {
+    const { error } = await supabase
+      .from('swap_requests')
+      .update({ status: 'rejected', resolved_at: new Date().toISOString() })
+      .eq('id', reqId)
+
+    if (error) { showToast('Error declining swap', 'error'); return }
+
+    showToast('Request declined', 'success')
+    openRequests = openRequests.filter(r => r.id !== reqId)
+    document.getElementById('count-open').textContent = openRequests.length
+    renderOpenRequests()
+  }
+
+  // ── Cancel own request ──
+  window.cancelSwap = async (reqId) => {
+    const { error } = await supabase
+      .from('swap_requests')
+      .update({ status: 'cancelled', resolved_at: new Date().toISOString() })
+      .eq('id', reqId)
+
+    if (error) { showToast('Error cancelling request', 'error'); return }
+
+    showToast('Request cancelled', 'success')
+    myRequests = myRequests.map(r => r.id === reqId ? { ...r, status: 'cancelled' } : r)
+    document.getElementById('count-mine').textContent = myRequests.filter(r => r.status === 'pending').length
+    renderMyRequests()
+  }
+
+  // ── Tab switching ──
+  window.switchTab = (tabName, btn) => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'))
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'))
+    if (btn) btn.classList.add('active')
+    document.getElementById('panel-' + tabName).classList.add('active')
+  }
+
+  // ── Helpers ──
+  function getTimeAgo(dateStr) {
+    const diff = Date.now() - new Date(dateStr).getTime()
+    const mins = Math.floor(diff / 60000)
+    if (mins < 60)   return `${mins}m ago`
+    const hrs = Math.floor(mins / 60)
+    if (hrs < 24)    return `${hrs}h ago`
+    const days = Math.floor(hrs / 24)
+    return `${days}d ago`
+  }
+
+  function showToast(msg, type = 'success') {
+    const t = document.getElementById('toast')
+    t.textContent = msg
+    t.className   = `toast ${type} show`
+    setTimeout(() => t.classList.remove('show'), 3000)
+  }
+</script>
+
+</body>
+</html>

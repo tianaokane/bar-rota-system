@@ -439,7 +439,7 @@
     <!-- Stat cards -->
     <div class="stats-row">
       <div class="stat-card">
-        <div class="stat-card-label">My shifts this fortnight</div>
+        <div class="stat-card-label">My shifts this week</div>
         <div class="stat-card-value accent" id="stat-my-shifts">—</div>
         <div class="stat-card-sub" id="stat-my-hours">Loading…</div>
       </div>
@@ -553,7 +553,7 @@
   if (fortnight) {
     const fmt = d => new Date(d).toLocaleDateString('en-GB', { day:'numeric', month:'short' })
     document.getElementById('fortnight-label').textContent =
-      `Current fortnight: ${fmt(fortnight.start_date)} – ${fmt(fortnight.end_date)}`
+      `Current week: ${fmt(fortnight.start_date)} – ${fmt(fortnight.end_date)}`
   } else {
     document.getElementById('fortnight-label').textContent = 'No published rota yet'
   }

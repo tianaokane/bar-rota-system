@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SU Bar Rota — Availability</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0d0d0d;
+      --surface:  #161616;
+      --surface2: #1e1e1e;
+      --border:   #2a2a2a;
+      --accent:   #c8f557;
+      --text:     #f0ede6;
+      --muted:    #6b6b6b;
+      --error:    #ff6b6b;
+      --green:    #4ade80;
+      --amber:    #fbbf24;
+      --radius:   10px;
+      --nav-w:    240px;
+    }
+
+    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-weight: 300; }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      opacity: 0.03; pointer-events: none; z-index: 0;
+    }
+
+    .app { position: relative; z-index: 1; display: flex; min-height: 100vh; }
+
+    .nav {
+      width: var(--nav-w);
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column;
+      position: fixed; top: 0; left: 0; bottom: 0;
+      padding: 1.75rem 1rem; z-index: 10;
+    }
+    .nav-logo { font-family: 'DM Serif Display', serif; font-size: 1rem; padding: 0 0.5rem; margin-bottom: 2rem; }
+    .nav-logo span { color: var(--accent); }
+    .nav-section { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); padding: 0 0.5rem; margin: 1rem 0 0.4rem; }
+    .nav-link { display: flex; align-items: center; gap: 0.65rem; padding: 0.6rem 0.75rem; border-radius: 8px; color: var(--muted); text-decoration: none; font-size: 0.88rem; transition: background 0.15s, color 0.15s; cursor: pointer; border: none; background: none; width: 100%; text-align: left; }
+    .nav-link:hover { background: var(--surface2); color: var(--text); }
+    .nav-link.active { background: rgba(200,245,87,0.1); color: var(--accent); }
+    .nav-link .icon { font-size: 1rem; width: 1.2rem; text-align: center; }
+    .nav-bottom { margin-top: auto; }
+    .nav-user { display: flex; align-items: center; gap: 0.65rem; padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 0.5rem; }
+    .nav-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--accent); color: #0d0d0d; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 500; flex-shrink: 0; }
+    .nav-user-name { font-size: 0.85rem; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .nav-user-role { font-size: 0.72rem; color: var(--muted); text-transform: capitalize; }
+
+    .main { margin-left: var(--nav-w); flex: 1; padding: 2.5rem 2.5rem 6rem; max-width: 900px; }
+
+    .page-header { margin-bottom: 2rem; animation: fadeUp 0.4s ease both; }
+    .page-title { font-family: 'DM Serif Display', serif; font-size: 2rem; font-weight: 400; }
+    .page-subtitle { color: var(--muted); font-size: 0.9rem; margin-top: 0.25rem; }
+
+    .week-bar {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.5rem;
+      margin-bottom: 1.5rem;
+      animation: fadeUp 0.4s 0.05s ease both;
+    }
+
+    .week-bar label { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); white-space: nowrap; }
+
+    .week-select {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.9rem;
+      padding: 0.5rem 0.85rem;
+      outline: none;
+      cursor: pointer;
+      flex: 1;
+    }
+    .week-select:focus { border-color: var(--accent); }
+
+    .deadline-pill {
+      font-size: 0.75rem;
+      padding: 0.3rem 0.75rem;
+      border-radius: 20px;
+      background: rgba(251,191,36,0.12);
+      color: var(--amber);
+      white-space: nowrap;
+    }
+
+    .legend {
+      display: flex;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+      animation: fadeUp 0.4s 0.08s ease both;
+    }
+    .legend-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; color: var(--muted); }
+    .legend-dot { width: 12px; height: 12px; border-radius: 50%; }
+    .dot-available   { background: var(--green); }
+    .dot-preferred   { background: var(--accent); }
+    .dot-unavailable { background: var(--error); }
+    .dot-unset       { background: var(--border); }
+
+    .week-grid { animation: fadeUp 0.4s 0.1s ease both; }
+
+    .day-row {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+      align-items: start;
+    }
+
+    .day-label {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 0.6rem 0.75rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      min-height: 56px;
+    }
+    .day-label.today { border-color: var(--accent); }
+
+    .day-name { font-size: 0.78rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+    .day-date { font-family: 'DM Serif Display', serif; font-size: 1.2rem; line-height: 1.1; }
+    .day-today-tag { font-size: 0.62rem; color: var(--accent); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 0.1rem; }
+
+    .shift-slots { display: flex; flex-direction: column; gap: 0.4rem; }
+
+    .slot {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 0.75rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--border);
+      border-radius: 8px;
+      padding: 0.6rem 0.85rem;
+      transition: border-color 0.15s;
+    }
+
+    .slot.is-available   { border-left-color: var(--green); }
+    .slot.is-preferred   { border-left-color: var(--accent); }
+    .slot.is-unavailable { border-left-color: var(--error); }
+
+    .slot-info { display: flex; flex-direction: column; }
+    .slot-name { font-size: 0.88rem; }
+    .slot-time { font-size: 0.72rem; color: var(--muted); margin-top: 0.1rem; }
+
+    .slot-controls { display: flex; gap: 0.4rem; }
+
+    .slot-btn {
+      width: 32px; height: 32px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 0.85rem;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s;
+    }
+    .slot-btn:hover { border-color: var(--text); color: var(--text); }
+    .slot-btn.active-available   { background: rgba(74,222,128,0.15);  border-color: var(--green);  color: var(--green); }
+    .slot-btn.active-preferred   { background: rgba(200,245,87,0.15);  border-color: var(--accent); color: var(--accent); }
+    .slot-btn.active-unavailable { background: rgba(255,107,107,0.15); border-color: var(--error);  color: var(--error); }
+
+    .save-bar {
+      position: fixed;
+      bottom: 0; left: var(--nav-w); right: 0;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 1rem 2.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 20;
+      transform: translateY(100%);
+      transition: transform 0.25s ease;
+    }
+    .save-bar.visible { transform: translateY(0); }
+    .save-bar-text { font-size: 0.88rem; color: var(--muted); }
+    .save-bar-text strong { color: var(--text); }
+
+    .btn-save {
+      padding: 0.65rem 1.75rem;
+      background: var(--accent);
+      color: #0d0d0d;
+      border: none;
+      border-radius: 8px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-save:hover { background: #d4f96e; }
+    .btn-save:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; }
+
+    .toast {
+      position: fixed;
+      bottom: 5rem; left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--green);
+      color: #0d0d0d;
+      padding: 0.65rem 1.5rem;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-weight: 500;
+      opacity: 0;
+      transition: all 0.3s ease;
+      pointer-events: none;
+      z-index: 100;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    .no-weeks {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--muted);
+    }
+    .no-weeks .big { font-family: 'DM Serif Display', serif; font-size: 3rem; margin-bottom: 0.5rem; }
+
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+    @media (max-width: 768px) {
+      .nav { display: none; }
+      .main { margin-left: 0; padding: 1.5rem 1rem 6rem; }
+      .save-bar { left: 0; }
+      .day-row { grid-template-columns: 72px 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app">
+
+  <nav class="nav">
+    <div class="nav-logo">SU Bar <span>Rota</span></div>
+    <span class="nav-section">Staff</span>
+    <a class="nav-link" href="index.html"><span class="icon">⊞</span> Dashboard</a>
+    <a class="nav-link active" href="availability.html"><span class="icon">📅</span> Availability</a>
+    <a class="nav-link" href="my-shifts.html"><span class="icon">🕐</span> My Shifts</a>
+    <a class="nav-link" href="swaps.html"><span class="icon">↔</span> Swap Requests</a>
+    <span class="nav-section" id="manager-nav-section" style="display:none">Manager</span>
+    <a class="nav-link" id="nav-manager" href="manager.html" style="display:none"><span class="icon">⚙</span> Rota Builder</a>
+    <div class="nav-bottom">
+      <div class="nav-user">
+        <div class="nav-avatar" id="nav-avatar">?</div>
+        <div class="nav-user-info">
+          <div class="nav-user-name" id="nav-name">Loading…</div>
+          <div class="nav-user-role" id="nav-role">—</div>
+        </div>
+      </div>
+      <button class="nav-link" onclick="handleSignOut()"><span class="icon">→</span> Sign out</button>
+    </div>
+  </nav>
+
+  <main class="main">
+    <div class="page-header">
+      <h1 class="page-title">Submit Availability</h1>
+      <p class="page-subtitle">Mark which shifts you can work. The manager uses this to build the weekly rota.</p>
+    </div>
+
+    <div class="week-bar">
+      <label>Week</label>
+      <select class="week-select" id="week-select"></select>
+      <span class="deadline-pill" id="deadline-pill">Select a week</span>
+    </div>
+
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot dot-available"></div> Available</div>
+      <div class="legend-item"><div class="legend-dot dot-preferred"></div> Preferred</div>
+      <div class="legend-item"><div class="legend-dot dot-unavailable"></div> Unavailable</div>
+      <div class="legend-item"><div class="legend-dot dot-unset"></div> Not set</div>
+    </div>
+
+    <div class="week-grid" id="grid-container"></div>
+  </main>
+</div>
+
+<div class="save-bar" id="save-bar">
+  <p class="save-bar-text"><strong id="changed-count">0</strong> changes unsaved</p>
+  <button class="btn-save" id="btn-save" onclick="saveAvailability()">Save availability</button>
+</div>
+
+<div class="toast" id="toast">✓ Availability saved!</div>
+
+<script src="env.js"></script>
+<script type="module">
+  import { supabase, requireAuth, isManager } from './src/lib/supabase.js'
+
+  let currentUser    = null
+  let weeks          = []
+  let templates      = []
+  let existingAvail  = {}
+  let pendingChanges = {}
+  let selectedWeek   = null
+  const todayStr     = new Date().toISOString().split('T')[0]
+
+  // ── Auth ──
+  currentUser = await requireAuth()
+  if (!currentUser) throw new Error('Not authenticated')
+
+  const initials = currentUser.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2)
+  document.getElementById('nav-avatar').textContent = initials
+  document.getElementById('nav-name').textContent   = currentUser.name
+  document.getElementById('nav-role').textContent   = currentUser.role
+
+  if (isManager(currentUser)) {
+    document.getElementById('manager-nav-section').style.display = 'block'
+    document.getElementById('nav-manager').style.display         = 'flex'
+  }
+
+  window.handleSignOut = async () => {
+    await supabase.auth.signOut()
+    window.location.href = '/login.html'
+  }
+
+  // ── Load weeks ──
+  const { data: weekData } = await supabase
+    .from('fortnights')
+    .select('*')
+    .in('status', ['draft', 'published'])
+    .order('start_date', { ascending: true })
+
+  weeks = weekData ?? []
+
+  const sel = document.getElementById('week-select')
+
+  if (weeks.length === 0) {
+    document.getElementById('grid-container').innerHTML = `
+      <div class="no-weeks">
+        <div class="big">📭</div>
+        <p>No upcoming weeks are open for availability yet.<br>Check back soon or ask your manager.</p>
+      </div>`
+  } else {
+    weeks.forEach(w => {
+      const fmt = d => new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+      const opt = document.createElement('option')
+      opt.value       = w.id
+      opt.textContent = `w/c ${fmt(w.start_date)} – ${fmt(w.end_date)}`
+      sel.appendChild(opt)
+    })
+
+    sel.addEventListener('change', () => loadWeek(sel.value))
+
+    // ── Load shift templates ──
+    const { data: tplData } = await supabase
+      .from('shift_templates')
+      .select('*, roles(*)')
+      .eq('is_adhoc', false)
+      .order('start_time')
+
+    templates = tplData ?? []
+
+    await loadWeek(weeks[0].id)
+  }
+
+  // ── Load week ──
+  async function loadWeek(weekId) {
+    selectedWeek   = weeks.find(w => w.id === weekId)
+    pendingChanges = {}
+    updateSaveBar()
+
+    // Deadline pill
+    const end      = new Date(selectedWeek.end_date)
+    const daysLeft = Math.ceil((end - new Date()) / 86400000)
+    const pill     = document.getElementById('deadline-pill')
+    pill.textContent  = daysLeft > 0 ? `${daysLeft} days remaining` : 'Week in progress'
+    pill.style.color  = daysLeft <= 2 ? 'var(--error)' : ''
+
+    // Load existing availability
+    const { data: avail } = await supabase
+      .from('availability')
+      .select('*')
+      .eq('user_id', currentUser.id)
+      .eq('fortnight_id', weekId)
+
+    existingAvail = {}
+    ;(avail ?? []).forEach(a => {
+      existingAvail[`${a.shift_template_id}_${a.shift_date}`] = { id: a.id, status: a.status }
+    })
+
+    renderGrid()
+  }
+
+  // ── Render 7-day grid ──
+  function renderGrid() {
+    const container = document.getElementById('grid-container')
+    container.innerHTML = ''
+
+    const [sy,sm,sd] = selectedWeek.start_date.split("-").map(Number)
+    const start = new Date(sy, sm-1, sd)
+    const dates = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(start)
+      d.setDate(start.getDate() + i)
+      return d
+    })
+
+    const userRoleNames = currentUser.user_roles?.map(ur => ur.roles?.name) ?? []
+    const relevant = templates.filter(t =>
+      userRoleNames.length === 0 || userRoleNames.includes(t.roles?.name)
+    )
+
+    if (relevant.length === 0) {
+      container.innerHTML = `
+        <div class="no-weeks">
+          <div class="big">🔧</div>
+          <p>No shift types are assigned to your role yet.<br>Ask your manager to set this up.</p>
+        </div>`
+      return
+    }
+
+    dates.forEach(date => {
+      const dateStr = date.toISOString().split('T')[0]
+      const dayName = date.toLocaleDateString('en-GB', { weekday: 'short' })
+      const dayNum  = date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+      const isToday = dateStr === todayStr
+
+      const row = document.createElement('div')
+      row.className = 'day-row'
+      row.innerHTML = `
+        <div class="day-label${isToday ? ' today' : ''}">
+          <div class="day-name">${dayName}</div>
+          <div class="day-date">${dayNum}</div>
+          ${isToday ? '<div class="day-today-tag">Today</div>' : ''}
+        </div>
+        <div class="shift-slots" id="slots-${dateStr}"></div>`
+
+      const slotsEl = row.querySelector(`#slots-${dateStr}`)
+
+      relevant.forEach(tpl => {
+        const key     = `${tpl.id}_${dateStr}`
+        const current = pendingChanges[key] ?? existingAvail[key]?.status ?? null
+        slotsEl.appendChild(buildSlot(tpl, dateStr, key, current))
+      })
+
+      container.appendChild(row)
+    })
+  }
+
+  function buildSlot(tpl, dateStr, key, currentStatus) {
+    const el = document.createElement('div')
+    el.className = `slot${currentStatus ? ` is-${currentStatus}` : ''}`
+    el.id = `slot-${key}`
+    el.innerHTML = `
+      <div class="slot-info">
+        <div class="slot-name">${tpl.name}</div>
+        <div class="slot-time">${tpl.start_time.slice(0,5)} – ${tpl.end_time.slice(0,5)}</div>
+      </div>
+      <div class="slot-controls">
+        <button class="slot-btn ${currentStatus === 'available'   ? 'active-available'   : ''}"
+          title="Available"   onclick="setStatus('${key}','available','${tpl.id}','${dateStr}')">✓</button>
+        <button class="slot-btn ${currentStatus === 'preferred'   ? 'active-preferred'   : ''}"
+          title="Preferred"   onclick="setStatus('${key}','preferred','${tpl.id}','${dateStr}')">★</button>
+        <button class="slot-btn ${currentStatus === 'unavailable' ? 'active-unavailable' : ''}"
+          title="Unavailable" onclick="setStatus('${key}','unavailable','${tpl.id}','${dateStr}')">✕</button>
+      </div>`
+    return el
+  }
+
+  window.setStatus = (key, status, templateId, dateStr) => {
+    const current   = pendingChanges[key] ?? existingAvail[key]?.status ?? null
+    const newStatus = current === status ? null : status
+
+    if (newStatus === null) delete pendingChanges[key]
+    else pendingChanges[key] = newStatus
+
+    const slot = document.getElementById(`slot-${key}`)
+    slot.className = `slot${newStatus ? ` is-${newStatus}` : ''}`
+
+    const btns     = slot.querySelectorAll('.slot-btn')
+    const classes  = ['active-available', 'active-preferred', 'active-unavailable']
+    const statuses = ['available', 'preferred', 'unavailable']
+    btns.forEach((btn, i) => {
+      btn.classList.remove(classes[i])
+      if (newStatus === statuses[i]) btn.classList.add(classes[i])
+    })
+
+    updateSaveBar()
+  }
+
+  function updateSaveBar() {
+    const count = Object.keys(pendingChanges).length
+    document.getElementById('changed-count').textContent = count
+    document.getElementById('save-bar').classList.toggle('visible', count > 0)
+  }
+
+  window.saveAvailability = async () => {
+    const btn = document.getElementById('btn-save')
+    btn.disabled    = true
+    btn.textContent = 'Saving…'
+
+    const upserts = []
+    const deletes = []
+
+    for (const [key, status] of Object.entries(pendingChanges)) {
+      const [templateId, dateStr] = key.split('_')
+      const existing = existingAvail[key]
+
+      if (status === null && existing) {
+        deletes.push(existing.id)
+      } else if (status !== null) {
+        upserts.push({
+          ...(existing?.id ? { id: existing.id } : {}),
+          user_id:           currentUser.id,
+          fortnight_id:      selectedWeek.id,
+          shift_template_id: templateId,
+          shift_date:        dateStr,
+          status,
+        })
+      }
+    }
+
+    if (upserts.length > 0) {
+      const { error } = await supabase.from('availability').upsert(upserts)
+      if (error) {
+        console.error(error)
+        alert('Error saving — please try again.')
+        btn.disabled    = false
+        btn.textContent = 'Save availability'
+        return
+      }
+    }
+
+    if (deletes.length > 0) {
+      await supabase.from('availability').delete().in('id', deletes)
+    }
+
+    upserts.forEach(u => {
+      const key = `${u.shift_template_id}_${u.shift_date}`
+      existingAvail[key] = { id: existingAvail[key]?.id ?? u.id, status: u.status }
+    })
+    deletes.forEach(id => {
+      const key = Object.keys(existingAvail).find(k => existingAvail[k].id === id)
+      if (key) delete existingAvail[key]
+    })
+
+    pendingChanges = {}
+    updateSaveBar()
+    showToast()
+    btn.disabled    = false
+    btn.textContent = 'Save availability'
+  }
+
+  function showToast() {
+    const t = document.getElementById('toast')
+    t.classList.add('show')
+    setTimeout(() => t.classList.remove('show'), 2500)
+  }
+</script>
+
+</body>
+</html>

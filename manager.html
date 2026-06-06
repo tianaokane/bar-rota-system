@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SU Bar Rota — Rota Builder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0d0d0d;
+      --surface:  #161616;
+      --surface2: #1e1e1e;
+      --border:   #2a2a2a;
+      --accent:   #c8f557;
+      --text:     #f0ede6;
+      --muted:    #6b6b6b;
+      --error:    #ff6b6b;
+      --green:    #4ade80;
+      --amber:    #fbbf24;
+      --radius:   10px;
+      --nav-w:    240px;
+    }
+
+    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-weight: 300; }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      opacity: 0.03; pointer-events: none; z-index: 0;
+    }
+
+    .app { position: relative; z-index: 1; display: flex; min-height: 100vh; }
+
+    /* ── Sidebar ── */
+    .nav { width: var(--nav-w); background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; padding: 1.75rem 1rem; z-index: 10; }
+    .nav-logo { font-family: 'DM Serif Display', serif; font-size: 1rem; padding: 0 0.5rem; margin-bottom: 2rem; }
+    .nav-logo span { color: var(--accent); }
+    .nav-section { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); padding: 0 0.5rem; margin: 1rem 0 0.4rem; }
+    .nav-link { display: flex; align-items: center; gap: 0.65rem; padding: 0.6rem 0.75rem; border-radius: 8px; color: var(--muted); text-decoration: none; font-size: 0.88rem; transition: background 0.15s, color 0.15s; cursor: pointer; border: none; background: none; width: 100%; text-align: left; }
+    .nav-link:hover { background: var(--surface2); color: var(--text); }
+    .nav-link.active { background: rgba(200,245,87,0.1); color: var(--accent); }
+    .nav-link .icon { font-size: 1rem; width: 1.2rem; text-align: center; }
+    .nav-bottom { margin-top: auto; }
+    .nav-user { display: flex; align-items: center; gap: 0.65rem; padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 0.5rem; }
+    .nav-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--accent); color: #0d0d0d; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 500; flex-shrink: 0; }
+    .nav-user-name { font-size: 0.85rem; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .nav-user-role { font-size: 0.72rem; color: var(--muted); text-transform: capitalize; }
+
+    /* ── Main ── */
+    .main { margin-left: var(--nav-w); flex: 1; padding: 2.5rem 2.5rem 8rem; }
+
+    .page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 2rem; animation: fadeUp 0.4s ease both; flex-wrap: wrap; gap: 1rem; }
+    .page-title { font-family: 'DM Serif Display', serif; font-size: 2rem; font-weight: 400; }
+    .page-subtitle { color: var(--muted); font-size: 0.9rem; margin-top: 0.25rem; }
+
+    .header-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+
+    .btn { padding: 0.6rem 1.25rem; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 0.88rem; font-weight: 500; cursor: pointer; border: none; transition: all 0.15s; }
+    .btn-primary { background: var(--accent); color: #0d0d0d; }
+    .btn-primary:hover { background: #d4f96e; }
+    .btn-primary:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; }
+    .btn-outline { background: transparent; color: var(--text); border: 1px solid var(--border); }
+    .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-danger { background: rgba(255,107,107,0.12); color: var(--error); border: 1px solid rgba(255,107,107,0.3); }
+    .btn-danger:hover { background: rgba(255,107,107,0.2); }
+
+    /* ── Week selector bar ── */
+    .week-bar { display: flex; align-items: center; gap: 1rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.5rem; margin-bottom: 1.5rem; animation: fadeUp 0.4s 0.05s ease both; flex-wrap: wrap; }
+    .week-bar label { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); white-space: nowrap; }
+    .week-select { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.9rem; padding: 0.5rem 0.85rem; outline: none; cursor: pointer; }
+    .week-select:focus { border-color: var(--accent); }
+    .week-status { font-size: 0.75rem; padding: 0.3rem 0.75rem; border-radius: 20px; }
+    .status-draft      { background: rgba(251,191,36,0.12); color: var(--amber); }
+    .status-published  { background: rgba(74,222,128,0.12); color: var(--green); }
+    .status-archived   { background: rgba(107,107,107,0.12); color: var(--muted); }
+
+    /* ── New week form ── */
+    .new-week-form { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; display: none; animation: fadeUp 0.2s ease both; }
+    .new-week-form.visible { display: block; }
+    .new-week-form h3 { font-size: 0.88rem; font-weight: 500; margin-bottom: 1rem; }
+    .form-row { display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap; }
+    .form-field { display: flex; flex-direction: column; gap: 0.4rem; }
+    .form-field label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); }
+    .form-field input { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.9rem; padding: 0.5rem 0.85rem; outline: none; }
+    .form-field input:focus { border-color: var(--accent); }
+    .form-field input[readonly] { color: var(--muted); cursor: not-allowed; }
+
+    /* ── Rota grid ── */
+    .rota-grid { animation: fadeUp 0.4s 0.1s ease both; }
+
+    .day-panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 1rem; overflow: hidden; }
+
+    .day-header { display: flex; align-items: center; justify-content: space-between; padding: 0.85rem 1.25rem; border-bottom: 1px solid var(--border); cursor: pointer; user-select: none; }
+    .day-header:hover { background: var(--surface2); }
+
+    .day-header-left { display: flex; align-items: center; gap: 0.75rem; }
+    .day-name-big { font-family: 'DM Serif Display', serif; font-size: 1.1rem; }
+    .day-date-small { font-size: 0.8rem; color: var(--muted); }
+    .day-today-badge { font-size: 0.65rem; background: rgba(200,245,87,0.15); color: var(--accent); padding: 0.15rem 0.5rem; border-radius: 10px; text-transform: uppercase; letter-spacing: 0.06em; }
+
+    .day-coverage { display: flex; gap: 0.5rem; align-items: center; }
+    .coverage-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .dot-green { background: var(--green); }
+    .dot-amber { background: var(--amber); }
+    .dot-red   { background: var(--error); }
+    .coverage-text { font-size: 0.78rem; color: var(--muted); }
+
+    .day-body { padding: 0.75rem 1.25rem 1.25rem; }
+
+    /* ── Slot rows ── */
+    .slot-row { display: grid; grid-template-columns: 140px 1fr; gap: 0.75rem; margin-bottom: 0.75rem; align-items: start; }
+
+    .slot-label { padding-top: 0.5rem; }
+    .slot-name { font-size: 0.85rem; font-weight: 500; }
+    .slot-time { font-size: 0.72rem; color: var(--muted); margin-top: 0.1rem; }
+    .slot-min  { font-size: 0.68rem; color: var(--muted); margin-top: 0.1rem; }
+
+    .slot-content { display: flex; flex-direction: column; gap: 0.5rem; }
+
+    /* Assigned staff chips */
+    .assigned-list { display: flex; flex-wrap: wrap; gap: 0.4rem; min-height: 36px; }
+
+    .staff-chip {
+      display: flex; align-items: center; gap: 0.4rem;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 20px; padding: 0.3rem 0.5rem 0.3rem 0.75rem;
+      font-size: 0.8rem;
+    }
+    .staff-chip.area-main_bar  { border-color: rgba(200,245,87,0.3); }
+    .staff-chip.area-wee_bar   { border-color: rgba(251,191,36,0.3); }
+    .staff-chip.area-mandela   { border-color: rgba(139,92,246,0.3); }
+    .staff-chip.area-floor     { border-color: rgba(74,222,128,0.3); }
+    .staff-chip.area-kitchen   { border-color: rgba(249,115,22,0.3); }
+
+    .chip-area { font-size: 0.65rem; color: var(--muted); margin-left: 0.2rem; }
+    .chip-remove { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 0.9rem; padding: 0; line-height: 1; transition: color 0.15s; }
+    .chip-remove:hover { color: var(--error); }
+
+    /* Add staff button */
+    .add-staff-btn {
+      display: flex; align-items: center; gap: 0.4rem;
+      background: var(--surface2); border: 1px dashed var(--border);
+      border-radius: 20px; padding: 0.3rem 0.75rem;
+      font-size: 0.78rem; color: var(--muted);
+      cursor: pointer; transition: all 0.15s;
+    }
+    .add-staff-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ── Availability picker dropdown ── */
+    .picker-overlay { position: fixed; inset: 0; z-index: 50; display: none; }
+    .picker-overlay.open { display: block; }
+
+    .picker {
+      position: fixed; z-index: 51;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      width: 320px;
+      max-height: 420px;
+      overflow: hidden;
+      display: flex; flex-direction: column;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    }
+
+    .picker-header { padding: 0.85rem 1rem; border-bottom: 1px solid var(--border); }
+    .picker-title { font-size: 0.85rem; font-weight: 500; }
+    .picker-subtitle { font-size: 0.72rem; color: var(--muted); margin-top: 0.2rem; }
+
+    .picker-search { padding: 0.6rem 1rem; border-bottom: 1px solid var(--border); }
+    .picker-search input { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.85rem; padding: 0.4rem 0.75rem; outline: none; }
+    .picker-search input:focus { border-color: var(--accent); }
+
+    .picker-list { overflow-y: auto; flex: 1; }
+
+    .picker-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.65rem 1rem; cursor: pointer;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.1s;
+    }
+    .picker-item:hover { background: var(--surface2); }
+    .picker-item.preferred { background: rgba(200,245,87,0.04); }
+    .picker-item.already-assigned { opacity: 0.4; cursor: not-allowed; }
+
+    .picker-name { font-size: 0.88rem; }
+    .picker-avail { font-size: 0.72rem; }
+    .avail-preferred   { color: var(--accent); }
+    .avail-available   { color: var(--green); }
+    .avail-unavailable { color: var(--error); }
+    .avail-none        { color: var(--muted); }
+
+    .picker-area-select { font-size: 0.78rem; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--text); padding: 0.25rem 0.5rem; cursor: pointer; outline: none; }
+
+    .picker-empty { padding: 1.5rem; text-align: center; color: var(--muted); font-size: 0.85rem; }
+
+    /* ── Publish bar ── */
+    .publish-bar {
+      position: fixed; bottom: 0; left: var(--nav-w); right: 0;
+      background: var(--surface); border-top: 1px solid var(--border);
+      padding: 1rem 2.5rem;
+      display: flex; align-items: center; justify-content: space-between;
+      z-index: 20;
+    }
+
+    .publish-bar-left { display: flex; flex-direction: column; gap: 0.2rem; }
+    .publish-bar-label { font-size: 0.78rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+    .publish-bar-week  { font-size: 0.95rem; }
+
+    .publish-bar-actions { display: flex; gap: 0.75rem; }
+
+    /* ── Toast ── */
+    .toast { position: fixed; bottom: 5rem; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--green); color: #0d0d0d; padding: 0.65rem 1.5rem; border-radius: 8px; font-size: 0.88rem; font-weight: 500; opacity: 0; transition: all 0.3s ease; pointer-events: none; z-index: 100; }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast.error { background: var(--error); color: #fff; }
+
+    /* ── No weeks state ── */
+    .no-weeks { text-align: center; padding: 4rem 2rem; color: var(--muted); }
+    .no-weeks .big { font-family: 'DM Serif Display', serif; font-size: 3rem; margin-bottom: 0.5rem; }
+
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+    @media (max-width: 900px) {
+      .nav { display: none; }
+      .main { margin-left: 0; padding: 1.5rem 1rem 8rem; }
+      .publish-bar { left: 0; }
+      .slot-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app">
+
+  <nav class="nav">
+    <div class="nav-logo">SU Bar <span>Rota</span></div>
+    <span class="nav-section">Staff</span>
+    <a class="nav-link" href="index.html"><span class="icon">⊞</span> Dashboard</a>
+    <a class="nav-link" href="availability.html"><span class="icon">📅</span> Availability</a>
+    <a class="nav-link" href="my-shifts.html"><span class="icon">🕐</span> My Shifts</a>
+    <a class="nav-link" href="swaps.html"><span class="icon">↔</span> Swap Requests</a>
+    <span class="nav-section">Manager</span>
+    <a class="nav-link active" href="manager.html"><span class="icon">⚙</span> Rota Builder</a>
+    <div class="nav-bottom">
+      <div class="nav-user">
+        <div class="nav-avatar" id="nav-avatar">?</div>
+        <div class="nav-user-info">
+          <div class="nav-user-name" id="nav-name">Loading…</div>
+          <div class="nav-user-role" id="nav-role">—</div>
+        </div>
+      </div>
+      <button class="nav-link" onclick="handleSignOut()"><span class="icon">→</span> Sign out</button>
+    </div>
+  </nav>
+
+  <main class="main">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Rota Builder</h1>
+        <p class="page-subtitle">Assign staff to shifts, then publish to notify everyone.</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-outline" onclick="toggleNewWeekForm()">+ New week</button>
+      </div>
+    </div>
+
+    <!-- New week form -->
+    <div class="new-week-form" id="new-week-form">
+      <h3>Create a new week</h3>
+      <div class="form-row">
+        <div class="form-field">
+          <label>Start date (Saturday)</label>
+          <input type="date" id="new-start-date" onchange="updateEndDate()" />
+        </div>
+        <div class="form-field">
+          <label>End date</label>
+          <input type="date" id="new-end-date" readonly />
+        </div>
+        <button class="btn btn-primary" onclick="createWeek()">Create week</button>
+        <button class="btn btn-outline" onclick="toggleNewWeekForm()">Cancel</button>
+      </div>
+    </div>
+
+    <!-- Week selector -->
+    <div class="week-bar">
+      <label>Week</label>
+      <select class="week-select" id="week-select" onchange="loadWeek(this.value)"></select>
+      <span class="week-status" id="week-status">—</span>
+      <span style="margin-left:auto; font-size:0.8rem; color:var(--muted)" id="week-range">—</span>
+    </div>
+
+    <!-- Rota grid -->
+    <div class="rota-grid" id="rota-grid"></div>
+
+  </main>
+</div>
+
+<!-- Availability picker -->
+<div class="picker-overlay" id="picker-overlay" onclick="closePicker()"></div>
+<div class="picker" id="picker" style="display:none">
+  <div class="picker-header">
+    <div class="picker-title" id="picker-title">Add staff</div>
+    <div class="picker-subtitle" id="picker-subtitle">—</div>
+  </div>
+  <div class="picker-search">
+    <input type="text" id="picker-search" placeholder="Search staff…" oninput="filterPicker()" />
+  </div>
+  <div class="picker-list" id="picker-list"></div>
+</div>
+
+<!-- Publish bar -->
+<div class="publish-bar" id="publish-bar">
+  <div class="publish-bar-left">
+    <span class="publish-bar-label">Currently editing</span>
+    <span class="publish-bar-week" id="publish-bar-week">—</span>
+  </div>
+  <div class="publish-bar-actions">
+    <button class="btn btn-danger" id="btn-delete-week" onclick="deleteWeek()">Delete week</button>
+    <button class="btn btn-primary" id="btn-publish" onclick="publishRota()">Publish rota</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="env.js"></script>
+<script type="module">
+  import { supabase, requireManager, signOut } from './src/lib/supabase.js'
+
+  let currentUser   = null
+  let weeks         = []
+  let selectedWeek  = null
+  let templates     = []
+  let allStaff      = []
+  let availability  = {}   // key: `${userId}_${templateId}_${date}` → status
+  let rotaShifts    = {}   // key: `${templateId}_${date}` → [{ id, user_id, venue_area }]
+  let pickerContext = null // { templateId, date, el }
+  const todayStr    = new Date().toISOString().split('T')[0]
+
+  // ── Auth (manager only) ──
+  currentUser = await requireManager()
+  if (!currentUser) throw new Error('Not a manager')
+
+  const initials = currentUser.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2)
+  document.getElementById('nav-avatar').textContent = initials
+  document.getElementById('nav-name').textContent   = currentUser.name
+  document.getElementById('nav-role').textContent   = currentUser.role
+
+  window.handleSignOut = async () => { await supabase.auth.signOut(); window.location.href = '/login.html' }
+
+  // ── Load shift templates ──
+  const { data: tplData } = await supabase
+    .from('shift_templates')
+    .select('*, roles(*)')
+    .order('start_time')
+  templates = tplData ?? []
+
+  // ── Load all active staff ──
+  const { data: staffData } = await supabase
+    .from('users')
+    .select('*, user_roles(*, roles(*))')
+    .eq('active', true)
+    .order('name')
+  allStaff = staffData ?? []
+
+  // Define loadWeek on window BEFORE loadWeeks runs
+  window.loadWeek = async (weekId) => {
+    selectedWeek = weeks.find(w => w.id === weekId)
+    if (!selectedWeek) return
+    const statusEl = document.getElementById('week-status')
+    statusEl.className   = 'week-status status-' + selectedWeek.status
+    statusEl.textContent = selectedWeek.status.charAt(0).toUpperCase() + selectedWeek.status.slice(1)
+    const fmt      = d => new Date(d).toLocaleDateString('en-GB', { day:'numeric', month:'long' })
+    const rangeStr = fmt(selectedWeek.start_date) + ' – ' + fmt(selectedWeek.end_date)
+    document.getElementById('week-range').textContent       = rangeStr
+    document.getElementById('publish-bar-week').textContent = rangeStr
+    const publishBtn = document.getElementById('btn-publish')
+    if (selectedWeek.status === 'published') {
+      publishBtn.textContent = 'Republish'
+    } else {
+      publishBtn.textContent = 'Publish rota'
+    }
+    const { data: avData } = await supabase.from('availability').select('*').eq('fortnight_id', weekId)
+    availability = {}
+    ;(avData ?? []).forEach(a => { availability[a.user_id + '_' + a.shift_template_id + '_' + a.shift_date] = a.status })
+    const { data: rsData } = await supabase.from('rota_shifts').select('*').eq('fortnight_id', weekId)
+    rotaShifts = {}
+    ;(rsData ?? []).forEach(rs => {
+      const key = rs.shift_template_id + '_' + rs.shift_date
+      if (!rotaShifts[key]) rotaShifts[key] = []
+      rotaShifts[key].push({ id: rs.id, user_id: rs.user_id, venue_area: rs.venue_area, status: rs.status })
+    })
+    renderGrid()
+  }
+
+  // Load weeks
+  await loadWeeks()
+
+  async function loadWeeks() {
+    const { data } = await supabase
+      .from('fortnights')
+      .select('*')
+      .order('start_date', { ascending: false })
+    weeks = data ?? []
+
+    const sel = document.getElementById('week-select')
+    sel.innerHTML = ''
+
+    if (weeks.length === 0) {
+      document.getElementById('rota-grid').innerHTML = `
+        <div class="no-weeks">
+          <div class="big">📋</div>
+          <p>No weeks yet. Create one to get started.</p>
+        </div>`
+      document.getElementById('publish-bar').style.display = 'none'
+      return
+    }
+
+    weeks.forEach(w => {
+      const fmt = d => new Date(d).toLocaleDateString('en-GB', { day:'numeric', month:'short' })
+      const opt = document.createElement('option')
+      opt.value       = w.id
+      opt.textContent = `w/c ${fmt(w.start_date)} – ${fmt(w.end_date)}`
+      sel.appendChild(opt)
+    })
+
+    await window.loadWeek(weeks[0].id)
+  }
+
+
+  // ── Render grid ──
+  function renderGrid() {
+    const container = document.getElementById('rota-grid')
+    container.innerHTML = ''
+
+    const [sy,sm,sd] = selectedWeek.start_date.split("-").map(Number)
+    const start = new Date(sy, sm-1, sd)
+    const dates = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(start)
+      d.setDate(start.getDate() + i)
+      return d
+    })
+
+    dates.forEach(date => {
+      const dateStr  = date.toISOString().split('T')[0]
+      const dayName  = date.toLocaleDateString('en-GB', { weekday: 'long' })
+      const dayShort = date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+      const isToday  = dateStr === todayStr
+
+      // Calculate total coverage for this day
+      const dayShifts = templates.filter(t => !t.is_adhoc)
+      let totalAssigned = 0, totalNeeded = 0
+      dayShifts.forEach(t => {
+        const key = `${t.id}_${dateStr}`
+        totalAssigned += (rotaShifts[key] ?? []).filter(s => s.status !== 'cancelled').length
+        totalNeeded   += t.min_staff
+      })
+
+      const coverageColor = totalAssigned >= totalNeeded ? 'dot-green'
+                          : totalAssigned > 0            ? 'dot-amber'
+                          : 'dot-red'
+      const coverageText  = `${totalAssigned}/${totalNeeded} filled`
+
+      const panel = document.createElement('div')
+      panel.className = 'day-panel'
+      panel.innerHTML = `
+        <div class="day-header" onclick="toggleDay('day-body-${dateStr}')">
+          <div class="day-header-left">
+            <span class="day-name-big">${dayName}</span>
+            <span class="day-date-small">${dayShort}</span>
+            ${isToday ? '<span class="day-today-badge">Today</span>' : ''}
+          </div>
+          <div class="day-coverage">
+            <div class="coverage-dot ${coverageColor}"></div>
+            <span class="coverage-text">${coverageText}</span>
+            <span style="color:var(--muted);font-size:0.85rem;margin-left:0.25rem">▾</span>
+          </div>
+        </div>
+        <div class="day-body" id="day-body-${dateStr}"></div>`
+
+      const body = panel.querySelector(`#day-body-${dateStr}`)
+
+      // Render each slot
+      const relevantTemplates = templates.filter(t => !t.is_adhoc)
+      relevantTemplates.forEach(tpl => {
+        const key      = `${tpl.id}_${dateStr}`
+        const assigned = (rotaShifts[key] ?? []).filter(s => s.status !== 'cancelled')
+
+        const row = document.createElement('div')
+        row.className = 'slot-row'
+        row.innerHTML = `
+          <div class="slot-label">
+            <div class="slot-name">${tpl.name}</div>
+            <div class="slot-time">${tpl.start_time.slice(0,5)} – ${tpl.end_time.slice(0,5)}</div>
+            <div class="slot-min">Min ${tpl.min_staff} staff</div>
+          </div>
+          <div class="slot-content">
+            <div class="assigned-list" id="assigned-${key}"></div>
+            <button class="add-staff-btn" onclick="openPicker('${tpl.id}','${dateStr}',this)">
+              + Add staff
+            </button>
+          </div>`
+
+        const assignedList = row.querySelector(`#assigned-${key}`)
+
+        assigned.forEach(rs => {
+          const staffMember = allStaff.find(s => s.id === rs.user_id)
+          if (staffMember) assignedList.appendChild(buildChip(rs, staffMember, tpl.id, dateStr))
+        })
+
+        body.appendChild(row)
+      })
+
+      container.appendChild(panel)
+    })
+  }
+
+  function buildChip(rs, staffMember, templateId, dateStr) {
+    const areaLabels = { main_bar:'Bar', wee_bar:'Wee Bar', mandela:'Mandela', floor:'Floor', kitchen:'Kitchen' }
+    const chip = document.createElement('div')
+    chip.className = `staff-chip area-${rs.venue_area}`
+    chip.id = `chip-${rs.id}`
+    chip.innerHTML = `
+      <span>${staffMember.name.split(' ')[0]}</span>
+      <span class="chip-area">${areaLabels[rs.venue_area] ?? rs.venue_area}</span>
+      <button class="chip-remove" title="Remove" onclick="removeShift('${rs.id}','${templateId}','${dateStr}','${rs.user_id}')">×</button>`
+    return chip
+  }
+
+  // ── Toggle day open/closed ──
+  window.toggleDay = (id) => {
+    const el = document.getElementById(id)
+    el.style.display = el.style.display === 'none' ? '' : 'none'
+  }
+
+  // ── Picker ──
+  window.openPicker = (templateId, dateStr, btn) => {
+    pickerContext = { templateId, dateStr }
+    const tpl     = templates.find(t => t.id === templateId)
+    const key     = `${templateId}_${dateStr}`
+    const already = (rotaShifts[key] ?? []).map(rs => rs.user_id)
+
+    document.getElementById('picker-title').textContent    = `Add to ${tpl.name}`
+    document.getElementById('picker-subtitle').textContent = new Date(dateStr).toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long' })
+    document.getElementById('picker-search').value         = ''
+
+    // Position picker near button
+    const rect = btn.getBoundingClientRect()
+    const picker = document.getElementById('picker')
+    picker.style.display = 'flex'
+    picker.style.top  = `${Math.min(rect.bottom + 8, window.innerHeight - 440)}px`
+    picker.style.left = `${Math.min(rect.left, window.innerWidth - 340)}px`
+
+    document.getElementById('picker-overlay').classList.add('open')
+
+    buildPickerList(templateId, dateStr, already, '')
+  }
+
+  function timeToMins(t) {
+    const [h, m] = t.slice(0,5).split(':').map(Number)
+    return h * 60 + m
+  }
+
+  function shiftsOverlap(tplA, tplB) {
+    // Handle overnight shifts (end < start means crosses midnight)
+    let aStart = timeToMins(tplA.start_time), aEnd = timeToMins(tplA.end_time)
+    let bStart = timeToMins(tplB.start_time), bEnd = timeToMins(tplB.end_time)
+    if (aEnd <= aStart) aEnd += 24 * 60
+    if (bEnd <= bStart) bEnd += 24 * 60
+    return aStart < bEnd && bStart < aEnd
+  }
+
+  function buildPickerList(templateId, dateStr, alreadyAssigned, search) {
+    const list = document.getElementById('picker-list')
+    list.innerHTML = ''
+
+    const tpl = templates.find(t => t.id === templateId)
+
+    // Find all templates this person is already on today (any slot)
+    function getConflictingTemplates(userId) {
+      return templates.filter(t => {
+        const key = t.id + '_' + dateStr
+        return (rotaShifts[key] ?? []).some(rs => rs.user_id === userId && rs.status !== 'cancelled')
+      })
+    }
+
+    // Filter staff by role match and search
+    const eligible = allStaff.filter(s => {
+      const hasRole = s.user_roles?.some(ur => ur.role_id === tpl.role_id)
+      const matchSearch = s.name.toLowerCase().includes(search.toLowerCase())
+      return hasRole && matchSearch
+    })
+
+    if (eligible.length === 0) {
+      list.innerHTML = `<div class="picker-empty">No matching staff found</div>`
+      return
+    }
+
+    // Sort: preferred first, then available, then no-response, then unavailable
+    const order = { preferred: 0, available: 1, null: 2, unavailable: 3 }
+    eligible.sort((a, b) => {
+      const aKey   = `${a.id}_${templateId}_${dateStr}`
+      const bKey   = `${b.id}_${templateId}_${dateStr}`
+      const aStatus = availability[aKey] ?? null
+      const bStatus = availability[bKey] ?? null
+      return (order[aStatus] ?? 2) - (order[bStatus] ?? 2)
+    })
+
+    // Area options based on role
+    const areaOptions = tpl.roles?.name === 'kp'
+      ? `<option value="kitchen">Kitchen</option>`
+      : `<option value="main_bar">Main Bar</option>
+         <option value="wee_bar">Wee Bar</option>
+         <option value="mandela">Mandela</option>
+         <option value="floor">Floor</option>`
+
+    eligible.forEach(s => {
+      const avKey    = s.id + '_' + templateId + '_' + dateStr
+      const status   = availability[avKey] ?? null
+      const assigned = alreadyAssigned.includes(s.id)
+
+      // Check if already on an overlapping shift today
+      const conflicts = getConflictingTemplates(s.id)
+      const hasConflict = !assigned && conflicts.some(ct => shiftsOverlap(ct, tpl))
+      const blocked = assigned || hasConflict
+
+      const statusLabel = assigned    ? '<span class="avail-none">Already added</span>'
+                        : hasConflict ? '<span class="avail-unavailable">⚠ Shift clash</span>'
+                        : status === 'preferred'   ? '<span class="avail-preferred">★ Preferred</span>'
+                        : status === 'available'   ? '<span class="avail-available">✓ Available</span>'
+                        : status === 'unavailable' ? '<span class="avail-unavailable">✕ Unavailable</span>'
+                        : '<span class="avail-none">No response</span>'
+
+      const item = document.createElement('div')
+      item.className = 'picker-item' + (status === 'preferred' && !blocked ? ' preferred' : '') + (blocked ? ' already-assigned' : '')
+
+      item.innerHTML = '<div>' +
+        '<div class="picker-name">' + s.name + '</div>' +
+        '<div class="picker-avail">' + statusLabel + '</div>' +
+        '</div>' +
+        (!blocked ? '<select class="picker-area-select" id="area-' + s.id + '" onclick="event.stopPropagation()">' + areaOptions + '</select>'
+                  : '<span style="font-size:0.72rem;color:var(--muted)">' + (assigned ? 'Added' : 'Clash') + '</span>')
+
+      if (!blocked) {
+        item.addEventListener('click', () => assignStaff(s, templateId, dateStr))
+      }
+
+      list.appendChild(item)
+    })
+  }
+
+  window.filterPicker = () => {
+    if (!pickerContext) return
+    const { templateId, dateStr } = pickerContext
+    const key     = `${templateId}_${dateStr}`
+    const already = (rotaShifts[key] ?? []).map(rs => rs.user_id)
+    buildPickerList(templateId, dateStr, already, document.getElementById('picker-search').value)
+  }
+
+  window.closePicker = () => {
+    document.getElementById('picker').style.display = 'none'
+    document.getElementById('picker-overlay').classList.remove('open')
+    pickerContext = null
+  }
+
+  // ── Assign staff ──
+  async function assignStaff(staffMember, templateId, dateStr) {
+    const areaEl   = document.getElementById(`area-${staffMember.id}`)
+    const venueArea = areaEl?.value ?? 'main_bar'
+
+    const { data, error } = await supabase
+      .from('rota_shifts')
+      .insert({
+        fortnight_id:      selectedWeek.id,
+        user_id:           staffMember.id,
+        shift_template_id: templateId,
+        shift_date:        dateStr,
+        venue_area:        venueArea,
+        status:            'scheduled',
+        created_by:        currentUser.id,
+      })
+      .select()
+      .single()
+
+    if (error) { console.error(error); showToast('Error assigning shift', true); return }
+
+    // Update local state
+    const key = `${templateId}_${dateStr}`
+    if (!rotaShifts[key]) rotaShifts[key] = []
+    rotaShifts[key].push({ id: data.id, user_id: staffMember.id, venue_area: venueArea, status: 'scheduled' })
+
+    // Add chip to UI
+    const assignedList = document.getElementById(`assigned-${key}`)
+    if (assignedList) assignedList.appendChild(buildChip({ id: data.id, user_id: staffMember.id, venue_area: venueArea }, staffMember, templateId, dateStr))
+
+    // Close picker and re-open with updated list
+    closePicker()
+    updateDayCoverage(dateStr)
+  }
+
+  // ── Remove shift ──
+  window.removeShift = async (shiftId, templateId, dateStr, userId) => {
+    const { error } = await supabase.from('rota_shifts').delete().eq('id', shiftId)
+    if (error) { showToast('Error removing shift', true); return }
+
+    // Remove from local state
+    const key = `${templateId}_${dateStr}`
+    rotaShifts[key] = (rotaShifts[key] ?? []).filter(rs => rs.id !== shiftId)
+
+    // Remove chip from UI
+    const chip = document.getElementById(`chip-${shiftId}`)
+    if (chip) chip.remove()
+
+    updateDayCoverage(dateStr)
+  }
+
+  function updateDayCoverage(dateStr) {
+    // Recalculate coverage dot and text for this day
+    const relevantTemplates = templates.filter(t => !t.is_adhoc)
+    let totalAssigned = 0, totalNeeded = 0
+    relevantTemplates.forEach(t => {
+      const key = `${t.id}_${dateStr}`
+      totalAssigned += (rotaShifts[key] ?? []).filter(s => s.status !== 'cancelled').length
+      totalNeeded   += t.min_staff
+    })
+
+    const coverageColor = totalAssigned >= totalNeeded ? 'dot-green'
+                        : totalAssigned > 0            ? 'dot-amber'
+                        : 'dot-red'
+
+    // Find coverage dot and text for this day panel
+    const panels = document.querySelectorAll('.day-panel')
+    panels.forEach(panel => {
+      const body = panel.querySelector(`[id^="day-body-${dateStr}"]`)
+      if (!body) return
+      const dot  = panel.querySelector('.coverage-dot')
+      const text = panel.querySelector('.coverage-text')
+      if (dot)  { dot.className = `coverage-dot ${coverageColor}` }
+      if (text) { text.textContent = `${totalAssigned}/${totalNeeded} filled` }
+    })
+  }
+
+  // ── New week form ──
+  window.toggleNewWeekForm = () => {
+    const form = document.getElementById('new-week-form')
+    form.classList.toggle('visible')
+
+    // Default to next Saturday
+    if (form.classList.contains('visible')) {
+      const d = new Date()
+      const day = d.getDay()
+      const daysUntilSaturday = (6 - day + 7) % 7 || 7
+      d.setDate(d.getDate() + daysUntilSaturday)
+      document.getElementById('new-start-date').value = d.toISOString().split('T')[0]
+      updateEndDate()
+    }
+  }
+
+  window.updateEndDate = () => {
+    const start = document.getElementById('new-start-date').value
+    if (!start) return
+    const end = new Date(start)
+    end.setDate(end.getDate() + 6)
+    document.getElementById('new-end-date').value = end.toISOString().split('T')[0]
+  }
+
+  window.createWeek = async () => {
+    const startDate = document.getElementById('new-start-date').value
+    const endDate   = document.getElementById('new-end-date').value
+    if (!startDate || !endDate) { showToast('Please select a start date', true); return }
+
+    const { data, error } = await supabase
+      .from('fortnights')
+      .insert({ start_date: startDate, end_date: endDate, status: 'draft' })
+      .select()
+      .single()
+
+    if (error) { console.error(error); showToast('Error creating week', true); return }
+
+    showToast('Week created!')
+    document.getElementById('new-week-form').classList.remove('visible')
+    await loadWeeks()
+
+    // Select the new week
+    document.getElementById('week-select').value = data.id
+    await loadWeek(data.id)
+  }
+
+  // ── Publish rota ──
+  window.publishRota = async () => {
+    if (!selectedWeek) return
+
+    const confirmed = confirm(
+      selectedWeek.status === 'published'
+        ? 'Republish the rota? Staff will be notified of any changes.'
+        : 'Publish this rota? All staff with assigned shifts will be notified.'
+    )
+    if (!confirmed) return
+
+    const btn = document.getElementById('btn-publish')
+    btn.disabled    = true
+    btn.textContent = 'Publishing…'
+
+    // Update fortnight status
+    const { error } = await supabase
+      .from('fortnights')
+      .update({ status: 'published', published_at: new Date().toISOString() })
+      .eq('id', selectedWeek.id)
+
+    if (error) { showToast('Error publishing rota', true); btn.disabled = false; btn.textContent = 'Publish rota'; return }
+
+    // Notify all assigned staff
+    const assignedUserIds = [...new Set(
+      Object.values(rotaShifts).flat().map(rs => rs.user_id)
+    )]
+
+    const fmt = d => new Date(d).toLocaleDateString('en-GB', { day:'numeric', month:'short' })
+    const weekLabel = `${fmt(selectedWeek.start_date)} – ${fmt(selectedWeek.end_date)}`
+
+    if (assignedUserIds.length > 0) {
+      const notifications = assignedUserIds.map(uid => ({
+        user_id: uid,
+        type:    'rota_published',
+        message: `The rota for w/c ${weekLabel} has been published. Check your shifts!`,
+        read:    false,
+      }))
+      await supabase.from('notifications').insert(notifications)
+    }
+
+    selectedWeek.status = 'published'
+    const statusEl = document.getElementById('week-status')
+    statusEl.className   = 'week-status status-published'
+    statusEl.textContent = 'Published'
+    btn.textContent = 'Republish'
+    btn.disabled    = false
+
+    showToast(`Rota published! ${assignedUserIds.length} staff notified.`)
+  }
+
+  // ── Delete week ──
+  window.deleteWeek = async () => {
+    if (!selectedWeek) return
+    const confirmed = confirm(`Delete the week of ${selectedWeek.start_date}? This will remove all assigned shifts. This cannot be undone.`)
+    if (!confirmed) return
+
+    await supabase.from('rota_shifts').delete().eq('fortnight_id', selectedWeek.id)
+    await supabase.from('availability').delete().eq('fortnight_id', selectedWeek.id)
+    await supabase.from('fortnights').delete().eq('id', selectedWeek.id)
+
+    showToast('Week deleted')
+    await loadWeeks()
+  }
+
+  function showToast(msg, isError = false) {
+    const t = document.getElementById('toast')
+    t.textContent = msg
+    t.className   = `toast${isError ? ' error' : ''} show`
+    setTimeout(() => t.classList.remove('show'), 3000)
+  }
+</script>
+
+</body>
+</html>

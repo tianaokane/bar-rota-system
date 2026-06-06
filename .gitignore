@@ -1,0 +1,19 @@
+# Environment — NEVER commit your real keys
+env.js
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+*.suo
+*.user
+
+# Logs
+*.log
+npm-debug.log*
+
+# Dependencies (if you ever add a build step)
+node_modules/

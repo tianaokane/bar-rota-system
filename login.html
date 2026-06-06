@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SU Bar — Sign in</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0d0d0d;
+      --surface:   #161616;
+      --border:    #2a2a2a;
+      --accent:    #c8f557;
+      --accent-dim:#8faa3a;
+      --text:      #f0ede6;
+      --muted:     #6b6b6b;
+      --error:     #ff6b6b;
+      --radius:    10px;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+    }
+
+    /* animated grain overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+      opacity: 0.035;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* accent blob */
+    body::after {
+      content: '';
+      position: fixed;
+      width: 600px;
+      height: 600px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(200,245,87,0.07) 0%, transparent 70%);
+      top: -200px;
+      right: -200px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .page {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
+
+    /* ── Left panel ── */
+    .left {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 3rem;
+      border-right: 1px solid var(--border);
+    }
+
+    .wordmark {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.1rem;
+      letter-spacing: 0.02em;
+      color: var(--text);
+    }
+
+    .wordmark span {
+      color: var(--accent);
+    }
+
+    .hero-text {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 4rem 0 2rem;
+    }
+
+    .hero-text h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(2.8rem, 4vw, 4.2rem);
+      line-height: 1.1;
+      font-weight: 400;
+      margin-bottom: 1.5rem;
+    }
+
+    .hero-text h1 em {
+      font-style: italic;
+      color: var(--accent);
+    }
+
+    .hero-text p {
+      font-size: 1rem;
+      color: var(--muted);
+      line-height: 1.7;
+      max-width: 360px;
+    }
+
+    .stats {
+      display: flex;
+      gap: 2.5rem;
+    }
+
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .stat-num {
+      font-family: 'DM Serif Display', serif;
+      font-size: 2rem;
+      color: var(--accent);
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    /* ── Right panel ── */
+    .right {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 400px;
+      animation: fadeUp 0.5s ease both;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .card-header {
+      margin-bottom: 2.5rem;
+    }
+
+    .card-header h2 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.8rem;
+      font-weight: 400;
+      margin-bottom: 0.4rem;
+    }
+
+    .card-header p {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-bottom: 1.25rem;
+    }
+
+    label {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--muted);
+    }
+
+    input {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 300;
+      padding: 0.85rem 1rem;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      width: 100%;
+    }
+
+    input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(200,245,87,0.1);
+    }
+
+    input::placeholder { color: var(--muted); }
+
+    .btn {
+      width: 100%;
+      padding: 0.9rem;
+      background: var(--accent);
+      color: #0d0d0d;
+      border: none;
+      border-radius: var(--radius);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      margin-top: 0.5rem;
+      transition: background 0.2s, transform 0.1s;
+      letter-spacing: 0.01em;
+    }
+
+    .btn:hover  { background: #d4f96e; }
+    .btn:active { transform: scale(0.99); }
+
+    .btn:disabled {
+      background: var(--border);
+      color: var(--muted);
+      cursor: not-allowed;
+    }
+
+    .error-msg {
+      display: none;
+      background: rgba(255,107,107,0.1);
+      border: 1px solid rgba(255,107,107,0.3);
+      border-radius: var(--radius);
+      color: var(--error);
+      font-size: 0.85rem;
+      padding: 0.75rem 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .error-msg.visible { display: block; }
+
+    .forgot {
+      text-align: center;
+      margin-top: 1.25rem;
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    .forgot a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .forgot a:hover { text-decoration: underline; }
+
+    /* ── Mobile ── */
+    @media (max-width: 700px) {
+      .page { grid-template-columns: 1fr; }
+      .left  { display: none; }
+      .right { padding: 2rem 1.5rem; align-items: flex-start; padding-top: 4rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- Left: branding -->
+  <div class="left">
+    <div class="wordmark">SU Bar <span>Rota</span></div>
+
+    <div class="hero-text">
+      <h1>Shifts,<br>sorted.<br><em>Finally.</em></h1>
+      <p>Submit availability, view your rota, swap shifts — all in one place. No more group chat chaos.</p>
+    </div>
+
+    <div class="stats">
+      <div class="stat-item">
+        <span class="stat-num" id="stat-staff">—</span>
+        <span class="stat-label">Staff</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-num" id="stat-shifts">—</span>
+        <span class="stat-label">Shifts this fortnight</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: login form -->
+  <div class="right">
+    <div class="card">
+      <div class="card-header">
+        <h2>Sign in</h2>
+        <p>Use your work email to access the rota system.</p>
+      </div>
+
+      <div class="error-msg" id="error-msg"></div>
+
+      <div class="field">
+        <label for="email">Email</label>
+        <input type="email" id="email" placeholder="you@qub.ac.uk" autocomplete="email" />
+      </div>
+
+      <div class="field">
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="••••••••" autocomplete="current-password" />
+      </div>
+
+      <button class="btn" id="login-btn">Sign in</button>
+
+      <p class="forgot">
+        Forgotten your password? <a href="reset.html">Reset it here</a>
+      </p>
+    </div>
+  </div>
+
+</div>
+
+<!-- Supabase env + client -->
+<script src="env.js"></script>
+<script type="module">
+  import { supabase, getSession } from './src/lib/supabase.js'
+
+  // Redirect if already logged in
+  const session = await getSession()
+  if (session) window.location.href = '/index.html'
+
+  const emailEl  = document.getElementById('email')
+  const passEl   = document.getElementById('password')
+  const btn      = document.getElementById('login-btn')
+  const errorMsg = document.getElementById('error-msg')
+
+  function showError(msg) {
+    errorMsg.textContent = msg
+    errorMsg.classList.add('visible')
+  }
+
+  function clearError() {
+    errorMsg.classList.remove('visible')
+  }
+
+  async function handleLogin() {
+    clearError()
+    const email    = emailEl.value.trim()
+    const password = passEl.value
+
+    if (!email || !password) {
+      showError('Please enter your email and password.')
+      return
+    }
+
+    btn.disabled    = true
+    btn.textContent = 'Signing in…'
+
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
+
+    if (error) {
+      showError(error.message === 'Invalid login credentials'
+        ? 'Incorrect email or password. Try again.'
+        : error.message)
+      btn.disabled    = false
+      btn.textContent = 'Sign in'
+      return
+    }
+
+    // Successful login — redirect based on role
+    const { data: userData } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', (await supabase.auth.getUser()).data.user.id)
+      .single()
+
+    if (userData?.role === 'manager' || userData?.role === 'admin') {
+      window.location.href = '/manager.html'
+    } else {
+      window.location.href = '/index.html'
+    }
+  }
+
+  btn.addEventListener('click', handleLogin)
+
+  // Allow Enter key to submit
+  ;[emailEl, passEl].forEach(el => {
+    el.addEventListener('keydown', e => { if (e.key === 'Enter') handleLogin() })
+  })
+
+  // Load live stats (public data — no auth needed)
+  async function loadStats() {
+    const { count: staffCount } = await supabase
+      .from('users')
+      .select('*', { count: 'exact', head: true })
+      .eq('active', true)
+
+    document.getElementById('stat-staff').textContent = staffCount ?? '—'
+
+    // Shifts in the current/most recent published fortnight
+    const { data: fortnight } = await supabase
+      .from('fortnights')
+      .select('id')
+      .eq('status', 'published')
+      .order('start_date', { ascending: false })
+      .limit(1)
+      .single()
+
+    if (fortnight) {
+      const { count: shiftCount } = await supabase
+        .from('rota_shifts')
+        .select('*', { count: 'exact', head: true })
+        .eq('fortnight_id', fortnight.id)
+        .eq('status', 'scheduled')
+
+      document.getElementById('stat-shifts').textContent = shiftCount ?? '0'
+    }
+  }
+
+  loadStats()
+</script>
+
+</body>
+</html>

@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SU Bar Rota — Reset Password</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #0d0d0d;
+      --surface: #161616;
+      --border:  #2a2a2a;
+      --accent:  #c8f557;
+      --text:    #f0ede6;
+      --muted:   #6b6b6b;
+      --error:   #ff6b6b;
+      --green:   #4ade80;
+      --radius:  10px;
+    }
+
+    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-weight: 300; }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      opacity: 0.03; pointer-events: none; z-index: 0;
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      width: 600px; height: 600px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(200,245,87,0.07) 0%, transparent 70%);
+      top: -200px; right: -200px;
+      pointer-events: none; z-index: 0;
+    }
+
+    .page {
+      position: relative; z-index: 1;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 400px;
+      animation: fadeUp 0.4s ease both;
+    }
+
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+    .wordmark {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1rem;
+      margin-bottom: 2rem;
+      color: var(--text);
+    }
+    .wordmark span { color: var(--accent); }
+
+    .card-header { margin-bottom: 2rem; }
+    .card-header h1 { font-family: 'DM Serif Display', serif; font-size: 1.8rem; font-weight: 400; margin-bottom: 0.4rem; }
+    .card-header p { color: var(--muted); font-size: 0.88rem; line-height: 1.5; }
+
+    .field { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.25rem; }
+
+    label { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); }
+
+    input {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 300;
+      padding: 0.85rem 1rem;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      width: 100%;
+    }
+    input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(200,245,87,0.1); }
+    input::placeholder { color: var(--muted); }
+
+    .btn {
+      width: 100%;
+      padding: 0.9rem;
+      background: var(--accent);
+      color: #0d0d0d;
+      border: none;
+      border-radius: var(--radius);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+    .btn:hover  { background: #d4f96e; }
+    .btn:active { transform: scale(0.99); }
+    .btn:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; }
+
+    .msg {
+      display: none;
+      border-radius: var(--radius);
+      font-size: 0.85rem;
+      padding: 0.75rem 1rem;
+      margin-bottom: 1rem;
+      line-height: 1.5;
+    }
+    .msg.error   { background: rgba(255,107,107,0.1); border: 1px solid rgba(255,107,107,0.3); color: var(--error); display: block; }
+    .msg.success { background: rgba(74,222,128,0.1);  border: 1px solid rgba(74,222,128,0.3);  color: var(--green); display: block; }
+
+    .back { text-align: center; margin-top: 1.25rem; font-size: 0.82rem; color: var(--muted); }
+    .back a { color: var(--accent); text-decoration: none; }
+    .back a:hover { text-decoration: underline; }
+
+    /* Password strength indicator */
+    .strength-bar { height: 3px; border-radius: 2px; background: var(--border); margin-top: 0.5rem; overflow: hidden; }
+    .strength-fill { height: 100%; border-radius: 2px; transition: width 0.3s, background 0.3s; width: 0%; }
+    .strength-label { font-size: 0.72rem; color: var(--muted); margin-top: 0.3rem; }
+  </style>
+</head>
+<body>
+
+<div class="page">
+  <div class="card">
+    <div class="wordmark">SU Bar <span>Rota</span></div>
+
+    <!-- Step 1: Request reset email -->
+    <div id="step-request">
+      <div class="card-header">
+        <h1>Reset password</h1>
+        <p>Enter your work email and we'll send you a link to reset your password.</p>
+      </div>
+      <div class="msg" id="req-msg"></div>
+      <div class="field">
+        <label for="req-email">Email</label>
+        <input type="email" id="req-email" placeholder="you@qub.ac.uk" autocomplete="email" />
+      </div>
+      <button class="btn" id="req-btn" onclick="requestReset()">Send reset link</button>
+      <p class="back"><a href="login.html">← Back to sign in</a></p>
+    </div>
+
+    <!-- Step 2: Set new password (shown when ?type=recovery is in URL) -->
+    <div id="step-update" style="display:none">
+      <div class="card-header">
+        <h1>Set new password</h1>
+        <p>Choose a strong password for your account.</p>
+      </div>
+      <div class="msg" id="upd-msg"></div>
+      <div class="field">
+        <label for="new-password">New password</label>
+        <input type="password" id="new-password" placeholder="Min. 8 characters" oninput="checkStrength()" />
+        <div class="strength-bar"><div class="strength-fill" id="strength-fill"></div></div>
+        <div class="strength-label" id="strength-label"></div>
+      </div>
+      <div class="field">
+        <label for="confirm-password">Confirm password</label>
+        <input type="password" id="confirm-password" placeholder="Repeat your password" />
+      </div>
+      <button class="btn" id="upd-btn" onclick="updatePassword()">Set new password</button>
+      <p class="back"><a href="login.html">← Back to sign in</a></p>
+    </div>
+
+  </div>
+</div>
+
+<script src="env.js"></script>
+<script type="module">
+  import { supabase } from './src/lib/supabase.js'
+
+  // ── Detect if this is a recovery link ──
+  // Supabase appends #access_token=...&type=recovery to the URL
+  const hash   = window.location.hash
+  const params = new URLSearchParams(hash.replace('#', ''))
+  const type   = params.get('type')
+
+  if (type === 'recovery') {
+    // Set the session from the recovery token
+    const accessToken  = params.get('access_token')
+    const refreshToken = params.get('refresh_token')
+
+    if (accessToken) {
+      await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken })
+      document.getElementById('step-request').style.display = 'none'
+      document.getElementById('step-update').style.display  = 'block'
+    }
+  }
+
+  // ── Request reset email ──
+  window.requestReset = async () => {
+    const email = document.getElementById('req-email').value.trim()
+    const msg   = document.getElementById('req-msg')
+    const btn   = document.getElementById('req-btn')
+    msg.className = 'msg'
+
+    if (!email) {
+      msg.className = 'msg error'
+      msg.textContent = 'Please enter your email address.'
+      return
+    }
+
+    btn.disabled    = true
+    btn.textContent = 'Sending…'
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset.html`,
+    })
+
+    if (error) {
+      msg.className   = 'msg error'
+      msg.textContent = error.message
+      btn.disabled    = false
+      btn.textContent = 'Send reset link'
+      return
+    }
+
+    msg.className   = 'msg success'
+    msg.textContent = `Reset link sent to ${email}. Check your inbox (and spam folder).`
+    btn.disabled    = true
+    btn.textContent = 'Link sent!'
+
+    document.getElementById('req-email').value = ''
+  }
+
+  // ── Password strength checker ──
+  window.checkStrength = () => {
+    const val  = document.getElementById('new-password').value
+    const fill = document.getElementById('strength-fill')
+    const label = document.getElementById('strength-label')
+
+    let score = 0
+    if (val.length >= 8)               score++
+    if (val.length >= 12)              score++
+    if (/[A-Z]/.test(val))            score++
+    if (/[0-9]/.test(val))            score++
+    if (/[^A-Za-z0-9]/.test(val))    score++
+
+    const levels = [
+      { label: '',          color: 'transparent', width: '0%' },
+      { label: 'Weak',      color: 'var(--error)', width: '25%' },
+      { label: 'Fair',      color: 'var(--amber)', width: '50%' },
+      { label: 'Good',      color: 'var(--accent)', width: '75%' },
+      { label: 'Strong',    color: 'var(--green)', width: '90%' },
+      { label: 'Very strong', color: 'var(--green)', width: '100%' },
+    ]
+
+    const level = levels[Math.min(score, 5)]
+    fill.style.width      = level.width
+    fill.style.background = level.color
+    label.textContent     = level.label
+    label.style.color     = level.color
+  }
+
+  // ── Update password ──
+  window.updatePassword = async () => {
+    const newPass     = document.getElementById('new-password').value
+    const confirmPass = document.getElementById('confirm-password').value
+    const msg         = document.getElementById('upd-msg')
+    const btn         = document.getElementById('upd-btn')
+    msg.className = 'msg'
+
+    if (newPass.length < 8) {
+      msg.className   = 'msg error'
+      msg.textContent = 'Password must be at least 8 characters.'
+      return
+    }
+
+    if (newPass !== confirmPass) {
+      msg.className   = 'msg error'
+      msg.textContent = 'Passwords do not match.'
+      return
+    }
+
+    btn.disabled    = true
+    btn.textContent = 'Updating…'
+
+    const { error } = await supabase.auth.updateUser({ password: newPass })
+
+    if (error) {
+      msg.className   = 'msg error'
+      msg.textContent = error.message
+      btn.disabled    = false
+      btn.textContent = 'Set new password'
+      return
+    }
+
+    msg.className   = 'msg success'
+    msg.textContent = 'Password updated! Redirecting you to sign in…'
+    btn.disabled    = true
+
+    setTimeout(() => { window.location.href = '/login.html' }, 2000)
+  }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SU Bar Rota — Staff Management</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0d0d0d;
+      --surface:  #161616;
+      --surface2: #1e1e1e;
+      --border:   #2a2a2a;
+      --accent:   #c8f557;
+      --text:     #f0ede6;
+      --muted:    #6b6b6b;
+      --error:    #ff6b6b;
+      --green:    #4ade80;
+      --amber:    #fbbf24;
+      --radius:   10px;
+      --nav-w:    240px;
+    }
+
+    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-weight: 300; }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      opacity: 0.03; pointer-events: none; z-index: 0;
+    }
+
+    .app { position: relative; z-index: 1; display: flex; min-height: 100vh; }
+
+    /* ── Sidebar ── */
+    .nav { width: var(--nav-w); background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; padding: 1.75rem 1rem; z-index: 10; }
+    .nav-logo { font-family: 'DM Serif Display', serif; font-size: 1rem; padding: 0 0.5rem; margin-bottom: 2rem; }
+    .nav-logo span { color: var(--accent); }
+    .nav-section { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); padding: 0 0.5rem; margin: 1rem 0 0.4rem; }
+    .nav-link { display: flex; align-items: center; gap: 0.65rem; padding: 0.6rem 0.75rem; border-radius: 8px; color: var(--muted); text-decoration: none; font-size: 0.88rem; transition: background 0.15s, color 0.15s; cursor: pointer; border: none; background: none; width: 100%; text-align: left; }
+    .nav-link:hover { background: var(--surface2); color: var(--text); }
+    .nav-link.active { background: rgba(200,245,87,0.1); color: var(--accent); }
+    .nav-link .icon { font-size: 1rem; width: 1.2rem; text-align: center; }
+    .nav-bottom { margin-top: auto; }
+    .nav-user { display: flex; align-items: center; gap: 0.65rem; padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 0.5rem; }
+    .nav-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--accent); color: #0d0d0d; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 500; flex-shrink: 0; }
+    .nav-user-name { font-size: 0.85rem; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .nav-user-role { font-size: 0.72rem; color: var(--muted); text-transform: capitalize; }
+
+    /* ── Main ── */
+    .main { margin-left: var(--nav-w); flex: 1; padding: 2.5rem; max-width: 960px; }
+
+    .page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 2rem; animation: fadeUp 0.4s ease both; flex-wrap: wrap; gap: 1rem; }
+    .page-title { font-family: 'DM Serif Display', serif; font-size: 2rem; font-weight: 400; }
+    .page-subtitle { color: var(--muted); font-size: 0.9rem; margin-top: 0.25rem; }
+
+    /* ── Tabs ── */
+    .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 2rem; animation: fadeUp 0.4s 0.05s ease both; }
+    .tab { padding: 0.75rem 1.25rem; font-size: 0.88rem; color: var(--muted); cursor: pointer; border: none; background: none; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.15s; font-family: 'DM Sans', sans-serif; }
+    .tab:hover { color: var(--text); }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    /* ── Panels ── */
+    .tab-panel { display: none; animation: fadeUp 0.3s ease both; }
+    .tab-panel.active { display: block; }
+
+    /* ── Forms ── */
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.75rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .panel-title { font-family: 'DM Serif Display', serif; font-size: 1.3rem; margin-bottom: 0.4rem; }
+    .panel-desc  { color: var(--muted); font-size: 0.85rem; margin-bottom: 1.5rem; line-height: 1.5; }
+
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .form-grid.three { grid-template-columns: 1fr 1fr 1fr; }
+
+    .field { display: flex; flex-direction: column; gap: 0.45rem; margin-bottom: 1rem; }
+    .field.full { grid-column: 1 / -1; }
+    .field label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); }
+
+    .field input, .field select {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.9rem;
+      padding: 0.65rem 0.85rem;
+      outline: none;
+      transition: border-color 0.15s;
+      width: 100%;
+    }
+    .field input:focus, .field select:focus { border-color: var(--accent); }
+    .field select option { background: var(--surface2); }
+
+    .roles-check { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 0.25rem; }
+    .role-option { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.88rem; color: var(--muted); transition: color 0.15s; }
+    .role-option input[type="checkbox"] { accent-color: var(--accent); width: 16px; height: 16px; cursor: pointer; }
+    .role-option:has(input:checked) { color: var(--accent); }
+
+    .btn {
+      padding: 0.7rem 1.5rem;
+      border-radius: 8px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      transition: all 0.15s;
+    }
+    .btn-primary  { background: var(--accent); color: #0d0d0d; }
+    .btn-primary:hover { background: #d4f96e; }
+    .btn-primary:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; }
+    .btn-outline  { background: transparent; color: var(--text); border: 1px solid var(--border); }
+    .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ── CSV Upload ── */
+    .drop-zone {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 2.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-bottom: 1.25rem;
+    }
+    .drop-zone:hover, .drop-zone.drag-over { border-color: var(--accent); background: rgba(200,245,87,0.03); }
+    .drop-zone .icon { font-size: 2rem; margin-bottom: 0.75rem; }
+    .drop-zone p { font-size: 0.88rem; color: var(--muted); }
+    .drop-zone strong { color: var(--accent); }
+    .drop-zone input[type="file"] { display: none; }
+
+    .csv-template {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 1.25rem;
+      font-size: 0.82rem;
+    }
+    .csv-template p { color: var(--muted); margin-bottom: 0.5rem; }
+    .csv-template code { color: var(--accent); font-family: monospace; font-size: 0.85rem; }
+
+    /* ── Preview table ── */
+    .preview-wrap { overflow-x: auto; margin-bottom: 1.25rem; }
+    .preview-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    .preview-table th { text-align: left; padding: 0.5rem 0.75rem; color: var(--muted); font-weight: 400; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.06em; border-bottom: 1px solid var(--border); }
+    .preview-table td { padding: 0.6rem 0.75rem; border-bottom: 1px solid var(--border); }
+    .preview-table tr:last-child td { border-bottom: none; }
+    .preview-table tr.error-row td { color: var(--error); }
+    .row-valid   { color: var(--green); }
+    .row-error   { color: var(--error); }
+    .row-warning { color: var(--amber); }
+
+    /* ── Progress ── */
+    .progress-wrap { margin: 1rem 0; display: none; }
+    .progress-wrap.visible { display: block; }
+    .progress-bar { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; margin-bottom: 0.5rem; }
+    .progress-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width 0.2s; width: 0%; }
+    .progress-label { font-size: 0.78rem; color: var(--muted); }
+
+    /* ── Results log ── */
+    .results-log {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      max-height: 250px;
+      overflow-y: auto;
+      font-size: 0.8rem;
+      display: none;
+    }
+    .results-log.visible { display: block; }
+    .log-line { padding: 0.2rem 0; border-bottom: 1px solid var(--border); }
+    .log-line:last-child { border-bottom: none; }
+    .log-ok   { color: var(--green); }
+    .log-err  { color: var(--error); }
+    .log-skip { color: var(--amber); }
+
+    /* ── Staff list ── */
+    .staff-list { display: flex; flex-direction: column; gap: 0.5rem; animation: fadeUp 0.4s 0.1s ease both; }
+
+    .staff-row {
+      display: grid;
+      grid-template-columns: 40px 1fr 120px 100px 80px;
+      align-items: center;
+      gap: 1rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+    }
+
+    .staff-avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--accent); color: #0d0d0d; display: flex; align-items: center; justify-content: center; font-size: 0.78rem; font-weight: 500; flex-shrink: 0; }
+    .staff-name  { font-size: 0.9rem; }
+    .staff-email { font-size: 0.75rem; color: var(--muted); margin-top: 0.1rem; }
+    .staff-role-badge { font-size: 0.72rem; padding: 0.2rem 0.55rem; border-radius: 10px; background: rgba(200,245,87,0.1); color: var(--accent); text-transform: capitalize; width: fit-content; }
+    .staff-status { font-size: 0.75rem; }
+    .status-active   { color: var(--green); }
+    .status-inactive { color: var(--muted); }
+
+    .btn-sm { padding: 0.35rem 0.85rem; font-size: 0.78rem; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--muted); cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s; }
+    .btn-sm:hover { border-color: var(--error); color: var(--error); }
+
+    .staff-list-header { display: grid; grid-template-columns: 40px 1fr 120px 100px 80px; gap: 1rem; padding: 0 1rem 0.5rem; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); }
+
+    .search-bar { display: flex; gap: 0.75rem; margin-bottom: 1rem; }
+    .search-bar input { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.88rem; padding: 0.6rem 0.85rem; outline: none; flex: 1; }
+    .search-bar input:focus { border-color: var(--accent); }
+
+    .msg { display: none; border-radius: var(--radius); font-size: 0.85rem; padding: 0.75rem 1rem; margin-bottom: 1rem; }
+    .msg.error   { background: rgba(255,107,107,0.1); border: 1px solid rgba(255,107,107,0.3); color: var(--error); display: block; }
+    .msg.success { background: rgba(74,222,128,0.1);  border: 1px solid rgba(74,222,128,0.3);  color: var(--green);  display: block; }
+
+    .toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(20px); padding: 0.65rem 1.5rem; border-radius: 8px; font-size: 0.88rem; font-weight: 500; opacity: 0; transition: all 0.3s ease; pointer-events: none; z-index: 100; }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast.success { background: var(--green); color: #0d0d0d; }
+    .toast.error   { background: var(--error); color: #fff; }
+
+    .skeleton { background: linear-gradient(90deg, var(--surface2) 25%, var(--border) 50%, var(--surface2) 75%); background-size: 200% 100%; animation: shimmer 1.2s infinite; border-radius: 8px; height: 60px; margin-bottom: 0.5rem; }
+    @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+    @keyframes fadeUp  { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+    @media (max-width: 768px) {
+      .nav { display: none; }
+      .main { margin-left: 0; padding: 1.5rem 1rem; }
+      .form-grid, .form-grid.three { grid-template-columns: 1fr; }
+      .staff-row { grid-template-columns: 36px 1fr auto; }
+      .staff-list-header { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app">
+  <nav class="nav">
+    <div class="nav-logo">SU Bar <span>Rota</span></div>
+    <span class="nav-section">Staff</span>
+    <a class="nav-link" href="index.html"><span class="icon">⊞</span> Dashboard</a>
+    <a class="nav-link" href="availability.html"><span class="icon">📅</span> Availability</a>
+    <a class="nav-link" href="my-shifts.html"><span class="icon">🕐</span> My Shifts</a>
+    <a class="nav-link" href="swaps.html"><span class="icon">↔</span> Swap Requests</a>
+    <span class="nav-section">Manager</span>
+    <a class="nav-link" href="manager.html"><span class="icon">⚙</span> Rota Builder</a>
+    <a class="nav-link active" href="manager-staff.html"><span class="icon">👥</span> Staff</a>
+    <div class="nav-bottom">
+      <div class="nav-user">
+        <div class="nav-avatar" id="nav-avatar">?</div>
+        <div class="nav-user-info">
+          <div class="nav-user-name" id="nav-name">Loading…</div>
+          <div class="nav-user-role" id="nav-role">—</div>
+        </div>
+      </div>
+      <button class="nav-link" onclick="handleSignOut()"><span class="icon">→</span> Sign out</button>
+    </div>
+  </nav>
+
+  <main class="main">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Staff Management</h1>
+        <p class="page-subtitle">Add individual staff or bulk import from a CSV file.</p>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('list', this)">All staff <span id="staff-count" style="color:var(--muted);margin-left:0.3rem"></span></button>
+      <button class="tab" onclick="switchTab('add', this)">Add single</button>
+      <button class="tab" onclick="switchTab('bulk', this)">Bulk import</button>
+    </div>
+
+    <!-- ── All staff tab ── -->
+    <div class="tab-panel active" id="panel-list">
+      <div class="search-bar">
+        <input type="text" id="staff-search" placeholder="Search by name or email…" oninput="filterStaff()" />
+        <button class="btn btn-outline" onclick="loadStaff()">↻ Refresh</button>
+      </div>
+      <div class="staff-list-header">
+        <div></div>
+        <div>Name / Email</div>
+        <div>Role</div>
+        <div>Status</div>
+        <div></div>
+      </div>
+      <div id="staff-loading">
+        <div class="skeleton"></div>
+        <div class="skeleton"></div>
+        <div class="skeleton"></div>
+      </div>
+      <div class="staff-list" id="staff-list"></div>
+    </div>
+
+    <!-- ── Add single tab ── -->
+    <div class="tab-panel" id="panel-add">
+      <div class="panel">
+        <h2 class="panel-title">Add a staff member</h2>
+        <p class="panel-desc">Creates a Supabase account and sends the staff member a "set your password" email so they can log in straight away.</p>
+
+        <div class="msg" id="add-msg"></div>
+
+        <div class="form-grid">
+          <div class="field">
+            <label>First name</label>
+            <input type="text" id="add-first" placeholder="e.g. Niall" />
+          </div>
+          <div class="field">
+            <label>Last name</label>
+            <input type="text" id="add-last" placeholder="e.g. McCallion" />
+          </div>
+          <div class="field full">
+            <label>Email address</label>
+            <input type="email" id="add-email" placeholder="e.g. niall@qub.ac.uk" />
+          </div>
+          <div class="field">
+            <label>System role</label>
+            <select id="add-role">
+              <option value="staff">Staff</option>
+              <option value="manager">Manager</option>
+            </select>
+          </div>
+          <div class="field full">
+            <label>Bar qualifications</label>
+            <div class="roles-check" id="add-roles-check"></div>
+          </div>
+        </div>
+
+        <button class="btn btn-primary" id="add-btn" onclick="addSingleStaff()">Add staff member</button>
+      </div>
+    </div>
+
+    <!-- ── Bulk import tab ── -->
+    <div class="tab-panel" id="panel-bulk">
+      <div class="panel">
+        <h2 class="panel-title">Bulk import from CSV</h2>
+        <p class="panel-desc">Upload a CSV file with your staff list. Each person will receive an email to set their password. Existing accounts (matched by email) will be skipped.</p>
+
+        <div class="csv-template">
+          <p>Your CSV must have these column headers (in any order):</p>
+          <code>name, email, role, contracted_hours, bar_role</code>
+          <p style="margin-top:0.5rem">Example row: <code>Niall McCallion, niall@qub.ac.uk, staff, 16, bar</code></p>
+          <p style="margin-top:0.5rem;font-size:0.78rem">Valid values — role: <code>staff</code> or <code>manager</code> · bar_role: <code>bar</code>, <code>kp</code>, or <code>both</code></p>
+        </div>
+
+        <div class="drop-zone" id="drop-zone" onclick="document.getElementById('csv-input').click()">
+          <input type="file" id="csv-input" accept=".csv" onchange="handleCSV(this.files[0])" />
+          <div class="icon">📄</div>
+          <p><strong>Click to upload</strong> or drag and drop your CSV here</p>
+          <p style="margin-top:0.4rem;font-size:0.78rem">CSV files only</p>
+        </div>
+
+        <!-- Preview -->
+        <div id="preview-section" style="display:none">
+          <div class="preview-wrap">
+            <table class="preview-table" id="preview-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Hours</th>
+                  <th>Bar role</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="preview-body"></tbody>
+            </table>
+          </div>
+
+          <div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap">
+            <button class="btn btn-primary" id="import-btn" onclick="runImport()">Import all valid rows</button>
+            <button class="btn btn-outline" onclick="clearPreview()">Clear</button>
+            <span id="preview-summary" style="font-size:0.82rem;color:var(--muted)"></span>
+          </div>
+        </div>
+
+        <!-- Progress -->
+        <div class="progress-wrap" id="progress-wrap">
+          <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+          <div class="progress-label" id="progress-label">Importing…</div>
+        </div>
+
+        <!-- Results log -->
+        <div class="results-log" id="results-log"></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="env.js"></script>
+<script type="module">
+  import { supabase, requireManager } from './src/lib/supabase.js'
+
+  let currentUser = null
+  let allStaff    = []
+  let allRoles    = []
+  let parsedRows  = []
+
+  // ── Auth ──
+  currentUser = await requireManager()
+  if (!currentUser) throw new Error('Not a manager')
+
+  const initials = currentUser.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2)
+  document.getElementById('nav-avatar').textContent = initials
+  document.getElementById('nav-name').textContent   = currentUser.name
+  document.getElementById('nav-role').textContent   = currentUser.role
+
+  window.handleSignOut = async () => { await supabase.auth.signOut(); window.location.href = '/login.html' }
+
+  // ── Load roles for checkboxes ──
+  const { data: rolesData } = await supabase.from('roles').select('*').order('name')
+  allRoles = rolesData ?? []
+
+  // Build role checkboxes for add form
+  const checkWrap = document.getElementById('add-roles-check')
+  allRoles.forEach(r => {
+    const label = document.createElement('label')
+    label.className = 'role-option'
+    label.innerHTML = `<input type="checkbox" name="add-role-check" value="${r.id}" /> ${r.name.toUpperCase()}`
+    checkWrap.appendChild(label)
+  })
+
+  // ── Load staff ──
+  await loadStaff()
+
+  window.loadStaff = async () => {
+    document.getElementById('staff-loading').style.display = 'block'
+    document.getElementById('staff-list').innerHTML = ''
+
+    const { data } = await supabase
+      .from('users')
+      .select('*, user_roles(*, roles(*))')
+      .order('name')
+
+    allStaff = data ?? []
+    document.getElementById('staff-loading').style.display = 'none'
+    document.getElementById('staff-count').textContent = `(${allStaff.length})`
+    renderStaffList(allStaff)
+  }
+
+  function renderStaffList(staff) {
+    const list = document.getElementById('staff-list')
+    list.innerHTML = ''
+
+    if (staff.length === 0) {
+      list.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--muted);font-size:0.88rem">No staff found.</div>'
+      return
+    }
+
+    staff.forEach(s => {
+      const initials = s.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2)
+      const roles    = s.user_roles?.map(ur => ur.roles?.name).filter(Boolean).join(', ') || '—'
+      const row = document.createElement('div')
+      row.className = 'staff-row'
+      row.innerHTML = `
+        <div class="staff-avatar">${initials}</div>
+        <div>
+          <div class="staff-name">${s.name}</div>
+          <div class="staff-email">${s.email}</div>
+        </div>
+        <div>
+          <div class="staff-role-badge">${s.role}</div>
+          <div style="font-size:0.72rem;color:var(--muted);margin-top:0.2rem">${roles}</div>
+        </div>
+        <div class="staff-status ${s.active ? 'status-active' : 'status-inactive'}">
+          ${s.active ? '● Active' : '○ Inactive'}
+        </div>
+        <div>
+          <button class="btn-sm" onclick="toggleActive('${s.id}', ${s.active})">
+            ${s.active ? 'Deactivate' : 'Reactivate'}
+          </button>
+        </div>`
+      list.appendChild(row)
+    })
+  }
+
+  window.filterStaff = () => {
+    const q = document.getElementById('staff-search').value.toLowerCase()
+    renderStaffList(allStaff.filter(s =>
+      s.name.toLowerCase().includes(q) || s.email.toLowerCase().includes(q)
+    ))
+  }
+
+  window.toggleActive = async (userId, currentlyActive) => {
+    const { error } = await supabase
+      .from('users')
+      .update({ active: !currentlyActive })
+      .eq('id', userId)
+
+    if (error) { showToast('Error updating staff member', 'error'); return }
+    showToast(currentlyActive ? 'Staff member deactivated' : 'Staff member reactivated', 'success')
+    await loadStaff()
+  }
+
+  // ── Add single staff ──
+  window.addSingleStaff = async () => {
+    const first  = document.getElementById('add-first').value.trim()
+    const last   = document.getElementById('add-last').value.trim()
+    const email  = document.getElementById('add-email').value.trim()
+    const role   = document.getElementById('add-role').value
+    const hours  = 0
+    const msg    = document.getElementById('add-msg')
+    msg.className = 'msg'
+
+    const name = `${first} ${last}`.trim()
+    if (!first || !last) { msg.className = 'msg error'; msg.textContent = 'Please enter first and last name.'; return }
+    if (!email)          { msg.className = 'msg error'; msg.textContent = 'Please enter an email address.'; return }
+
+    const selectedRoles = [...document.querySelectorAll('input[name="add-role-check"]:checked')].map(el => el.value)
+
+    const btn = document.getElementById('add-btn')
+    btn.disabled    = true
+    btn.textContent = 'Creating account…'
+
+    const result = await createStaffMember({ name, email, role, contracted_hours: hours, roleIds: selectedRoles })
+
+    if (result.error) {
+      msg.className   = 'msg error'
+      msg.textContent = result.error
+      btn.disabled    = false
+      btn.textContent = 'Add staff member'
+      return
+    }
+
+    msg.className   = 'msg success'
+    msg.textContent = `${name} added! They'll receive an email to set their password.`
+    document.getElementById('add-first').value  = ''
+    document.getElementById('add-last').value   = ''
+    document.getElementById('add-email').value  = ''
+    document.getElementById('add-hours').value  = '0'
+    document.querySelectorAll('input[name="add-role-check"]').forEach(el => el.checked = false)
+
+    btn.disabled    = false
+    btn.textContent = 'Add staff member'
+    await loadStaff()
+  }
+
+  // ── Core create function (used by both single and bulk) ──
+  async function createStaffMember({ name, email, role, contracted_hours, roleIds }) {
+    // Generate a temp password — user will reset via email
+    const tempPass = Math.random().toString(36).slice(-10) + 'Aa1!'
+
+    // Create auth user
+    const { data: authData, error: authError } = await supabase.auth.admin
+      ? await supabase.auth.admin.createUser({ email, password: tempPass, email_confirm: true })
+      : { data: null, error: { message: 'Admin API not available from browser — use service role key' } }
+
+    // Since we can't use admin API from browser, use signUp with a random password
+    // and immediately send a password reset so they set their own
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+      email,
+      password: tempPass,
+      options: { emailRedirectTo: `${window.location.origin}/reset.html` }
+    })
+
+    if (signUpError) {
+      if (signUpError.message.includes('already registered')) return { error: `${email} is already registered.` }
+      return { error: signUpError.message }
+    }
+
+    const userId = signUpData.user?.id
+    if (!userId) return { error: 'Could not create user account.' }
+
+    // Insert into public users table
+    const { error: userError } = await supabase.from('users').insert({
+      id: userId, name, email, role, contracted_hours, active: true
+    })
+
+    if (userError) return { error: userError.message }
+
+    // Assign roles
+    if (roleIds && roleIds.length > 0) {
+      const roleRows = roleIds.map((rid, i) => ({
+        user_id: userId, role_id: rid, is_primary: i === 0
+      }))
+      await supabase.from('user_roles').insert(roleRows)
+    }
+
+    // Send password reset email so they set their own password
+    await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset.html`
+    })
+
+    return { success: true, userId }
+  }
+
+  // ── CSV handling ──
+  window.handleCSV = async (file) => {
+    if (!file) return
+    const text = await file.text()
+    const lines = text.trim().split('\n').filter(l => l.trim())
+
+    if (lines.length < 2) {
+      showToast('CSV must have a header row and at least one data row', 'error')
+      return
+    }
+
+    const headers = lines[0].split(',').map(h => h.trim().toLowerCase())
+    const required = ['name', 'email']
+    const missing  = required.filter(r => !headers.includes(r))
+    if (missing.length > 0) {
+      showToast(`CSV missing required columns: ${missing.join(', ')}`, 'error')
+      return
+    }
+
+    parsedRows = []
+    const tbody = document.getElementById('preview-body')
+    tbody.innerHTML = ''
+
+    const existingEmails = new Set(allStaff.map(s => s.email.toLowerCase()))
+
+    lines.slice(1).forEach((line, i) => {
+      const vals = line.split(',').map(v => v.trim())
+      const row  = {}
+      headers.forEach((h, j) => { row[h] = vals[j] ?? '' })
+
+      const name     = row.name || ''
+      const email    = (row.email || '').toLowerCase()
+      const role     = ['manager', 'staff'].includes(row.role) ? row.role : 'staff'
+      const hours    = parseInt(row.contracted_hours) || 0
+      const barRole  = row.bar_role || 'bar'
+
+      let status = 'valid', statusLabel = '✓ Ready'
+      if (!name)                          { status = 'error';   statusLabel = '✕ Missing name' }
+      else if (!email || !email.includes('@')) { status = 'error';   statusLabel = '✕ Invalid email' }
+      else if (existingEmails.has(email)) { status = 'warning'; statusLabel = '⚠ Already exists' }
+
+      parsedRows.push({ name, email, role, hours, barRole, status })
+
+      const tr = document.createElement('tr')
+      if (status === 'error') tr.className = 'error-row'
+      tr.innerHTML = `
+        <td>${i + 1}</td>
+        <td>${name || '<em style="color:var(--muted)">—</em>'}</td>
+        <td>${email || '<em style="color:var(--muted)">—</em>'}</td>
+        <td>${role}</td>
+        <td>${hours}h</td>
+        <td>${barRole}</td>
+        <td class="row-${status}">${statusLabel}</td>`
+      tbody.appendChild(tr)
+    })
+
+    const valid   = parsedRows.filter(r => r.status === 'valid').length
+    const errors  = parsedRows.filter(r => r.status === 'error').length
+    const skipped = parsedRows.filter(r => r.status === 'warning').length
+
+    document.getElementById('preview-summary').textContent =
+      `${valid} to import · ${skipped} to skip · ${errors} with errors`
+
+    document.getElementById('preview-section').style.display = 'block'
+    document.getElementById('import-btn').disabled = valid === 0
+  }
+
+  // Drag and drop
+  const dropZone = document.getElementById('drop-zone')
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over') })
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'))
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault()
+    dropZone.classList.remove('drag-over')
+    const file = e.dataTransfer.files[0]
+    if (file?.name.endsWith('.csv')) handleCSV(file)
+    else showToast('Please upload a CSV file', 'error')
+  })
+
+  window.clearPreview = () => {
+    parsedRows = []
+    document.getElementById('preview-section').style.display = 'none'
+    document.getElementById('csv-input').value = ''
+    document.getElementById('results-log').className = 'results-log'
+    document.getElementById('progress-wrap').className = 'progress-wrap'
+  }
+
+  // ── Run bulk import ──
+  window.runImport = async () => {
+    const toImport = parsedRows.filter(r => r.status === 'valid')
+    if (toImport.length === 0) { showToast('No valid rows to import', 'error'); return }
+
+    const btn = document.getElementById('import-btn')
+    btn.disabled    = true
+    btn.textContent = `Importing ${toImport.length} staff…`
+
+    const progressWrap = document.getElementById('progress-wrap')
+    const progressFill = document.getElementById('progress-fill')
+    const progressLabel = document.getElementById('progress-label')
+    const log = document.getElementById('results-log')
+
+    progressWrap.className = 'progress-wrap visible'
+    log.className = 'results-log visible'
+    log.innerHTML = ''
+
+    // Get role IDs for bar / kp / both
+    const barRoleId = allRoles.find(r => r.name === 'bar')?.id
+    const kpRoleId  = allRoles.find(r => r.name === 'kp')?.id
+
+    let succeeded = 0, failed = 0
+
+    for (let i = 0; i < toImport.length; i++) {
+      const person = toImport[i]
+      progressFill.style.width  = `${Math.round((i / toImport.length) * 100)}%`
+      progressLabel.textContent = `Importing ${i + 1} of ${toImport.length}: ${person.name}…`
+
+      const roleIds = []
+      if (person.barRole === 'bar' || person.barRole === 'both')  roleIds.push(barRoleId)
+      if (person.barRole === 'kp'  || person.barRole === 'both')  roleIds.push(kpRoleId)
+
+      const result = await createStaffMember({
+        name:              person.name,
+        email:             person.email,
+        role:              person.role,
+        contracted_hours:  0,
+        roleIds:           roleIds.filter(Boolean),
+      })
+
+      const line = document.createElement('div')
+      line.className = `log-line ${result.success ? 'log-ok' : 'log-err'}`
+      line.textContent = result.success
+        ? `✓ ${person.name} (${person.email}) — invite sent`
+        : `✕ ${person.name} (${person.email}) — ${result.error}`
+      log.appendChild(line)
+      log.scrollTop = log.scrollHeight
+
+      if (result.success) succeeded++
+      else failed++
+
+      // Small delay to avoid rate limiting
+      await new Promise(r => setTimeout(r, 300))
+    }
+
+    progressFill.style.width  = '100%'
+    progressLabel.textContent = `Done! ${succeeded} imported, ${failed} failed.`
+    btn.textContent = 'Import complete'
+
+    showToast(`${succeeded} staff imported successfully!`, 'success')
+    await loadStaff()
+  }
+
+  // ── Tab switch ──
+  window.switchTab = (tab, btn) => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'))
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'))
+    btn.classList.add('active')
+    document.getElementById('panel-' + tab).classList.add('active')
+  }
+
+  function showToast(msg, type = 'success') {
+    const t = document.getElementById('toast')
+    t.textContent = msg
+    t.className   = `toast ${type} show`
+    setTimeout(() => t.classList.remove('show'), 3000)
+  }
+</script>
+
+</body>
+</html>

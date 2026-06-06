@@ -187,6 +187,7 @@
     <a class="nav-link" href="swaps.html"><span class="icon">↔</span> Swap Requests</a>
     <span class="nav-section" id="manager-nav-section" style="display:none">Manager</span>
     <a class="nav-link" id="nav-manager" href="manager.html" style="display:none"><span class="icon">⚙</span> Rota Builder</a>
+    <a class="nav-link" id="nav-staff" href="manager-staff.html" style="display:none"><span class="icon">👥</span> Staff</a>
     <div class="nav-bottom">
       <div class="nav-user">
         <div class="nav-avatar" id="nav-avatar">?</div>
@@ -273,6 +274,7 @@
   if (isManager(currentUser)) {
     document.getElementById('manager-nav-section').style.display = 'block'
     document.getElementById('nav-manager').style.display         = 'flex'
+    document.getElementById('nav-staff').style.display            = 'flex'
   }
 
   window.handleSignOut = async () => {

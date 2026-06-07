@@ -248,6 +248,7 @@
     <a class="nav-link" href="index.html"><span class="icon">⊞</span> Dashboard</a>
     <a class="nav-link" href="availability.html"><span class="icon">📅</span> Availability</a>
     <a class="nav-link" href="my-shifts.html"><span class="icon">🕐</span> My Shifts</a>
+    <a class="nav-link" href="rota.html"><span class="icon">📋</span> Rota</a>
     <a class="nav-link" href="swaps.html"><span class="icon">↔</span> Swap Requests</a>
     <span class="nav-section">Manager</span>
     <a class="nav-link" href="manager.html"><span class="icon">⚙</span> Rota Builder</a>
@@ -326,6 +327,10 @@
               <option value="staff">Staff</option>
               <option value="manager">Manager</option>
             </select>
+          </div>
+          <div class="field">
+            <label>Contracted hours / week</label>
+            <input type="number" id="add-hours" placeholder="0" min="0" max="48" value="0" />
           </div>
           <div class="field full">
             <label>Bar qualifications</label>
@@ -510,7 +515,7 @@
     const last   = document.getElementById('add-last').value.trim()
     const email  = document.getElementById('add-email').value.trim()
     const role   = document.getElementById('add-role').value
-    const hours  = 0
+    const hours  = parseInt(document.getElementById('add-hours').value) || 0
     const msg    = document.getElementById('add-msg')
     msg.className = 'msg'
 
@@ -720,7 +725,7 @@
         name:              person.name,
         email:             person.email,
         role:              person.role,
-        contracted_hours:  0,
+        contracted_hours:  person.hours,
         roleIds:           roleIds.filter(Boolean),
       })
 

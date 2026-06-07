@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SU Bar Rota — Weekly Rota</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:      #0d0d0d; --surface: #161616; --surface2: #1e1e1e;
+      --border:  #2a2a2a; --accent: #c8f557; --text: #f0ede6;
+      --muted:   #6b6b6b; --error: #ff6b6b; --green: #4ade80;
+      --amber:   #fbbf24; --purple: #a78bfa; --orange: #fb923c;
+      --radius:  10px; --nav-w: 240px;
+    }
+    html, body { height:100%; background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; font-weight:300; }
+    body::before { content:''; position:fixed; inset:0; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); opacity:.03; pointer-events:none; z-index:0; }
+    .app { position:relative; z-index:1; display:flex; min-height:100vh; }
+
+    /* Nav */
+    .nav { width:var(--nav-w); background:var(--surface); border-right:1px solid var(--border); display:flex; flex-direction:column; position:fixed; top:0; left:0; bottom:0; padding:1.75rem 1rem; z-index:10; }
+    .nav-logo { font-family:'DM Serif Display',serif; font-size:1rem; padding:0 0.5rem; margin-bottom:2rem; }
+    .nav-logo span { color:var(--accent); }
+    .nav-section { font-size:0.68rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--muted); padding:0 0.5rem; margin:1rem 0 0.4rem; }
+    .nav-link { display:flex; align-items:center; gap:0.65rem; padding:0.6rem 0.75rem; border-radius:8px; color:var(--muted); text-decoration:none; font-size:0.88rem; transition:background .15s,color .15s; cursor:pointer; border:none; background:none; width:100%; text-align:left; }
+    .nav-link:hover { background:var(--surface2); color:var(--text); }
+    .nav-link.active { background:rgba(200,245,87,0.1); color:var(--accent); }
+    .nav-link .icon { font-size:1rem; width:1.2rem; text-align:center; }
+    .nav-bottom { margin-top:auto; }
+    .nav-user { display:flex; align-items:center; gap:0.65rem; padding:0.75rem; border-radius:8px; border:1px solid var(--border); margin-bottom:0.5rem; }
+    .nav-avatar { width:32px; height:32px; border-radius:50%; background:var(--accent); color:#0d0d0d; display:flex; align-items:center; justify-content:center; font-size:0.8rem; font-weight:500; flex-shrink:0; }
+    .nav-user-name { font-size:0.85rem; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .nav-user-role { font-size:0.72rem; color:var(--muted); text-transform:capitalize; }
+
+    /* Main */
+    .main { margin-left:var(--nav-w); flex:1; padding:2.5rem; }
+    .page-header { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:2rem; animation:fadeUp .4s ease both; flex-wrap:wrap; gap:1rem; }
+    .page-title { font-family:'DM Serif Display',serif; font-size:2rem; font-weight:400; }
+    .page-subtitle { color:var(--muted); font-size:0.9rem; margin-top:0.25rem; }
+
+    /* Week selector */
+    .week-bar { display:flex; align-items:center; gap:1rem; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:1rem 1.5rem; margin-bottom:1.5rem; animation:fadeUp .4s .05s ease both; flex-wrap:wrap; }
+    .week-bar label { font-size:0.78rem; text-transform:uppercase; letter-spacing:0.07em; color:var(--muted); white-space:nowrap; }
+    .week-select { background:var(--surface2); border:1px solid var(--border); border-radius:8px; color:var(--text); font-family:'DM Sans',sans-serif; font-size:0.9rem; padding:0.5rem 0.85rem; outline:none; cursor:pointer; }
+    .week-select:focus { border-color:var(--accent); }
+    .week-status { font-size:0.75rem; padding:0.3rem 0.75rem; border-radius:20px; }
+    .status-draft     { background:rgba(251,191,36,0.12); color:var(--amber); }
+    .status-published { background:rgba(74,222,128,0.12); color:var(--green); }
+
+    /* Legend */
+    .legend { display:flex; gap:1.5rem; flex-wrap:wrap; margin-bottom:1.5rem; animation:fadeUp .4s .08s ease both; }
+    .legend-item { display:flex; align-items:center; gap:0.5rem; font-size:0.78rem; color:var(--muted); }
+    .legend-dot { width:10px; height:10px; border-radius:50%; }
+
+    /* Day panels */
+    .rota-grid { animation:fadeUp .4s .1s ease both; display:flex; flex-direction:column; gap:1rem; }
+    .day-panel { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
+    .day-header { display:flex; align-items:center; justify-content:space-between; padding:0.85rem 1.25rem; border-bottom:1px solid var(--border); cursor:pointer; user-select:none; }
+    .day-header:hover { background:var(--surface2); }
+    .day-header-left { display:flex; align-items:center; gap:0.75rem; }
+    .day-name { font-family:'DM Serif Display',serif; font-size:1.1rem; }
+    .day-date { font-size:0.8rem; color:var(--muted); }
+    .day-today-badge { font-size:0.65rem; background:rgba(200,245,87,0.15); color:var(--accent); padding:0.15rem 0.5rem; border-radius:10px; text-transform:uppercase; letter-spacing:0.06em; }
+    .day-summary { display:flex; gap:0.5rem; align-items:center; font-size:0.78rem; color:var(--muted); }
+    .day-body { padding:1rem 1.25rem 1.25rem; display:flex; flex-direction:column; gap:0.75rem; }
+
+    /* Venue blocks */
+    .venue-block { border:1px solid var(--border); border-radius:8px; overflow:hidden; }
+    .venue-block-header { display:flex; align-items:center; justify-content:space-between; padding:0.55rem 1rem; }
+    .venue-block-header.main-bar { background:rgba(200,245,87,0.05); border-left:3px solid var(--accent); }
+    .venue-block-header.wee-bar  { background:rgba(251,191,36,0.05);  border-left:3px solid var(--amber); }
+    .venue-block-header.mandela  { background:rgba(167,139,250,0.05); border-left:3px solid var(--purple); }
+    .venue-block-header.barista  { background:rgba(200,245,87,0.05);  border-left:3px solid var(--accent); }
+    .venue-block-header.popup    { background:rgba(249,115,22,0.05);  border-left:3px solid var(--orange); }
+    .venue-block-header.kitchen  { background:rgba(74,222,128,0.05);  border-left:3px solid var(--green); }
+    .venue-label { font-size:0.8rem; font-weight:500; display:flex; align-items:center; gap:0.5rem; }
+    .venue-dot { width:7px; height:7px; border-radius:50%; }
+    .venue-times { font-size:0.72rem; color:var(--muted); }
+    .venue-body { padding:0.6rem 1rem; display:flex; flex-direction:column; gap:0.5rem; }
+
+    /* Shift slot rows */
+    .shift-slot { display:flex; align-items:center; justify-content:space-between; gap:0.75rem; padding:0.5rem 0; border-bottom:1px solid var(--border); flex-wrap:wrap; }
+    .shift-slot:last-child { border-bottom:none; padding-bottom:0; }
+    .shift-slot-left { display:flex; flex-direction:column; gap:0.2rem; min-width:80px; }
+    .shift-slot-name { font-size:0.85rem; }
+    .shift-slot-time { font-size:0.72rem; color:var(--muted); }
+
+    /* Staff pills */
+    .staff-pills { display:flex; flex-wrap:wrap; gap:0.4rem; flex:1; }
+    .staff-pill { display:flex; align-items:center; gap:0.35rem; background:var(--surface2); border:1px solid var(--border); border-radius:20px; padding:0.25rem 0.75rem; font-size:0.8rem; }
+    .staff-pill.is-me { border-color:rgba(200,245,87,0.4); background:rgba(200,245,87,0.06); }
+    .staff-pill.is-floor { border-color:rgba(74,222,128,0.3); }
+    .pill-name { }
+    .pill-role { font-size:0.65rem; color:var(--muted); }
+    .pill-role.floor { color:var(--green); }
+    .pill-role.mandela { color:var(--purple); }
+    .pill-role.wee_bar { color:var(--amber); }
+    .pill-role.barista { color:var(--accent); }
+    .pill-role.kitchen { color:var(--green); }
+    .pill-role.popup   { color:var(--orange); }
+
+    .staff-pill.has-swap { border-color:rgba(251,191,36,0.4); }
+    .pill-swap { font-size:0.65rem; color:var(--amber); margin-left:0.1rem; }
+
+    /* Open slot */
+    .open-slot { display:flex; align-items:center; gap:0.5rem; background:rgba(200,245,87,0.04); border:1px dashed rgba(200,245,87,0.2); border-radius:20px; padding:0.25rem 0.75rem; font-size:0.78rem; color:var(--muted); }
+    .open-slot.can-claim { cursor:pointer; transition:all .15s; }
+    .open-slot.can-claim:hover { background:rgba(200,245,87,0.1); border-color:var(--accent); color:var(--accent); }
+    .open-slot.claiming { opacity:0.5; cursor:not-allowed; }
+
+    /* Empty state */
+    .empty { text-align:center; padding:4rem 2rem; color:var(--muted); }
+    .empty .big { font-family:'DM Serif Display',serif; font-size:3rem; margin-bottom:0.5rem; }
+
+    /* Toast */
+    .toast { position:fixed; bottom:2rem; left:50%; transform:translateX(-50%) translateY(20px); padding:0.65rem 1.5rem; border-radius:8px; font-size:0.88rem; font-weight:500; opacity:0; transition:all .3s ease; pointer-events:none; z-index:100; }
+    .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+    .toast.success { background:var(--green); color:#0d0d0d; }
+    .toast.error   { background:var(--error); color:#fff; }
+
+    /* Skeleton */
+    .skeleton { background:linear-gradient(90deg,var(--surface2) 25%,var(--border) 50%,var(--surface2) 75%); background-size:200% 100%; animation:shimmer 1.2s infinite; border-radius:var(--radius); height:80px; margin-bottom:1rem; }
+    @keyframes shimmer { from{background-position:200% 0} to{background-position:-200% 0} }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+
+    @media (max-width:768px) {
+      .nav { display:none; }
+      .main { margin-left:0; padding:1.5rem 1rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <nav class="nav">
+    <div class="nav-logo">SU Bar <span>Rota</span></div>
+    <span class="nav-section">Staff</span>
+    <a class="nav-link" href="index.html"><span class="icon">⊞</span> Dashboard</a>
+    <a class="nav-link" href="availability.html"><span class="icon">📅</span> Availability</a>
+    <a class="nav-link" href="my-shifts.html"><span class="icon">🕐</span> My Shifts</a>
+    <a class="nav-link active" href="rota.html"><span class="icon">📋</span> Rota</a>
+    <a class="nav-link" href="swaps.html"><span class="icon">↔</span> Swap Requests</a>
+    <span class="nav-section" id="manager-nav-section" style="display:none">Manager</span>
+    <a class="nav-link" id="nav-manager" href="manager.html" style="display:none"><span class="icon">⚙</span> Rota Builder</a>
+    <a class="nav-link" id="nav-staff" href="manager-staff.html" style="display:none"><span class="icon">👥</span> Staff</a>
+    <div class="nav-bottom">
+      <div class="nav-user">
+        <div class="nav-avatar" id="nav-avatar">?</div>
+        <div class="nav-user-info">
+          <div class="nav-user-name" id="nav-name">Loading…</div>
+          <div class="nav-user-role" id="nav-role">—</div>
+        </div>
+      </div>
+      <button class="nav-link" onclick="handleSignOut()"><span class="icon">→</span> Sign out</button>
+    </div>
+  </nav>
+
+  <main class="main">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Weekly Rota</h1>
+        <p class="page-subtitle">See the full week, spot open shifts, and pick them up.</p>
+      </div>
+    </div>
+
+    <div class="week-bar">
+      <label>Week</label>
+      <select class="week-select" id="week-select" onchange="loadWeek(this.value)"></select>
+      <span class="week-status" id="week-status">—</span>
+      <span style="margin-left:auto;font-size:0.8rem;color:var(--muted)" id="week-range">—</span>
+    </div>
+
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:rgba(200,245,87,0.6)"></div> You</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--surface2);border:1px solid var(--border)"></div> Colleague</div>
+      <div class="legend-item"><div class="legend-dot" style="background:rgba(200,245,87,0.15);border:1px dashed rgba(200,245,87,0.3)"></div> Open — click to claim</div>
+    </div>
+
+    <div id="loading">
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+    </div>
+
+    <div class="rota-grid" id="rota-grid" style="display:none"></div>
+    <div class="empty" id="empty" style="display:none">
+      <div class="big">📋</div>
+      <p id="empty-msg">No published rota yet.<br>Check back once the manager publishes the week.</p>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="env.js"></script>
+<script type="module">
+import { supabase, requireAuth, isManager } from './src/lib/supabase.js'
+
+let currentUser = null
+let selectedWeek = null
+let templates    = []
+let allStaff     = {}   // id → user
+let rotaShifts   = {}   // configKey → [{id, user_id, venue_area, status}]
+let dayConfigs   = {}   // configKey → {id, required_staff, start_time, end_time, notes}
+const todayStr   = new Date().toISOString().split('T')[0]
+let swapRequests = {}   // shiftId → swap_request
+
+// Venue display order
+const VENUE_ORDER = [
+  { key:'main_bar', label:'Main Bar',        colorClass:'main-bar', dot:'var(--accent)',  isMainBar:true  },
+  { key:'barista',  label:'Barista',          colorClass:'barista',  dot:'var(--accent)',  isMainBar:false },
+  { key:'wee_bar',  label:'Wee Bar',          colorClass:'wee-bar',  dot:'var(--amber)',   isMainBar:false },
+  { key:'mandela',  label:'Mandela',          colorClass:'mandela',  dot:'var(--purple)',  isMainBar:false },
+  { key:'popup',    label:'Pop-up Bar',       colorClass:'popup',    dot:'var(--orange)',  isMainBar:false },
+  { key:'kitchen',  label:'Kitchen Porter',   colorClass:'kitchen',  dot:'var(--green)',   isMainBar:false },
+]
+
+// ── Auth ──
+currentUser = await requireAuth()
+if (!currentUser) throw new Error('Not authenticated')
+
+const initials = currentUser.name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2)
+document.getElementById('nav-avatar').textContent = initials
+document.getElementById('nav-name').textContent   = currentUser.name
+document.getElementById('nav-role').textContent   = currentUser.role
+
+if (isManager(currentUser)) {
+  document.getElementById('manager-nav-section').style.display = 'block'
+  document.getElementById('nav-manager').style.display         = 'flex'
+  document.getElementById('nav-staff').style.display           = 'flex'
+}
+
+window.handleSignOut = async () => { await supabase.auth.signOut(); window.location.href='/login.html' }
+
+// ── Load templates ──
+const { data:tplData } = await supabase.from('shift_templates').select('*,roles(*)').order('start_time')
+templates = tplData ?? []
+
+// ── Load all staff ──
+const { data:staffData } = await supabase.from('users').select('id,name').eq('active',true)
+;(staffData ?? []).forEach(s => { allStaff[s.id] = s })
+
+// ── Load weeks ──
+const { data:weeksData } = await supabase
+  .from('fortnights')
+  .select('*')
+  .in('status', ['published', 'draft'])
+  .order('start_date', { ascending: false })
+
+const weeks = weeksData ?? []
+const sel   = document.getElementById('week-select')
+
+if (weeks.length === 0) {
+  document.getElementById('loading').style.display  = 'none'
+  document.getElementById('empty').style.display    = 'block'
+  document.getElementById('empty-msg').innerHTML    = 'No rota has been published yet.<br>Check back soon.'
+} else {
+  weeks.forEach(w => {
+    const fmt = d => new Date(d).toLocaleDateString('en-GB',{day:'numeric',month:'short'})
+    const opt = document.createElement('option')
+    opt.value = w.id
+    opt.textContent = `w/c ${fmt(w.start_date)} – ${fmt(w.end_date)}`
+    sel.appendChild(opt)
+  })
+  sel.addEventListener('change', () => window.loadWeek(sel.value))
+window.loadWeek = async (weekId) => {
+  selectedWeek = weeks.find(w => w.id === weekId)
+  if (!selectedWeek) return
+
+  document.getElementById('loading').style.display   = 'block'
+  document.getElementById('rota-grid').style.display = 'none'
+  document.getElementById('empty').style.display     = 'none'
+
+  const statusEl = document.getElementById('week-status')
+  statusEl.className   = `week-status status-${selectedWeek.status}`
+  statusEl.textContent = selectedWeek.status.charAt(0).toUpperCase() + selectedWeek.status.slice(1)
+
+  const fmt = d => new Date(d).toLocaleDateString('en-GB',{day:'numeric',month:'long'})
+  document.getElementById('week-range').textContent = `${fmt(selectedWeek.start_date)} – ${fmt(selectedWeek.end_date)}`
+
+  // Load rota shifts
+  const { data:rsData } = await supabase.from('rota_shifts').select('*').eq('fortnight_id', weekId).neq('status','cancelled')
+  rotaShifts = {}
+  ;(rsData ?? []).forEach(rs => {
+    const key = rs.shift_template_id ? `${rs.shift_template_id}_${rs.shift_date}` : `${rs.venue_area}_${rs.shift_date}`
+    if (!rotaShifts[key]) rotaShifts[key] = []
+    rotaShifts[key].push(rs)
+  })
+
+  // Load pending swap requests for this week
+  const shiftIds = (rsData ?? []).map(rs => rs.id)
+  swapRequests = {}
+  if (shiftIds.length > 0) {
+    const { data:swData } = await supabase
+      .from('swap_requests')
+      .select('rota_shift_id, requester_id, status')
+      .in('rota_shift_id', shiftIds)
+      .eq('status', 'pending')
+    ;(swData ?? []).forEach(sw => { swapRequests[sw.rota_shift_id] = sw })
+  }
+
+  // Load day configs
+  const { data:dcData } = await supabase.from('shift_day_config').select('*').eq('fortnight_id', weekId)
+  dayConfigs = {}
+  ;(dcData ?? []).forEach(dc => {
+    let key
+    if (dc.notes && dc.notes.startsWith('venue:')) {
+      key = dc.notes.replace('venue:','') + '_' + dc.shift_date
+    } else if (!dc.shift_template_id) {
+      key = 'popup_' + dc.shift_date
+    } else {
+      key = dc.shift_template_id + '_' + dc.shift_date
+    }
+    dayConfigs[key] = { id:dc.id, required_staff:dc.required_staff, start_time:dc.start_time, end_time:dc.end_time, notes:dc.notes }
+  })
+
+  document.getElementById('loading').style.display = 'none'
+  renderGrid()
+}
+
+  await window.loadWeek(weeks[0].id)
+}
+
+// ── Load week data ──
+
+// ── Render grid ──
+function renderGrid() {
+  const grid = document.getElementById('rota-grid')
+  grid.innerHTML = ''
+  grid.style.display = 'flex'
+
+  const [sy,sm,sd] = selectedWeek.start_date.split('-').map(Number)
+  const start = new Date(sy, sm-1, sd)
+  const dates = Array.from({length:7},(_,i) => { const d=new Date(start); d.setDate(start.getDate()+i); return d })
+
+  dates.forEach(date => {
+    const dateStr  = date.toISOString().split('T')[0]
+    const dayName  = date.toLocaleDateString('en-GB',{weekday:'long'})
+    const dayShort = date.toLocaleDateString('en-GB',{day:'numeric',month:'short'})
+    const isToday  = dateStr === todayStr
+
+    // Count open slots for this day
+    let totalOpen = 0
+    const venueBlocks = buildVenueBlocks(dateStr)
+    venueBlocks.forEach(vb => { totalOpen += vb.openSlots })
+
+    const panel = document.createElement('div')
+    panel.className = 'day-panel'
+    panel.innerHTML = `
+      <div class="day-header" onclick="toggleDay('day-body-${dateStr}')">
+        <div class="day-header-left">
+          <span class="day-name">${dayName}</span>
+          <span class="day-date">${dayShort}</span>
+          ${isToday ? '<span class="day-today-badge">Today</span>' : ''}
+        </div>
+        <div class="day-summary">
+          ${totalOpen > 0
+            ? `<span style="color:var(--accent)">${totalOpen} open slot${totalOpen!==1?'s':''}</span>`
+            : `<span style="color:var(--green)">✓ Fully staffed</span>`
+          }
+          <span style="color:var(--muted);font-size:0.85rem">▾</span>
+        </div>
+      </div>
+      <div class="day-body" id="day-body-${dateStr}" style="${isToday?'':'display:none'}"></div>`
+
+    const body = panel.querySelector(`#day-body-${dateStr}`)
+    venueBlocks.forEach(vb => { if (vb.el) body.appendChild(vb.el) })
+
+    if (venueBlocks.every(vb => !vb.el)) {
+      body.innerHTML = '<p style="color:var(--muted);font-size:0.85rem;padding:0.5rem 0">No shifts scheduled for this day.</p>'
+    }
+
+    grid.appendChild(panel)
+  })
+}
+
+// ── Build venue blocks for a day ──
+function buildVenueBlocks(dateStr) {
+  const blocks = []
+
+  // Main bar — template-based slots
+  const mainBarTpls = templates.filter(t => !t.is_adhoc && t.roles?.name === 'bar')
+  if (mainBarTpls.length > 0) {
+    let blockOpenSlots = 0
+    const section = document.createElement('div')
+    section.className = 'venue-block'
+
+    const header = document.createElement('div')
+    header.className = 'venue-block-header main-bar'
+    header.innerHTML = '<div class="venue-label"><div class="venue-dot" style="background:var(--accent)"></div>Main Bar</div>'
+    section.appendChild(header)
+
+    const body = document.createElement('div')
+    body.className = 'venue-body'
+
+    mainBarTpls.forEach(tpl => {
+      const key      = `${tpl.id}_${dateStr}`
+      const dc       = dayConfigs[key]
+      const required = dc?.required_staff ?? tpl.min_staff
+      const assigned = rotaShifts[key] ?? []
+      const open     = Math.max(0, required - assigned.length)
+      blockOpenSlots += open
+      body.appendChild(buildShiftSlot(tpl.name, tpl.start_time, tpl.end_time, key, tpl.id, dateStr, required, assigned, 'main_bar'))
+    })
+
+    section.appendChild(body)
+    blocks.push({ el:section, openSlots:blockOpenSlots })
+  }
+
+  // Event venues — only if active (have a day config)
+  VENUE_ORDER.filter(v => !v.isMainBar).forEach(venue => {
+    const configKey = `${venue.key}_${dateStr}`
+    const dc = dayConfigs[configKey]
+    if (!dc) return
+
+    const required = dc.required_staff ?? 1
+    const assigned = rotaShifts[configKey] ?? []
+    const open     = Math.max(0, required - assigned.length)
+    const startT   = dc.start_time?.slice(0,5) ?? '18:00'
+    const endT     = dc.end_time?.slice(0,5)   ?? '23:00'
+    const label    = venue.key === 'popup' && dc.notes && !dc.notes.startsWith('venue:') ? dc.notes : venue.label
+
+    const section = document.createElement('div')
+    section.className = 'venue-block'
+
+    const header = document.createElement('div')
+    header.className = `venue-block-header ${venue.colorClass}`
+    header.innerHTML = `
+      <div class="venue-label">
+        <div class="venue-dot" style="background:${venue.dot}"></div>
+        ${label}
+      </div>
+      <span class="venue-times">${startT} – ${endT}</span>`
+    section.appendChild(header)
+
+    const body = document.createElement('div')
+    body.className = 'venue-body'
+    body.appendChild(buildShiftSlot(label, dc.start_time, dc.end_time, configKey, venue.key, dateStr, required, assigned, venue.key))
+    section.appendChild(body)
+
+    blocks.push({ el:section, openSlots:open })
+  })
+
+  return blocks
+}
+
+// ── Build a shift slot row ──
+function buildShiftSlot(name, startTime, endTime, configKey, templateId, dateStr, required, assigned, defaultArea) {
+  const startDisp = (startTime||'').slice(0,5) || '--:--'
+  const endDisp   = (endTime||'').slice(0,5)   || '--:--'
+  const open      = Math.max(0, required - assigned.length)
+
+  // Check if current user is already on this slot
+  const myShift   = assigned.find(rs => rs.user_id === currentUser.id)
+
+  // Check if current user is eligible (role match)
+  const isKitchen = defaultArea === 'kitchen'
+  const myRoles   = currentUser.user_roles?.map(ur => ur.roles?.name) ?? []
+  const canWork   = isKitchen
+    ? myRoles.includes('kp')
+    : myRoles.includes('bar')
+
+  // Check for time clash with existing shifts
+  const hasClash  = !myShift && canWork && checkClash(currentUser.id, dateStr, startTime, endTime, configKey)
+
+  const row = document.createElement('div')
+  row.className = 'shift-slot'
+
+  const left = document.createElement('div')
+  left.className = 'shift-slot-left'
+  left.innerHTML = `<div class="shift-slot-name">${name}</div><div class="shift-slot-time">${startDisp} – ${endDisp}</div>`
+
+  const pills = document.createElement('div')
+  pills.className = 'staff-pills'
+
+  // Assigned staff pills
+  assigned.forEach(rs => {
+    const staffMember = allStaff[rs.user_id]
+    if (!staffMember) return
+    const isMe     = rs.user_id === currentUser.id
+    const isFloor  = rs.venue_area === 'floor'
+    const hasSwap  = !!swapRequests[rs.id]
+    const pill = document.createElement('div')
+    pill.className = `staff-pill${isMe?' is-me':''}${isFloor?' is-floor':''}${hasSwap?' has-swap':''}`
+    pill.title     = hasSwap ? `${staffMember.name.split(' ')[0]} has requested a swap for this shift` : ''
+    pill.innerHTML = `<span class="pill-name">${staffMember.name.split(' ')[0]}</span>${isFloor?'<span class="pill-role floor">Floor</span>':''}${hasSwap?'<span class="pill-swap">↔</span>':''}`
+    pills.appendChild(pill)
+  })
+
+  // Open slots
+  for (let i = 0; i < open; i++) {
+    const slot = document.createElement('div')
+    const canClaim = canWork && !myShift && !hasClash
+
+    slot.className = `open-slot${canClaim?' can-claim':''}`
+    slot.innerHTML = canClaim ? '+ Pick up' : 'Open'
+    slot.title     = !canWork  ? 'You are not qualified for this shift'
+                   : myShift   ? 'You are already on this shift'
+                   : hasClash  ? 'You have a conflicting shift'
+                   : 'Click to claim this shift'
+
+    if (canClaim) {
+      slot.addEventListener('click', () => claimShift(templateId, dateStr, configKey, defaultArea, slot))
+    }
+    pills.appendChild(slot)
+  }
+
+  row.appendChild(left)
+  row.appendChild(pills)
+  return row
+}
+
+// ── Check for time clash ──
+function checkClash(userId, dateStr, startTime, endTime) {
+  if (!startTime || !endTime) return false
+  const toMins = t => { const [h,m]=(t||'00:00').slice(0,5).split(':').map(Number); return h*60+m }
+  let as=toMins(startTime), ae=toMins(endTime)
+  if (ae<=as) ae+=1440
+
+  for (const [key, shifts] of Object.entries(rotaShifts)) {
+    if (!key.endsWith('_'+dateStr)) continue
+    if (!shifts.some(rs => rs.user_id===userId)) continue
+    // Find times for this slot
+    const tplId = key.replace('_'+dateStr,'')
+    const tpl   = templates.find(t=>t.id===tplId)
+    const dc    = dayConfigs[key]
+    const bStart = dc?.start_time ?? tpl?.start_time ?? '00:00'
+    const bEnd   = dc?.end_time   ?? tpl?.end_time   ?? '23:59'
+    let bs=toMins(bStart), be=toMins(bEnd)
+    if (be<=bs) be+=1440
+    if (as<be && bs<ae) return true
+  }
+  return false
+}
+
+// ── Claim a shift ──
+window.claimShift = async (templateId, dateStr, configKey, defaultArea, slotEl) => {
+  slotEl.className = 'open-slot claiming'
+  slotEl.textContent = 'Claiming…'
+
+  const isVenueKeyed = ['popup','kitchen','mandela','barista','wee_bar'].includes(templateId)
+  const venueArea    = defaultArea
+
+  const { data, error } = await supabase.from('rota_shifts').insert({
+    fortnight_id:      selectedWeek.id,
+    user_id:           currentUser.id,
+    shift_template_id: isVenueKeyed ? null : templateId,
+    shift_date:        dateStr,
+    venue_area:        venueArea,
+    status:            'scheduled',
+    created_by:        currentUser.id,
+  }).select().single()
+
+  if (error) {
+    console.error(error)
+    showToast('Error claiming shift', 'error')
+    slotEl.className = 'open-slot can-claim'
+    slotEl.textContent = '+ Pick up'
+    return
+  }
+
+  // Update local state
+  if (!rotaShifts[configKey]) rotaShifts[configKey] = []
+  rotaShifts[configKey].push({ id:data.id, user_id:currentUser.id, venue_area:venueArea, status:'scheduled' })
+
+  // Notify manager
+  const managers = await supabase.from('users').select('id').in('role',['manager','admin'])
+  if (managers.data && managers.data.length > 0) {
+    const fmt = d => new Date(d).toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'})
+    await supabase.from('notifications').insert(managers.data.map(m => ({
+      user_id:  m.id,
+      type:     'shift_claimed',
+      message:  `${currentUser.name} picked up a shift on ${fmt(dateStr)}.`,
+      read:     false,
+    })))
+  }
+
+  showToast('Shift claimed! ✓', 'success')
+
+  // Re-render just this day
+  const dayBody = document.getElementById('day-body-' + dateStr)
+  if (dayBody) {
+    dayBody.innerHTML = ''
+    const venueBlocks = buildVenueBlocks(dateStr)
+    venueBlocks.forEach(vb => { if (vb.el) dayBody.appendChild(vb.el) })
+  }
+}
+
+// ── Toggle day ──
+window.toggleDay = (id) => {
+  const el = document.getElementById(id)
+  el.style.display = el.style.display === 'none' ? '' : 'none'
+}
+
+function showToast(msg, type='success') {
+  const t = document.getElementById('toast')
+  t.textContent = msg
+  t.className   = `toast ${type} show`
+  setTimeout(() => t.classList.remove('show'), 3000)
+}
+</script>
+</body>
+</html>

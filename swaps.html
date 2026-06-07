@@ -232,6 +232,7 @@
     <a class="nav-link" href="index.html"><span class="icon">⊞</span> Dashboard</a>
     <a class="nav-link" href="availability.html"><span class="icon">📅</span> Availability</a>
     <a class="nav-link" href="my-shifts.html"><span class="icon">🕐</span> My Shifts</a>
+    <a class="nav-link" href="rota.html"><span class="icon">📋</span> Rota</a>
     <a class="nav-link active" href="swaps.html"><span class="icon">↔</span> Swap Requests</a>
     <span class="nav-section" id="manager-nav-section" style="display:none">Manager</span>
     <a class="nav-link" id="nav-manager" href="manager.html" style="display:none"><span class="icon">⚙</span> Rota Builder</a>
@@ -362,23 +363,7 @@
 
   myShifts = shiftsData ?? []
 
-  // Populate shift select
-  const shiftSel = document.getElementById('shift-select')
-  shiftSel.innerHTML = ''
-
-  if (myShifts.length === 0) {
-    shiftSel.innerHTML = '<option value="">No upcoming shifts found</option>'
-  } else {
-    shiftSel.innerHTML = '<option value="">Select a shift…</option>'
-    myShifts.forEach(s => {
-      const d   = new Date(s.shift_date)
-      const day = d.toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short' })
-      const opt = document.createElement('option')
-      opt.value       = s.id
-      opt.textContent = `${day} — ${s.shift_templates.name} (${s.shift_templates.start_time.slice(0,5)}–${s.shift_templates.end_time.slice(0,5)})`
-      shiftSel.appendChild(opt)
-    })
-  }
+  // Dropdown populated after myRequests loads — see populateShiftSelect() below
 
   // ── Check for ?shift= param (from my-shifts page) ──
   const params = new URLSearchParams(window.location.search)
@@ -391,7 +376,7 @@
   // ── Load open swap requests (from others, pending, same role) ──
   const { data: openData } = await supabase
     .from('swap_requests')
-    .select('*, rota_shifts!inner(*, shift_templates(*), fortnights!inner(*))')
+    .select('*, rota_shifts!swap_requests_rota_shift_id_fkey!inner(*, shift_templates(*), fortnights!inner(*))')
     .eq('status', 'pending')
     .neq('requester_id', currentUser.id)
     .eq('rota_shifts.fortnights.status', 'published')
@@ -406,7 +391,7 @@
   // ── Load my swap requests ──
   const { data: mineData } = await supabase
     .from('swap_requests')
-    .select('*, rota_shifts!inner(*, shift_templates(*), fortnights(*))')
+    .select('*, rota_shifts!swap_requests_rota_shift_id_fkey!inner(*, shift_templates(*), fortnights(*))')
     .eq('requester_id', currentUser.id)
     .order('created_at', { ascending: false })
 
@@ -414,6 +399,7 @@
   document.getElementById('loading-mine').style.display = 'none'
   document.getElementById('count-mine').textContent = myRequests.filter(r => r.status === 'pending').length
   renderMyRequests()
+  populateShiftSelect()
 
   // ── Render open requests ──
   function renderOpenRequests() {
@@ -511,6 +497,42 @@
     })
   }
 
+  // ── Populate shift dropdown (called after myRequests loads) ──
+  function populateShiftSelect() {
+    const shiftSel = document.getElementById('shift-select')
+    shiftSel.innerHTML = ''
+
+    if (myShifts.length === 0) {
+      shiftSel.innerHTML = '<option value="">No upcoming shifts found</option>'
+      return
+    }
+
+    shiftSel.innerHTML = '<option value="">Select a shift…</option>'
+    myShifts.forEach(s => {
+      const d          = new Date(s.shift_date)
+      const day        = d.toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short' })
+      const shiftLabel = `${day} — ${s.shift_templates.name} (${s.shift_templates.start_time.slice(0,5)}–${s.shift_templates.end_time.slice(0,5)})`
+      const opt        = document.createElement('option')
+      opt.value        = s.id
+
+      const pendingReq  = myRequests.find(r => r.rota_shift_id === s.id && r.status === 'pending')
+      const acceptedReq = myRequests.find(r => r.rota_shift_id === s.id && r.status === 'accepted')
+
+      if (acceptedReq) {
+        const coveredBy = allUsers[acceptedReq.acceptor_id] ?? 'a colleague'
+        opt.textContent = `${shiftLabel} — ✓ Covered by ${coveredBy}`
+        opt.disabled    = true
+      } else if (pendingReq) {
+        opt.textContent = `${shiftLabel} — ⏳ Request pending`
+        opt.disabled    = true
+      } else {
+        opt.textContent = shiftLabel
+      }
+
+      shiftSel.appendChild(opt)
+    })
+  }
+
   // ── Submit swap request ──
   window.submitSwapRequest = async () => {
     const shiftId = document.getElementById('shift-select').value
@@ -535,7 +557,7 @@
         status:        'pending',
         needs_approval: false,
       })
-      .select('*, rota_shifts!inner(*, shift_templates(*), fortnights(*))')
+      .select('*, rota_shifts!swap_requests_rota_shift_id_fkey!inner(*, shift_templates(*), fortnights(*))')
       .single()
 
     if (error) {

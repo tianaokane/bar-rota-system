@@ -94,6 +94,7 @@
     .venue-header.main-bar { background:rgba(200,245,87,0.05); border-left:3px solid var(--accent); }
     .venue-header.wee-bar  { background:rgba(251,191,36,0.05); border-left:3px solid var(--amber); }
     .venue-header.mandela  { background:rgba(167,139,250,0.05); border-left:3px solid var(--purple); }
+    .venue-header.barista  { background:rgba(200,245,87,0.05);  border-left:3px solid var(--accent); }
     .venue-header.popup    { background:rgba(249,115,22,0.05); border-left:3px solid var(--orange); }
     .venue-header.kitchen  { background:rgba(74,222,128,0.05); border-left:3px solid var(--green); }
     .venue-name { font-size:0.82rem; font-weight:500; display:flex; align-items:center; gap:0.5rem; }
@@ -124,9 +125,19 @@
     .chip-area { font-size:0.68rem; font-weight:500; }
     .chip-area.main_bar { color:var(--accent); } .chip-area.wee_bar { color:var(--amber); }
     .chip-area.mandela  { color:var(--purple); } .chip-area.floor   { color:var(--green); }
-    .chip-area.kitchen  { color:var(--green);  } .chip-area.popup   { color:var(--orange); }
+    .chip-area.kitchen  { color:var(--green);  } .chip-area.popup   { color:var(--orange); } .chip-area.barista { color:var(--accent); } .chip-area.wee_bar { color:var(--amber); }
     .chip-remove { background:none; border:none; color:var(--muted); cursor:pointer; font-size:0.9rem; padding:0; line-height:1; transition:color .15s; }
     .chip-remove:hover { color:var(--error); }
+
+    /* Floor toggle on chip */
+    .chip-floor-wrap { display:flex; align-items:center; gap:0.3rem; }
+    .chip-floor-label { font-size:0.65rem; color:var(--muted); }
+    .floor-switch { position:relative; width:28px; height:16px; flex-shrink:0; }
+    .floor-switch input { opacity:0; width:0; height:0; position:absolute; }
+    .floor-switch-track { position:absolute; inset:0; background:var(--border); border-radius:20px; cursor:pointer; transition:background .2s; }
+    .floor-switch input:checked + .floor-switch-track { background:var(--green); }
+    .floor-switch-track::after { content:''; position:absolute; width:10px; height:10px; border-radius:50%; background:#fff; top:3px; left:3px; transition:transform .2s; }
+    .floor-switch input:checked + .floor-switch-track::after { transform:translateX(12px); }
 
     /* Add staff btn */
     .add-staff-btn { display:inline-flex; align-items:center; gap:0.4rem; background:transparent; border:1px dashed var(--border); border-radius:20px; padding:0.25rem 0.75rem; font-size:0.78rem; color:var(--muted); cursor:pointer; transition:all .15s; font-family:'DM Sans',sans-serif; }
@@ -135,8 +146,13 @@
     /* Event config row */
     .event-config { display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap; padding:0.5rem 0; border-bottom:1px solid var(--border); }
     .event-config label { font-size:0.72rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.06em; }
-    .event-config input[type="time"] { background:var(--surface2); border:1px solid var(--border); border-radius:6px; color:var(--text); font-family:'DM Sans',sans-serif; font-size:0.82rem; padding:0.3rem 0.6rem; outline:none; width:100px; }
-    .event-config input[type="time"]:focus { border-color:var(--accent); }
+    .event-config input[type="time"] {
+      background:var(--surface2); border:1px solid var(--border); border-radius:6px;
+      color:var(--accent); font-family:'DM Sans',sans-serif; font-size:0.82rem;
+      padding:0.3rem 0.6rem; outline:none; width:110px; cursor:pointer;
+      color-scheme: dark;
+    }
+    .event-config input[type="time"]:focus { border-color:var(--accent); box-shadow:0 0 0 2px rgba(200,245,87,0.1); }
     .event-config input[type="text"] { background:var(--surface2); border:1px solid var(--border); border-radius:6px; color:var(--text); font-family:'DM Sans',sans-serif; font-size:0.82rem; padding:0.3rem 0.6rem; outline:none; width:140px; }
     .event-config input[type="text"]:focus { border-color:var(--accent); }
     .event-config-saved { font-size:0.72rem; color:var(--muted); }
@@ -191,6 +207,7 @@
     <a class="nav-link" href="index.html"><span class="icon">⊞</span> Dashboard</a>
     <a class="nav-link" href="availability.html"><span class="icon">📅</span> Availability</a>
     <a class="nav-link" href="my-shifts.html"><span class="icon">🕐</span> My Shifts</a>
+    <a class="nav-link" href="rota.html"><span class="icon">📋</span> Rota</a>
     <a class="nav-link" href="swaps.html"><span class="icon">↔</span> Swap Requests</a>
     <span class="nav-section">Manager</span>
     <a class="nav-link active" href="manager.html"><span class="icon">⚙</span> Rota Builder</a>
@@ -283,7 +300,9 @@ let allStaff     = []
 let availability = {}   // `${userId}_${templateId}_${date}` → status
 let rotaShifts   = {}   // `${templateId}_${date}` → [{id,user_id,venue_area,status}]
 let dayConfigs   = {}   // `${templateId}_${date}` → {id,required_staff,start_time,end_time,notes}
-let pickerCtx    = null // {templateId,dateStr,customStart,customEnd,venueKey}
+let pickerCtx           = null // {templateId,dateStr,customStart,customEnd,venueKey}
+let availabilityMeta    = {}   // `${userId}_${templateId}_${date}` → {status, submitted_at}
+let availabilityFirstSubmit = {} // `${userId}_${date}` → earliest submitted_at
 const todayStr   = new Date().toISOString().split('T')[0]
 
 // Venue definitions — order matters for display
@@ -328,10 +347,20 @@ window.loadWeek = async (weekId) => {
   const publishBtn = document.getElementById('btn-publish')
   publishBtn.textContent = selectedWeek.status === 'published' ? 'Republish' : 'Publish rota'
 
-  // Load availability
+  // Load availability — store status AND first submitted_at for fair ordering
   const { data:avData } = await supabase.from('availability').select('*').eq('fortnight_id', weekId)
   availability = {}
-  ;(avData ?? []).forEach(a => { availability[`${a.user_id}_${a.shift_template_id}_${a.shift_date}`] = a.status })
+  availabilityMeta = {}
+  availabilityFirstSubmit = {}
+  ;(avData ?? []).forEach(a => {
+    const key = a.user_id + '_' + a.shift_template_id + '_' + a.shift_date
+    availability[key] = a.status
+    // Track earliest submission per user per date (re-submissions don't reset priority)
+    const dateKey = a.user_id + '_' + a.shift_date
+    if (!availabilityFirstSubmit[dateKey] || a.submitted_at < availabilityFirstSubmit[dateKey]) {
+      availabilityFirstSubmit[dateKey] = a.submitted_at
+    }
+  })
 
   // Load rota shifts
   const { data:rsData } = await supabase.from('rota_shifts').select('*').eq('fortnight_id', weekId)
@@ -342,11 +371,19 @@ window.loadWeek = async (weekId) => {
     rotaShifts[key].push({ id:rs.id, user_id:rs.user_id, venue_area:rs.venue_area, status:rs.status })
   })
 
-  // Load day configs
+  // Load day configs — venue-keyed records store 'venue:key' in notes
   const { data:dcData } = await supabase.from('shift_day_config').select('*').eq('fortnight_id', weekId)
   dayConfigs = {}
   ;(dcData ?? []).forEach(dc => {
-    dayConfigs[`${dc.shift_template_id}_${dc.shift_date}`] = {
+    let configKey
+    if (dc.notes && dc.notes.startsWith('venue:')) {
+      configKey = dc.notes.replace('venue:', '') + '_' + dc.shift_date
+    } else if (!dc.shift_template_id) {
+      configKey = 'popup_' + dc.shift_date
+    } else {
+      configKey = dc.shift_template_id + '_' + dc.shift_date
+    }
+    dayConfigs[configKey] = {
       id: dc.id, required_staff: dc.required_staff,
       start_time: dc.start_time, end_time: dc.end_time, notes: dc.notes
     }
@@ -403,11 +440,13 @@ function renderGrid() {
       assigned += (rotaShifts[key]??[]).filter(s=>s.status!=='cancelled').length
       needed   += dc?.required_staff ?? t.min_staff
     })
-    // popup venue (no template) — check shift_day_config with template_id null workaround via venue key
-    const popupKey = `popup_${dateStr}`
-    if (dayConfigs[popupKey]) {
-      assigned += (rotaShifts[popupKey]??[]).filter(s=>s.status!=='cancelled').length
-      needed   += dayConfigs[popupKey].required_staff ?? 1
+    // venue-keyed configs (popup, kitchen, mandela)
+    for (const vk of ['popup', 'kitchen', 'mandela', 'barista', 'wee_bar']) {
+      const vKey = `${vk}_${dateStr}`
+      if (dayConfigs[vKey]) {
+        assigned += (rotaShifts[vKey]??[]).filter(s=>s.status!=='cancelled').length
+        needed   += dayConfigs[vKey].required_staff ?? 1
+      }
     }
 
     const dotColor = assigned>=needed ? 'dot-green' : assigned>0 ? 'dot-amber' : 'dot-red'
@@ -427,7 +466,7 @@ function renderGrid() {
           <span style="color:var(--muted);font-size:0.85rem;margin-left:0.25rem">▾</span>
         </div>
       </div>
-      <div class="day-body" id="body-${dateStr}"></div>`
+      <div class="day-body" id="body-${dateStr}" style="${isToday ? '' : 'display:none'}"></div>`
 
     const body = panel.querySelector(`#body-${dateStr}`)
 
@@ -435,13 +474,12 @@ function renderGrid() {
     renderMainBarSection(body, dateStr)
 
     // Wee Bar, Mandela, Pop-up — togglable event venues
-    renderEventVenueSection(body, dateStr, 'wee_bar',  'wee-bar',  'Wee Bar',   'var(--amber)')
+    renderEventVenueSection(body, dateStr, 'barista',  'barista',  'Barista',        'var(--accent)')
+    renderEventVenueSection(body, dateStr, 'wee_bar',  'wee-bar',  'Wee Bar',        'var(--amber)')
+    renderEventVenueSection(body, dateStr, 'mandela',  'mandela',  'Mandela',        'var(--purple)')
+    renderEventVenueSection(body, dateStr, 'popup',    'popup',    'Pop-up Bar',     'var(--orange)')
+    renderEventVenueSection(body, dateStr, 'kitchen',  'kitchen',  'Kitchen Porter', 'var(--green)')
     renderEventVenueSection(body, dateStr, 'mandela',  'mandela',  'Mandela',   'var(--purple)')
-    renderEventVenueSection(body, dateStr, 'popup',    'popup',    'Pop-up Bar','var(--orange)')
-
-    // Kitchen venue section
-    renderKitchenSection(body, dateStr)
-
     container.appendChild(panel)
   })
 }
@@ -474,96 +512,56 @@ function renderMainBarSection(body, dateStr) {
   body.appendChild(section)
 }
 
-// ── Kitchen section ───────────────────────────────────────────
-function renderKitchenSection(body, dateStr) {
-  const kpTpls = templates.filter(t => !t.is_adhoc && t.roles?.name === 'kp')
-  if (kpTpls.length === 0) return
-
-  const section = document.createElement('div')
-  section.className = 'venue-section'
-  section.innerHTML = `
-    <div class="venue-header kitchen">
-      <div class="venue-name">
-        <div class="venue-dot" style="background:var(--green)"></div>
-        Kitchen
-      </div>
-    </div>
-    <div class="venue-body" id="kitchen-body-${dateStr}"></div>`
-  const vBody = section.querySelector(`#kitchen-body-${dateStr}`)
-
-  kpTpls.forEach(tpl => {
-    const key      = `${tpl.id}_${dateStr}`
-    const dc       = dayConfigs[key]
-    const required = dc?.required_staff ?? tpl.min_staff
-    const assigned = (rotaShifts[key]??[]).filter(s=>s.status!=='cancelled')
-    vBody.appendChild(buildSlotRow(tpl.id, tpl.name, tpl.start_time, tpl.end_time, dateStr, key, required, assigned, 'kitchen', false))
-  })
-
-  body.appendChild(section)
-}
-
-// ── Event venue section (Wee Bar, Mandela, Pop-up) ───────────
+// ── Event venue section (Wee Bar, Mandela, Pop-up, Kitchen Porter) ─
 function renderEventVenueSection(body, dateStr, venueKey, colorClass, label, dotColor) {
-  // For popup, we use venueKey as the fake templateId since there's no real template
-  const isPopup    = venueKey === 'popup'
-  const configKey  = isPopup ? `popup_${dateStr}` : null
-
-  // For non-popup: find the adhoc template matching this venue
-  let tpl = null
-  if (!isPopup) {
-    tpl = templates.find(t => t.is_adhoc && t.venue_area === venueKey)
-    if (!tpl) return // no template for this venue, skip
-  }
-
-  const key    = isPopup ? configKey : `${tpl.id}_${dateStr}`
-  const dc     = dayConfigs[key]
-  const active = !!dc
+  // All event venues use a simple venueKey_date config key
+  const configKey = venueKey + '_' + dateStr
+  const dc        = dayConfigs[configKey]
+  const active    = !!dc
+  const isPopup   = venueKey === 'popup'
 
   const section = document.createElement('div')
   section.className = 'venue-section'
-  section.id = `venue-section-${venueKey}-${dateStr}`
+  section.id = 'venue-section-' + venueKey + '-' + dateStr
 
-  const headerHTML = `
-    <div class="venue-header ${colorClass}">
-      <div class="venue-name">
-        <div class="venue-dot" style="background:${dotColor}"></div>
-        ${label}
-      </div>
-      <div style="display:flex;gap:0.5rem;align-items:center">
-        ${active
-          ? `<button class="remove-event-btn" onclick="toggleEventVenue('${venueKey}','${dateStr}',false)">Remove</button>`
-          : `<button class="venue-toggle" onclick="toggleEventVenue('${venueKey}','${dateStr}',true)">+ Add to rota</button>`
-        }
-      </div>
-    </div>`
-
-  section.innerHTML = headerHTML
+  section.innerHTML =
+    '<div class="venue-header ' + colorClass + '">' +
+      '<div class="venue-name">' +
+        '<div class="venue-dot" style="background:' + dotColor + '"></div>' +
+        label +
+      '</div>' +
+      '<div style="display:flex;gap:0.5rem;align-items:center">' +
+        (active
+          ? '<button class="remove-event-btn" onclick="toggleEventVenue(\'' + venueKey + '\',\'' + dateStr + '\',false)">Remove</button>'
+          : '<button class="venue-toggle" onclick="toggleEventVenue(\'' + venueKey + '\',\'' + dateStr + '\',true)">+ Add to rota</button>'
+        ) +
+      '</div>' +
+    '</div>'
 
   if (active) {
     const vBody = document.createElement('div')
     vBody.className = 'venue-body'
 
-    // Time config row
     const configRow = document.createElement('div')
     configRow.className = 'event-config'
-    configRow.innerHTML = `
-      <label>Start</label>
-      <input type="time" id="start-${venueKey}-${dateStr}" value="${dc.start_time??''}" onchange="saveEventConfig('${venueKey}','${dateStr}')" />
-      <label>End</label>
-      <input type="time" id="end-${venueKey}-${dateStr}" value="${dc.end_time??''}" onchange="saveEventConfig('${venueKey}','${dateStr}')" />
-      ${isPopup ? `<label>Name</label><input type="text" id="name-${venueKey}-${dateStr}" value="${dc.notes??'Pop-up Bar'}" placeholder="e.g. Freshers Bar" onchange="saveEventConfig('${venueKey}','${dateStr}')" />` : ''}
-    `
+    const displayNotes = dc.notes && dc.notes.startsWith('venue:') ? '' : (dc.notes || '')
+    const startVal = dc.start_time ? dc.start_time.slice(0,5) : '18:00'
+    const endVal   = dc.end_time   ? dc.end_time.slice(0,5)   : '23:00'
+    configRow.innerHTML =
+      '<label>Start</label>' +
+      '<input type="time" id="start-' + venueKey + '-' + dateStr + '" value="' + startVal + '" onchange="saveEventConfig(\'' + venueKey + '\',\'' + dateStr + '\')" />' +
+      '<label>End</label>' +
+      '<input type="time" id="end-' + venueKey + '-' + dateStr + '" value="' + endVal + '" onchange="saveEventConfig(\'' + venueKey + '\',\'' + dateStr + '\')" />' +
+      (isPopup ? '<label>Name</label><input type="text" id="name-' + venueKey + '-' + dateStr + '" value="' + (displayNotes||'Pop-up Bar') + '" placeholder="e.g. Freshers Bar" onchange="saveEventConfig(\'' + venueKey + '\',\'' + dateStr + '\')" />' : '')
     vBody.appendChild(configRow)
 
-    // Slot row for assigned staff
-    const assigned  = (rotaShifts[key]??[]).filter(s=>s.status!=='cancelled')
-    const required  = dc.required_staff ?? 1
-    const startT    = dc.start_time ?? '18:00'
-    const endT      = dc.end_time   ?? '23:00'
-    const slotName  = isPopup ? (dc.notes||'Pop-up Bar') : label
-    const fakeId    = isPopup ? 'popup' : tpl.id
-    vBody.appendChild(buildSlotRow(fakeId, slotName, startT, endT, dateStr, key, required, assigned, venueKey, true))
+    const assigned = (rotaShifts[configKey]||[]).filter(s=>s.status!=='cancelled')
+    const required = dc.required_staff || 1
+    const startT   = dc.start_time || '18:00'
+    const endT     = dc.end_time   || '23:00'
+    const slotName = isPopup ? (displayNotes||'Pop-up Bar') : label
 
+    vBody.appendChild(buildSlotRow(venueKey, slotName, startT, endT, dateStr, configKey, required, assigned, venueKey, true))
     section.appendChild(vBody)
   }
 
@@ -605,67 +603,112 @@ function buildSlotRow(templateId, name, startTime, endTime, dateStr, key, requir
 }
 
 // ── Chip ──────────────────────────────────────────────────────
+// ── Toggle floor/bar for a main bar chip ─────────────────────
+window.toggleFloor = async (shiftId, templateId, dateStr, isChecked) => {
+  // isChecked = true means Floor switch is ON
+  const newArea = isChecked ? 'floor' : 'main_bar'
+  const { error } = await supabase.from('rota_shifts').update({ venue_area: newArea }).eq('id', shiftId)
+  if (error) { showToast('Error updating', true); return }
+
+  // Update local state
+  const configKey = ['popup','kitchen','mandela'].includes(templateId)
+    ? templateId + '_' + dateStr
+    : templateId + '_' + dateStr
+  if (rotaShifts[configKey]) {
+    const rs = rotaShifts[configKey].find(r => r.id === shiftId)
+    if (rs) rs.venue_area = newArea
+  }
+}
+
 function buildChip(rs, staffMember, templateId, dateStr) {
-  const areaLabels = { main_bar:'Bar', wee_bar:'Wee Bar', mandela:'Mandela', floor:'Floor', kitchen:'KP', popup:'Pop-up' }
+  const areaLabels = { main_bar:'Bar', wee_bar:'Wee Bar', mandela:'Mandela', floor:'Floor', kitchen:'Kitchen Porter', popup:'Pop-up', barista:'Barista' }
+  const isMainBar = rs.venue_area === 'main_bar' || rs.venue_area === 'floor'
+  const isFloor   = rs.venue_area === 'floor'
   const chip = document.createElement('div')
   chip.className = 'staff-chip'
   chip.id = `chip-${rs.id}`
   chip.innerHTML = `
     <span>${staffMember.name.split(' ')[0]}</span>
-    <span class="chip-area ${rs.venue_area}">${areaLabels[rs.venue_area]??rs.venue_area}</span>
+    ${isMainBar ? `
+      <div class="chip-floor-wrap">
+        <span class="chip-floor-label">Floor</span>
+        <label class="floor-switch" title="Toggle Floor">
+          <input type="checkbox" ${isFloor ? 'checked' : ''}
+            onchange="toggleFloor('${rs.id}','${templateId}','${dateStr}',this.checked)" />
+          <div class="floor-switch-track"></div>
+        </label>
+      </div>` 
+      : `<span class="chip-area ${rs.venue_area}">${areaLabels[rs.venue_area]??rs.venue_area}</span>`
+    }
     <button class="chip-remove" onclick="removeShift('${rs.id}','${templateId}','${dateStr}')">×</button>`
   return chip
 }
 
 // ── Toggle event venue on/off ─────────────────────────────────
 window.toggleEventVenue = async (venueKey, dateStr, enable) => {
-  const isPopup   = venueKey === 'popup'
-  const configKey = isPopup ? `popup_${dateStr}` : null
-  const tpl       = !isPopup ? templates.find(t => t.is_adhoc && t.venue_area === venueKey) : null
-  const key       = isPopup ? configKey : `${tpl?.id}_${dateStr}`
+  // All event venues use a simple venueKey_date config key
+  const key = `${venueKey}_${dateStr}`
+  const tpl = venueKey === 'kitchen'
+    ? templates.find(t => t.roles?.name === 'kp')
+    : venueKey === 'barista'
+    ? templates.find(t => t.name === 'Barista')
+    : templates.find(t => t.is_adhoc && t.venue_area === venueKey)
 
   if (enable) {
     const defaultStart = tpl?.start_time ?? '18:00:00'
     const defaultEnd   = tpl?.end_time   ?? '23:00:00'
+    const isPopup      = venueKey === 'popup'
     const { data, error } = await supabase.from('shift_day_config').insert({
       fortnight_id:      selectedWeek.id,
-      shift_template_id: tpl?.id ?? null,
+      shift_template_id: null,
       shift_date:        dateStr,
       required_staff:    tpl?.min_staff ?? 2,
       start_time:        defaultStart,
       end_time:          defaultEnd,
-      notes:             isPopup ? 'Pop-up Bar' : null,
+      notes:             'venue:' + venueKey,
     }).select().single()
     if (!error && data) dayConfigs[key] = { id:data.id, required_staff:data.required_staff, start_time:data.start_time, end_time:data.end_time, notes:data.notes }
   } else {
     const dc = dayConfigs[key]
     if (dc) {
       await supabase.from('shift_day_config').delete().eq('id', dc.id)
-      // Remove assigned shifts
       for (const rs of (rotaShifts[key]??[])) await supabase.from('rota_shifts').delete().eq('id', rs.id)
       delete dayConfigs[key]
       delete rotaShifts[key]
     }
   }
-  renderGrid()
+  // Re-render just this day's body rather than full grid (prevents collapse)
+  rerenderDay(dateStr)
+}
+
+// ── Re-render a single day ────────────────────────────────────
+function rerenderDay(dateStr) {
+  const body = document.getElementById('body-' + dateStr)
+  if (!body) return
+  body.innerHTML = ''
+  renderMainBarSection(body, dateStr)
+  renderEventVenueSection(body, dateStr, 'barista',  'barista',  'Barista',        'var(--accent)')
+  renderEventVenueSection(body, dateStr, 'wee_bar',  'wee-bar',  'Wee Bar',        'var(--amber)')
+  renderEventVenueSection(body, dateStr, 'mandela',  'mandela',  'Mandela',        'var(--purple)')
+  renderEventVenueSection(body, dateStr, 'popup',    'popup',    'Pop-up Bar',     'var(--orange)')
+  renderEventVenueSection(body, dateStr, 'kitchen',  'kitchen',  'Kitchen Porter', 'var(--green)')
+  updateDayCoverage(dateStr)
 }
 
 // ── Save event config (times/name) ───────────────────────────
 window.saveEventConfig = async (venueKey, dateStr) => {
-  const isPopup   = venueKey === 'popup'
-  const key       = isPopup ? `popup_${dateStr}` : (() => { const t=templates.find(t=>t.is_adhoc&&t.venue_area===venueKey); return t?`${t.id}_${dateStr}`:null })()
-  if (!key) return
-  const dc = dayConfigs[key]
+  const key = venueKey + '_' + dateStr
+  const dc  = dayConfigs[key]
   if (!dc) return
 
-  const startEl = document.getElementById(`start-${venueKey}-${dateStr}`)
-  const endEl   = document.getElementById(`end-${venueKey}-${dateStr}`)
-  const nameEl  = document.getElementById(`name-${venueKey}-${dateStr}`)
+  const startEl = document.getElementById('start-' + venueKey + '-' + dateStr)
+  const endEl   = document.getElementById('end-'   + venueKey + '-' + dateStr)
+  const nameEl  = document.getElementById('name-'  + venueKey + '-' + dateStr)
 
   const updates = {
-    start_time: startEl?.value || dc.start_time,
-    end_time:   endEl?.value   || dc.end_time,
-    notes:      nameEl?.value  || dc.notes,
+    start_time: startEl?.value ? startEl.value + ':00' : dc.start_time,
+    end_time:   endEl?.value   ? endEl.value   + ':00' : dc.end_time,
+    notes: nameEl ? (nameEl.value || dc.notes) : dc.notes,
   }
 
   await supabase.from('shift_day_config').update(updates).eq('id', dc.id)
@@ -674,8 +717,8 @@ window.saveEventConfig = async (venueKey, dateStr) => {
 
 // ── Update required staff count ───────────────────────────────
 window.updateRequired = async (templateId, dateStr, delta) => {
-  const isPopup = templateId === 'popup'
-  const key     = isPopup ? `popup_${dateStr}` : `${templateId}_${dateStr}`
+  const isVenueKeyed = ['popup', 'kitchen', 'mandela', 'barista', 'wee_bar'].includes(templateId)
+  const key          = isVenueKeyed ? `${templateId}_${dateStr}` : `${templateId}_${dateStr}`
   const dc      = dayConfigs[key]
   const tpl     = templates.find(t => t.id === templateId)
   const current = dc?.required_staff ?? tpl?.min_staff ?? 1
@@ -701,7 +744,8 @@ window.updateRequired = async (templateId, dateStr, delta) => {
 // ── Picker ────────────────────────────────────────────────────
 window.openPicker = (templateId, dateStr, defaultArea, btn) => {
   const isPopup   = templateId === 'popup'
-  const configKey = isPopup ? `popup_${dateStr}` : `${templateId}_${dateStr}`
+  const isKitchen = templateId === 'kitchen'
+  const configKey = (isPopup || isKitchen) ? `${templateId}_${dateStr}` : `${templateId}_${dateStr}`
   const dc        = dayConfigs[configKey]
   const tpl       = templates.find(t => t.id === templateId)
 
@@ -746,7 +790,7 @@ function buildPickerList(alreadyAssigned, search) {
   const { templateId, dateStr, defaultArea, effectiveStart, effectiveEnd } = pickerCtx
 
   // Role filter — popup/event bar staff; kitchen = kp
-  const isKitchen = defaultArea === 'kitchen'
+  const isKitchen = defaultArea === 'kitchen' || pickerCtx.templateId === 'kitchen'
   const eligible  = allStaff.filter(s => {
     const roleMatch = isKitchen
       ? s.user_roles?.some(ur => ur.roles?.name === 'kp')
@@ -756,18 +800,28 @@ function buildPickerList(alreadyAssigned, search) {
 
   if (eligible.length === 0) { list.innerHTML='<div class="picker-empty">No matching staff found</div>'; return }
 
-  // Sort by availability status
+  // Sort by: 1) availability status, 2) first submission time (earlier = higher priority)
   const order = { preferred:0, available:1, null:2, unavailable:3 }
   eligible.sort((a,b) => {
-    const ak = availability[`${a.id}_${templateId}_${dateStr}`] ?? null
-    const bk = availability[`${b.id}_${templateId}_${dateStr}`] ?? null
-    return (order[ak]??2)-(order[bk]??2)
+    const ak      = availability[`${a.id}_${templateId}_${dateStr}`] ?? null
+    const bk      = availability[`${b.id}_${templateId}_${dateStr}`] ?? null
+    const statusDiff = (order[ak]??2) - (order[bk]??2)
+    if (statusDiff !== 0) return statusDiff
+
+    // Same status — sort by earliest submission time
+    const aFirst = availabilityFirstSubmit[`${a.id}_${dateStr}`] ?? '9999'
+    const bFirst = availabilityFirstSubmit[`${b.id}_${dateStr}`] ?? '9999'
+    return aFirst < bFirst ? -1 : aFirst > bFirst ? 1 : 0
   })
 
   // Area options
   const areaOptions = isKitchen
-    ? '<option value="kitchen">Kitchen</option>'
-    : `<option value="main_bar">Main Bar</option><option value="wee_bar">Wee Bar</option><option value="mandela">Mandela</option><option value="floor">Floor</option><option value="popup">Pop-up</option>`
+    ? '<option value="kitchen">Kitchen Porter</option>'
+    : pickerCtx?.defaultArea === 'mandela' ? '<option value="mandela">Mandela</option>'
+    : pickerCtx?.defaultArea === 'wee_bar' ? '<option value="wee_bar">Wee Bar</option>'
+    : pickerCtx?.defaultArea === 'popup'   ? '<option value="popup">Pop-up Bar</option>'
+    : pickerCtx?.defaultArea === 'barista' ? '<option value="barista">Barista</option>'
+    : '<option value="main_bar">Main Bar</option>'
 
   eligible.forEach(s => {
     const avKey  = `${s.id}_${templateId}_${dateStr}`
@@ -799,16 +853,20 @@ function buildPickerList(alreadyAssigned, search) {
                       : status==='unavailable' ? '<span class="avail-unavailable">✕ Unavailable</span>'
                       : '<span class="avail-none">No response</span>'
 
+    // Show how early they submitted (first submit time for this date)
+    const firstSubmit = availabilityFirstSubmit[`${s.id}_${dateStr}`]
+    const submitHint  = firstSubmit && (status === 'preferred' || status === 'available')
+      ? `<span style="font-size:0.65rem;color:var(--muted)">${new Date(firstSubmit).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})} ${new Date(firstSubmit).toLocaleDateString('en-GB',{day:'numeric',month:'short'})}</span>`
+      : ''
+
     const item = document.createElement('div')
     item.className = `picker-item${status==='preferred'&&!blocked?' preferred':''}${blocked?' blocked':''}`
     item.innerHTML = `
       <div>
         <div class="picker-name">${s.name}</div>
-        <div class="picker-avail">${statusLabel}</div>
+        <div class="picker-avail" style="display:flex;gap:0.5rem;align-items:center">${statusLabel}${submitHint}</div>
       </div>
-      ${!blocked
-        ? `<select class="picker-area-select" id="area-${s.id}" onclick="event.stopPropagation()">${areaOptions}</select>`
-        : `<span style="font-size:0.72rem;color:var(--muted)">${already?'Added':'Clash'}</span>`}`
+      ${blocked ? `<span style="font-size:0.72rem;color:var(--muted)">${already?'Added':'Clash'}</span>` : ''}`
 
     if (!blocked) {
       // Pre-select area based on venue context
@@ -833,14 +891,13 @@ window.closePicker = () => {
 // ── Assign staff ──────────────────────────────────────────────
 async function assignStaff(staffMember) {
   const { templateId, dateStr, defaultArea, configKey } = pickerCtx
-  const areaEl    = document.getElementById(`area-${staffMember.id}`)
-  const venueArea = areaEl?.value ?? defaultArea
-  const isPopup   = templateId === 'popup'
+  const venueArea = defaultArea === 'main_bar' || defaultArea === 'floor' ? 'main_bar' : defaultArea
+  const isVenueKeyed = ['popup', 'kitchen', 'mandela', 'barista', 'wee_bar'].includes(templateId)
 
   const { data, error } = await supabase.from('rota_shifts').insert({
     fortnight_id:      selectedWeek.id,
     user_id:           staffMember.id,
-    shift_template_id: isPopup ? null : templateId,
+    shift_template_id: isVenueKeyed ? null : templateId,
     shift_date:        dateStr,
     venue_area:        venueArea,
     status:            'scheduled',
@@ -865,7 +922,8 @@ window.removeShift = async (shiftId, templateId, dateStr) => {
   if (error) { showToast('Error removing shift', true); return }
 
   const isPopup   = templateId === 'popup'
-  const configKey = isPopup ? `popup_${dateStr}` : `${templateId}_${dateStr}`
+  const isKitchen = templateId === 'kitchen'
+  const configKey = (isPopup || isKitchen) ? `${templateId}_${dateStr}` : `${templateId}_${dateStr}`
   rotaShifts[configKey] = (rotaShifts[configKey]??[]).filter(rs=>rs.id!==shiftId)
   document.getElementById(`chip-${shiftId}`)?.remove()
   updateDayCoverage(dateStr)
@@ -880,10 +938,12 @@ function updateDayCoverage(dateStr) {
     assigned += (rotaShifts[key]??[]).filter(s=>s.status!=='cancelled').length
     needed   += dc?.required_staff ?? t.min_staff
   })
-  const popKey=`popup_${dateStr}`
-  if (dayConfigs[popKey]) {
-    assigned += (rotaShifts[popKey]??[]).filter(s=>s.status!=='cancelled').length
-    needed   += dayConfigs[popKey].required_staff ?? 1
+  for (const vk of ['popup', 'kitchen', 'mandela', 'barista', 'wee_bar']) {
+    const vKey = `${vk}_${dateStr}`
+    if (dayConfigs[vKey]) {
+      assigned += (rotaShifts[vKey]??[]).filter(s=>s.status!=='cancelled').length
+      needed   += dayConfigs[vKey].required_staff ?? 1
+    }
   }
   const color = assigned>=needed?'dot-green':assigned>0?'dot-amber':'dot-red'
   document.querySelectorAll('.day-panel').forEach(panel => {

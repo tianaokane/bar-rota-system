@@ -328,10 +328,11 @@
               <option value="manager">Manager</option>
             </select>
           </div>
-          <div class="field full">
-            <label>Bar qualifications</label>
-            <div class="roles-check" id="add-roles-check"></div>
+          <div class="field">
+            <label>Contracted hours / week</label>
+            <input type="number" id="add-hours" placeholder="0" min="0" max="48" value="0" />
           </div>
+
         </div>
 
         <button class="btn btn-primary" id="add-btn" onclick="addSingleStaff()">Add staff member</button>
@@ -406,7 +407,7 @@
 
   let currentUser = null
   let allStaff    = []
-  let allRoles    = []
+
   let parsedRows  = []
 
   // ── Auth ──
@@ -420,18 +421,7 @@
 
   window.handleSignOut = async () => { await supabase.auth.signOut(); window.location.href = '/login.html' }
 
-  // ── Load roles for checkboxes ──
-  const { data: rolesData } = await supabase.from('roles').select('*').order('name')
-  allRoles = rolesData ?? []
 
-  // Build role checkboxes for add form
-  const checkWrap = document.getElementById('add-roles-check')
-  allRoles.forEach(r => {
-    const label = document.createElement('label')
-    label.className = 'role-option'
-    label.innerHTML = `<input type="checkbox" name="add-role-check" value="${r.id}" /> ${r.name.toUpperCase()}`
-    checkWrap.appendChild(label)
-  })
 
   // ── Load staff ──
   window.loadStaff = async () => {
@@ -523,7 +513,7 @@
     const last   = document.getElementById('add-last').value.trim()
     const email  = document.getElementById('add-email').value.trim()
     const role   = document.getElementById('add-role').value
-    const hours  = 0
+    const hours  = parseInt(document.getElementById('add-hours').value) || 0
     const msg    = document.getElementById('add-msg')
     msg.className = 'msg'
 
@@ -531,7 +521,7 @@
     if (!first || !last) { msg.className = 'msg error'; msg.textContent = 'Please enter first and last name.'; return }
     if (!email)          { msg.className = 'msg error'; msg.textContent = 'Please enter an email address.'; return }
 
-    const selectedRoles = [...document.querySelectorAll('input[name="add-role-check"]:checked')].map(el => el.value)
+    const selectedRoles = []
 
     const btn = document.getElementById('add-btn')
     btn.disabled    = true
@@ -552,7 +542,7 @@
     document.getElementById('add-first').value  = ''
     document.getElementById('add-last').value   = ''
     document.getElementById('add-email').value  = ''
-    document.getElementById('add-hours').value  = '0'
+
     document.querySelectorAll('input[name="add-role-check"]').forEach(el => el.checked = false)
 
     btn.disabled    = false

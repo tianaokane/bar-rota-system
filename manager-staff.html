@@ -328,10 +328,6 @@
               <option value="manager">Manager</option>
             </select>
           </div>
-          <div class="field">
-            <label>Contracted hours / week</label>
-            <input type="number" id="add-hours" placeholder="0" min="0" max="48" value="0" />
-          </div>
           <div class="field full">
             <label>Bar qualifications</label>
             <div class="roles-check" id="add-roles-check"></div>
@@ -527,7 +523,7 @@
     const last   = document.getElementById('add-last').value.trim()
     const email  = document.getElementById('add-email').value.trim()
     const role   = document.getElementById('add-role').value
-    const hours  = parseInt(document.getElementById('add-hours').value) || 0
+    const hours  = 0
     const msg    = document.getElementById('add-msg')
     msg.className = 'msg'
 

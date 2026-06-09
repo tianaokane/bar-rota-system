@@ -800,17 +800,48 @@ function buildPickerList(alreadyAssigned, search) {
 
   if (eligible.length === 0) { list.innerHTML='<div class="picker-empty">No matching staff found</div>'; return }
 
+  // For ad-hoc venues, look up availability by time overlap with main bar slots
+  const isVenueKeyed = ['popup','kitchen','mandela','barista','wee_bar'].includes(templateId)
+
+  function getAvailabilityForUser(userId) {
+    // Try direct template match first
+    const direct = availability[userId + '_' + templateId + '_' + dateStr]
+    if (direct) return direct
+
+    // For ad-hoc venues — find best matching main bar slot by time overlap
+    if (isVenueKeyed) {
+      const dc = dayConfigs[templateId + '_' + dateStr]
+      if (!dc?.start_time || !dc?.end_time) return null
+      // Find the main bar template that overlaps most
+      let bestStatus = null
+      templates.filter(t => !t.is_adhoc).forEach(t => {
+        const avKey = userId + '_' + t.id + '_' + dateStr
+        const avStatus = availability[avKey]
+        if (!avStatus) return
+        if (timesOverlap(dc.start_time, dc.end_time, t.start_time, t.end_time)) {
+          // Prefer preferred > available > unavailable
+          const order = { preferred:0, available:1, unavailable:2 }
+          if (bestStatus === null || (order[avStatus]??3) < (order[bestStatus]??3)) {
+            bestStatus = avStatus
+          }
+        }
+      })
+      return bestStatus
+    }
+    return null
+  }
+
   // Sort by: 1) availability status, 2) first submission time (earlier = higher priority)
   const order = { preferred:0, available:1, null:2, unavailable:3 }
   eligible.sort((a,b) => {
-    const ak      = availability[`${a.id}_${templateId}_${dateStr}`] ?? null
-    const bk      = availability[`${b.id}_${templateId}_${dateStr}`] ?? null
+    const ak      = getAvailabilityForUser(a.id) ?? null
+    const bk      = getAvailabilityForUser(b.id) ?? null
     const statusDiff = (order[ak]??2) - (order[bk]??2)
     if (statusDiff !== 0) return statusDiff
 
     // Same status — sort by earliest submission time
-    const aFirst = availabilityFirstSubmit[`${a.id}_${dateStr}`] ?? '9999'
-    const bFirst = availabilityFirstSubmit[`${b.id}_${dateStr}`] ?? '9999'
+    const aFirst = availabilityFirstSubmit[a.id + '_' + dateStr] ?? '9999'
+    const bFirst = availabilityFirstSubmit[b.id + '_' + dateStr] ?? '9999'
     return aFirst < bFirst ? -1 : aFirst > bFirst ? 1 : 0
   })
 
@@ -824,8 +855,7 @@ function buildPickerList(alreadyAssigned, search) {
     : '<option value="main_bar">Main Bar</option>'
 
   eligible.forEach(s => {
-    const avKey  = `${s.id}_${templateId}_${dateStr}`
-    const status = availability[avKey] ?? null
+    const status = getAvailabilityForUser(s.id) ?? null
     const already = alreadyAssigned.includes(s.id)
 
     // Check shift clashes using effective times
@@ -854,7 +884,7 @@ function buildPickerList(alreadyAssigned, search) {
                       : '<span class="avail-none">No response</span>'
 
     // Show how early they submitted (first submit time for this date)
-    const firstSubmit = availabilityFirstSubmit[`${s.id}_${dateStr}`]
+    const firstSubmit = availabilityFirstSubmit[s.id + '_' + dateStr]
     const submitHint  = firstSubmit && (status === 'preferred' || status === 'available')
       ? `<span style="font-size:0.65rem;color:var(--muted)">${new Date(firstSubmit).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})} ${new Date(firstSubmit).toLocaleDateString('en-GB',{day:'numeric',month:'short'})}</span>`
       : ''

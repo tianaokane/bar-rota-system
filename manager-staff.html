@@ -438,8 +438,6 @@
   })
 
   // ── Load staff ──
-  await loadStaff()
-
   window.loadStaff = async () => {
     document.getElementById('staff-loading').style.display = 'block'
     document.getElementById('staff-list').innerHTML = ''
@@ -455,6 +453,15 @@
     renderStaffList(allStaff)
   }
 
+  window.switchTab = (tab, btn) => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'))
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'))
+    btn.classList.add('active')
+    document.getElementById('panel-' + tab).classList.add('active')
+  }
+
+  await loadStaff()
+
   function renderStaffList(staff) {
     const list = document.getElementById('staff-list')
     list.innerHTML = ''
@@ -466,7 +473,12 @@
 
     staff.forEach(s => {
       const initials = s.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2)
-      const roles    = s.user_roles?.map(ur => ur.roles?.name).filter(Boolean).join(', ') || '—'
+      // Role display — simple: Manager or Bar Staff
+      const systemRole  = s.role === 'manager' || s.role === 'admin' ? 'Manager' : 'Bar Staff'
+      const systemColor = s.role === 'manager' || s.role === 'admin' ? 'rgba(167,139,250,0.15)' : 'rgba(200,245,87,0.1)'
+      const systemText  = s.role === 'manager' || s.role === 'admin' ? 'var(--purple)' : 'var(--accent)'
+      const qualifs     = ''  // not needed
+
       const row = document.createElement('div')
       row.className = 'staff-row'
       row.innerHTML = `
@@ -476,8 +488,8 @@
           <div class="staff-email">${s.email}</div>
         </div>
         <div>
-          <div class="staff-role-badge">${s.role}</div>
-          <div style="font-size:0.72rem;color:var(--muted);margin-top:0.2rem">${roles}</div>
+          <div class="staff-role-badge" style="background:${systemColor};color:${systemText}">${systemRole}</div>
+
         </div>
         <div class="staff-status ${s.active ? 'status-active' : 'status-inactive'}">
           ${s.active ? '● Active' : '○ Inactive'}
@@ -753,13 +765,6 @@
   }
 
   // ── Tab switch ──
-  window.switchTab = (tab, btn) => {
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'))
-    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'))
-    btn.classList.add('active')
-    document.getElementById('panel-' + tab).classList.add('active')
-  }
-
   function showToast(msg, type = 'success') {
     const t = document.getElementById('toast')
     t.textContent = msg

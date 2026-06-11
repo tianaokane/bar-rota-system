@@ -451,6 +451,18 @@
 
 <div class="toast" id="toast"></div>
 
+<!-- Confirm modal -->
+<div id="modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;display:none;align-items:center;justify-content:center">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:2rem;max-width:400px;width:90%;animation:fadeUp 0.2s ease both">
+    <div id="modal-title" style="font-family:'DM Serif Display',serif;font-size:1.2rem;margin-bottom:0.75rem"></div>
+    <div id="modal-msg" style="color:var(--muted);font-size:0.88rem;line-height:1.6;margin-bottom:1.5rem"></div>
+    <div style="display:flex;gap:0.75rem;justify-content:flex-end">
+      <button onclick="modalResolve(false)" style="background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:0.55rem 1.25rem;font-family:'DM Sans',sans-serif;font-size:0.88rem;cursor:pointer;transition:all .15s" onmouseover="this.style.borderColor='var(--text)';this.style.color='var(--text)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">Cancel</button>
+      <button id="modal-confirm-btn" onclick="modalResolve(true)" style="background:var(--error);border:none;color:#fff;border-radius:8px;padding:0.55rem 1.25rem;font-family:'DM Sans',sans-serif;font-size:0.88rem;font-weight:500;cursor:pointer;transition:all .15s" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">Delete</button>
+    </div>
+  </div>
+</div>
+
 <script src="env.js"></script>
 <script type="module">
   import { supabase, requireManager } from './src/lib/supabase.js'
@@ -640,7 +652,11 @@
   }
 
   window.deleteStaff = async (userId, name) => {
-    const confirmed = confirm(`Delete ${name}? This will remove them from the system permanently. Their name will remain on any past shifts.`)
+    const confirmed = await showConfirm(
+      `Delete ${name}?`,
+      `This will remove them from the system permanently. Their name will remain on any past shifts.`,
+      'Delete'
+    )
     if (!confirmed) return
 
     // Remove user_roles first
@@ -899,6 +915,25 @@
   }
 
   // ── Tab switch ──
+    // ── Custom confirm modal ──
+  let modalResolve = null
+
+  window.showConfirm = (title, msg, confirmLabel = 'Delete', danger = true) => {
+    return new Promise(resolve => {
+      document.getElementById('modal-title').textContent = title
+      document.getElementById('modal-msg').textContent   = msg
+      const btn = document.getElementById('modal-confirm-btn')
+      btn.textContent  = confirmLabel
+      btn.style.background = danger ? 'var(--error)' : 'var(--accent)'
+      btn.style.color      = danger ? '#fff' : '#0d0d0d'
+      document.getElementById('modal-overlay').style.display = 'flex'
+      modalResolve = (result) => {
+        document.getElementById('modal-overlay').style.display = 'none'
+        resolve(result)
+      }
+    })
+  }
+
   function showToast(msg, type = 'success') {
     const t = document.getElementById('toast')
     t.textContent = msg

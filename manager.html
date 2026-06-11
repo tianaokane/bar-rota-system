@@ -1363,6 +1363,21 @@ window.createWeek = async () => {
 }
 
 // ── Publish rota ──────────────────────────────────────────────
+window.modalResolve = null
+window.showConfirm = (title, msg, confirmLabel='Confirm', danger=true) => {
+  return new Promise(resolve => {
+    document.getElementById('modal-title').textContent = title
+    document.getElementById('modal-msg').textContent   = msg
+    const btn = document.getElementById('modal-confirm-btn')
+    btn.textContent       = confirmLabel
+    btn.style.background  = danger ? 'var(--error)' : 'var(--accent)'
+    btn.style.color       = danger ? '#fff' : '#0d0d0d'
+    document.getElementById('modal-overlay').style.display = 'flex'
+    window.modalResolve = (result) => {
+      document.getElementById('modal-overlay').style.display = 'none'
+      resolve(result)
+    }
+
 window.publishRota = async () => {
   if (!selectedWeek) return
   const confirmed = await showConfirm(
@@ -1410,20 +1425,6 @@ window.deleteWeek = async () => {
   await loadWeeks()
 }
 
-window.modalResolve = null
-window.showConfirm = (title, msg, confirmLabel='Confirm', danger=true) => {
-  return new Promise(resolve => {
-    document.getElementById('modal-title').textContent = title
-    document.getElementById('modal-msg').textContent   = msg
-    const btn = document.getElementById('modal-confirm-btn')
-    btn.textContent       = confirmLabel
-    btn.style.background  = danger ? 'var(--error)' : 'var(--accent)'
-    btn.style.color       = danger ? '#fff' : '#0d0d0d'
-    document.getElementById('modal-overlay').style.display = 'flex'
-    window.modalResolve = (result) => {
-      document.getElementById('modal-overlay').style.display = 'none'
-      resolve(result)
-    }
   })
 }
 

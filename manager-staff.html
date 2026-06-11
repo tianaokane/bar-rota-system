@@ -221,6 +221,57 @@
     .msg.error   { background: rgba(255,107,107,0.1); border: 1px solid rgba(255,107,107,0.3); color: var(--error); display: block; }
     .msg.success { background: rgba(74,222,128,0.1);  border: 1px solid rgba(74,222,128,0.3);  color: var(--green);  display: block; }
 
+    /* Edit panel */
+    .edit-panel { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; margin-top: 0.5rem; display: none; animation: fadeUp 0.2s ease both; }
+    .edit-panel.open { display: block; }
+    .edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem; }
+    .edit-field { display: flex; flex-direction: column; gap: 0.35rem; }
+    .edit-field label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); }
+    .edit-field input, .edit-field select { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.85rem; padding: 0.5rem 0.75rem; outline: none; width: 100%; }
+    .edit-field input:focus, .edit-field select:focus { border-color: var(--accent); }
+    .edit-field input[type="password"] { letter-spacing: 0.1em; }
+    .edit-actions { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+    .btn-save { background: var(--accent); color: #0d0d0d; border: none; border-radius: 6px; padding: 0.45rem 1rem; font-size: 0.82rem; font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all .15s; }
+    .btn-save:hover { background: #d4f96e; }
+    .btn-cancel-edit { background: transparent; color: var(--muted); border: 1px solid var(--border); border-radius: 6px; padding: 0.45rem 1rem; font-size: 0.82rem; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all .15s; }
+    .btn-cancel-edit:hover { border-color: var(--text); color: var(--text); }
+    .staff-row { cursor: pointer; }
+    .staff-row:hover { background: var(--surface2); }
+    .staff-row-wrap { margin-bottom: 0.5rem; }
+
+    /* Edit panel */
+    .edit-panel { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; display: none; animation: fadeUp 0.2s ease both; }
+    .edit-panel.open { display: block; }
+    .edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem; }
+    .edit-field { display: flex; flex-direction: column; gap: 0.35rem; }
+    .edit-field label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); }
+    .edit-field input, .edit-field select { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.85rem; padding: 0.5rem 0.75rem; outline: none; width: 100%; }
+    .edit-field input:focus, .edit-field select:focus { border-color: var(--accent); }
+    .edit-actions { display: flex; gap: 0.5rem; margin-top: 0.25rem; }
+    .btn-save { background: var(--accent); color: #0d0d0d; border: none; border-radius: 6px; padding: 0.45rem 1rem; font-size: 0.82rem; font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all .15s; }
+    .btn-save:hover { background: #d4f96e; }
+    .btn-cancel-edit { background: transparent; color: var(--muted); border: 1px solid var(--border); border-radius: 6px; padding: 0.45rem 1rem; font-size: 0.82rem; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all .15s; }
+    .btn-cancel-edit:hover { border-color: var(--text); color: var(--text); }
+    .staff-row { cursor: pointer; }
+    .staff-row:hover { background: rgba(200,245,87,0.03); }
+    .staff-row-wrap { margin-bottom: 0.5rem; }
+
+    /* Edit panel */
+    .edit-panel { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; display: none; animation: fadeUp 0.2s ease both; }
+    .edit-panel.open { display: block; }
+    .edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem; }
+    .edit-field { display: flex; flex-direction: column; gap: 0.35rem; }
+    .edit-field label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); }
+    .edit-field input, .edit-field select { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.85rem; padding: 0.5rem 0.75rem; outline: none; width: 100%; }
+    .edit-field input:focus, .edit-field select:focus { border-color: var(--accent); }
+    .edit-actions { display: flex; gap: 0.5rem; margin-top: 0.25rem; }
+    .btn-save { background: var(--accent); color: #0d0d0d; border: none; border-radius: 6px; padding: 0.45rem 1rem; font-size: 0.82rem; font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all .15s; }
+    .btn-save:hover { background: #d4f96e; }
+    .btn-cancel-edit { background: transparent; color: var(--muted); border: 1px solid var(--border); border-radius: 6px; padding: 0.45rem 1rem; font-size: 0.82rem; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all .15s; }
+    .btn-cancel-edit:hover { border-color: var(--text); color: var(--text); }
+    .staff-row { cursor: pointer; }
+    .staff-row:hover { background: rgba(200,245,87,0.03); }
+    .staff-row-wrap { margin-bottom: 0.5rem; }
     .toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(20px); padding: 0.65rem 1.5rem; border-radius: 8px; font-size: 0.88rem; font-weight: 500; opacity: 0; transition: all 0.3s ease; pointer-events: none; z-index: 100; }
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
     .toast.success { background: var(--green); color: #0d0d0d; }
@@ -455,15 +506,18 @@
     }
 
     staff.forEach(s => {
-      const initials = s.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2)
-      // Role display — simple: Manager or Bar Staff
+      const initials    = s.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2)
       const systemRole  = s.role === 'manager' || s.role === 'admin' ? 'Manager' : 'Bar Staff'
       const systemColor = s.role === 'manager' || s.role === 'admin' ? 'rgba(167,139,250,0.15)' : 'rgba(200,245,87,0.1)'
       const systemText  = s.role === 'manager' || s.role === 'admin' ? 'var(--purple)' : 'var(--accent)'
-      const qualifs     = ''  // not needed
+
+      const wrap = document.createElement('div')
+      wrap.className = 'staff-row-wrap'
+      wrap.id = `wrap-${s.id}`
 
       const row = document.createElement('div')
       row.className = 'staff-row'
+      row.onclick = () => toggleEditPanel(s)
       row.innerHTML = `
         <div class="staff-avatar">${initials}</div>
         <div>
@@ -472,17 +526,51 @@
         </div>
         <div>
           <div class="staff-role-badge" style="background:${systemColor};color:${systemText}">${systemRole}</div>
-
         </div>
         <div class="staff-status ${s.active ? 'status-active' : 'status-inactive'}">
           ${s.active ? '● Active' : '○ Inactive'}
         </div>
         <div>
-          <button class="btn-sm" onclick="toggleActive('${s.id}', ${s.active})">
+          <button class="btn-sm" onclick="event.stopPropagation();toggleActive('${s.id}', ${s.active})">
             ${s.active ? 'Deactivate' : 'Reactivate'}
           </button>
         </div>`
-      list.appendChild(row)
+
+      const editPanel = document.createElement('div')
+      editPanel.className = 'edit-panel'
+      editPanel.id = `edit-${s.id}`
+      editPanel.innerHTML = `
+        <div class="edit-grid">
+          <div class="edit-field">
+            <label>Name</label>
+            <input type="text" id="edit-name-${s.id}" value="${s.name}" />
+          </div>
+          <div class="edit-field">
+            <label>Email</label>
+            <input type="email" id="edit-email-${s.id}" value="${s.email}" />
+          </div>
+          <div class="edit-field">
+            <label>Role</label>
+            <select id="edit-role-${s.id}">
+              <option value="staff"   ${s.role === 'staff'   ? 'selected' : ''}>Bar Staff</option>
+              <option value="manager" ${s.role === 'manager' ? 'selected' : ''}>Manager</option>
+            </select>
+          </div>
+          <div class="edit-field">
+            <label>Password</label>
+            <button class="btn-cancel-edit" style="margin-top:0.25rem" onclick="sendPasswordReset('${s.id}')">
+              Send reset email →
+            </button>
+          </div>
+        </div>
+        <div class="edit-actions">
+          <button class="btn-save" onclick="saveStaff('${s.id}')">Save changes</button>
+          <button class="btn-cancel-edit" onclick="toggleEditPanel(null,'${s.id}')">Cancel</button>
+        </div>`
+
+      wrap.appendChild(row)
+      wrap.appendChild(editPanel)
+      list.appendChild(wrap)
     })
   }
 
@@ -491,6 +579,64 @@
     renderStaffList(allStaff.filter(s =>
       s.name.toLowerCase().includes(q) || s.email.toLowerCase().includes(q)
     ))
+  }
+
+  // ── Toggle edit panel ──
+  window.toggleEditPanel = (staff, forceCloseId = null) => {
+    // Close all open panels first
+    document.querySelectorAll('.edit-panel.open').forEach(p => {
+      if (!forceCloseId || p.id === `edit-${forceCloseId}`) p.classList.remove('open')
+    })
+    // Open the clicked one (unless we're just closing)
+    if (staff && !forceCloseId) {
+      const panel = document.getElementById(`edit-${staff.id}`)
+      if (panel) panel.classList.toggle('open')
+    }
+  }
+
+  // ── Save staff edits ──
+  // ── Send password reset email ──
+  window.sendPasswordReset = async (userId) => {
+    const staffMember = allStaff.find(s => s.id === userId)
+    if (!staffMember) return
+    const { error } = await supabase.auth.resetPasswordForEmail(staffMember.email, {
+      redirectTo: window.location.origin + '/reset.html'
+    })
+    if (error) { showToast('Error sending reset email', 'error'); return }
+    showToast('Reset email sent to ' + staffMember.email, 'success')
+  }
+
+  window.saveStaff = async (userId) => {
+    const name  = document.getElementById(`edit-name-${userId}`)?.value.trim()
+    const email = document.getElementById(`edit-email-${userId}`)?.value.trim()
+    const role  = document.getElementById(`edit-role-${userId}`)?.value
+
+
+    if (!name || !email) { showToast('Name and email are required', 'error'); return }
+
+    // Update users table
+    const { error } = await supabase
+      .from('users')
+      .update({ name, email, role })
+      .eq('id', userId)
+
+    if (error) { showToast('Error saving changes', 'error'); return }
+
+    // Send password reset email if requested
+    if (pw === 'RESET') {
+      // Find email for this user
+      const staffMember = allStaff.find(s => s.id === userId)
+      if (staffMember) {
+        await supabase.auth.resetPasswordForEmail(staffMember.email, {
+          redirectTo: window.location.origin + '/reset.html'
+        })
+        showToast('Password reset email sent to ' + staffMember.email, 'success')
+      }
+    } else {
+      showToast('Details saved!', 'success')
+    }
+
+    await loadStaff()
   }
 
   window.toggleActive = async (userId, currentlyActive) => {

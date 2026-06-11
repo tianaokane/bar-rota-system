@@ -1,0 +1,12 @@
+[build]
+  command = "node generate-env.js"
+  publish = "."
+
+[build.environment]
+  NODE_VERSION = "18"
+
+# Redirect root to login page
+[[redirects]]
+  from = "/"
+  to = "/login.html"
+  status = 302

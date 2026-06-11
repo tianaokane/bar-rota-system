@@ -1,0 +1,7 @@
+{
+  "name": "bar-rota-system",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "node generate-env.js"
+  }
+}

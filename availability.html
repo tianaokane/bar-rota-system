@@ -310,6 +310,7 @@
   let currentUser    = null
   let weeks          = []
   let templates      = []
+  let weekDayConfigs = {}   // venueKey_date → {start_time, end_time}
   let existingAvail  = {}
   let pendingChanges = {}
   let selectedWeek   = null
@@ -363,11 +364,10 @@
 
     sel.addEventListener('change', () => loadWeek(sel.value))
 
-    // ── Load shift templates ──
+    // ── Load shift templates (all including adhoc for overlap matching) ──
     const { data: tplData } = await supabase
       .from('shift_templates')
       .select('*, roles(*)')
-      .eq('is_adhoc', false)
       .order('start_time')
 
     templates = tplData ?? []
@@ -400,6 +400,25 @@
       existingAvail[`${a.shift_template_id}_${a.shift_date}`] = { id: a.id, status: a.status }
     })
 
+    // Load day configs to know which ad-hoc venues are active this week
+    const { data: dcData } = await supabase
+      .from('shift_day_config')
+      .select('*')
+      .eq('fortnight_id', weekId)
+
+    weekDayConfigs = {}
+    ;(dcData ?? []).forEach(dc => {
+      let key
+      if (dc.notes && dc.notes.startsWith('venue:')) {
+        key = dc.notes.replace('venue:', '') + '_' + dc.shift_date
+      } else if (!dc.shift_template_id) {
+        key = 'popup_' + dc.shift_date
+      } else {
+        key = dc.shift_template_id + '_' + dc.shift_date
+      }
+      weekDayConfigs[key] = { start_time: dc.start_time, end_time: dc.end_time, notes: dc.notes }
+    })
+
     renderGrid()
   }
 
@@ -417,11 +436,20 @@
     })
 
     const userRoleNames = currentUser.user_roles?.map(ur => ur.roles?.name) ?? []
-    const relevant = templates.filter(t =>
-      userRoleNames.length === 0 || userRoleNames.includes(t.roles?.name)
+    const isBar = userRoleNames.includes('bar')
+    const isKP  = userRoleNames.includes('kp')
+
+    // Regular templates for this user's role (non-adhoc)
+    const regularTpls = templates.filter(t =>
+      !t.is_adhoc && (userRoleNames.length === 0 || userRoleNames.includes(t.roles?.name))
     )
 
-    if (relevant.length === 0) {
+    // Ad-hoc venue keys that bar staff should see
+    const adHocVenues = isBar
+      ? ['barista','wee_bar','mandela','popup']
+      : isKP ? ['kitchen'] : []
+
+    if (regularTpls.length === 0 && !isBar && !isKP) {
       container.innerHTML = `
         <div class="no-weeks">
           <div class="big">🔧</div>
@@ -448,10 +476,30 @@
 
       const slotsEl = row.querySelector(`#slots-${dateStr}`)
 
-      relevant.forEach(tpl => {
+      // Regular slots
+      regularTpls.forEach(tpl => {
         const key     = `${tpl.id}_${dateStr}`
         const current = pendingChanges[key] ?? existingAvail[key]?.status ?? null
         slotsEl.appendChild(buildSlot(tpl, dateStr, key, current))
+      })
+
+      // Ad-hoc venue slots — only show if manager has enabled them this day
+      adHocVenues.forEach(venueKey => {
+        const dcKey = `${venueKey}_${dateStr}`
+        const dc    = weekDayConfigs[dcKey]
+        if (!dc) return // not active this day
+
+        const venueLabels = { barista:'Barista', wee_bar:'Wee Bar', mandela:'Mandela', popup:'Pop-up Bar', kitchen:'Kitchen Porter' }
+        const label       = venueKey === 'popup' && dc.notes && !dc.notes.startsWith('venue:') ? dc.notes : venueLabels[venueKey]
+        const startDisp   = (dc.start_time||'').slice(0,5)
+        const endDisp     = (dc.end_time||'').slice(0,5)
+
+        // Use venueKey as fake template id for availability key
+        const key     = `adhoc_${venueKey}_${dateStr}`
+        const current = pendingChanges[key] ?? existingAvail[key]?.status ?? null
+
+        const slot = buildAdHocSlot(label, startDisp, endDisp, dateStr, key, current, venueKey)
+        slotsEl.appendChild(slot)
       })
 
       container.appendChild(row)
@@ -474,6 +522,27 @@
           title="Preferred"   onclick="setStatus('${key}','preferred','${tpl.id}','${dateStr}')">★</button>
         <button class="slot-btn ${currentStatus === 'unavailable' ? 'active-unavailable' : ''}"
           title="Unavailable" onclick="setStatus('${key}','unavailable','${tpl.id}','${dateStr}')">✕</button>
+      </div>`
+    return el
+  }
+
+  // ── Build an ad-hoc venue slot (Barista, Wee Bar etc) ──
+  function buildAdHocSlot(label, startTime, endTime, dateStr, key, currentStatus, venueKey) {
+    const el = document.createElement('div')
+    el.className = `slot adhoc-slot${currentStatus ? ` is-${currentStatus}` : ''}`
+    el.id = `slot-${key}`
+    el.innerHTML = `
+      <div class="slot-info">
+        <div class="slot-name">${label} <span style="font-size:0.68rem;color:var(--muted);margin-left:0.25rem">event</span></div>
+        <div class="slot-time">${startTime} – ${endTime}</div>
+      </div>
+      <div class="slot-controls">
+        <button class="slot-btn ${currentStatus === 'available'   ? 'active-available'   : ''}"
+          title="Available"   onclick="setStatus('${key}','available','adhoc_${venueKey}','${dateStr}')">✓</button>
+        <button class="slot-btn ${currentStatus === 'preferred'   ? 'active-preferred'   : ''}"
+          title="Preferred"   onclick="setStatus('${key}','preferred','adhoc_${venueKey}','${dateStr}')">★</button>
+        <button class="slot-btn ${currentStatus === 'unavailable' ? 'active-unavailable' : ''}"
+          title="Unavailable" onclick="setStatus('${key}','unavailable','adhoc_${venueKey}','${dateStr}')">✕</button>
       </div>`
     return el
   }
@@ -514,8 +583,23 @@
     const deletes = []
 
     for (const [key, status] of Object.entries(pendingChanges)) {
-      const [templateId, dateStr] = key.split('_')
       const existing = existingAvail[key]
+      const isAdhoc  = key.startsWith('adhoc_')
+
+      let templateId, dateStr, venueKey
+      if (isAdhoc) {
+        // key format: adhoc_venueKey_date
+        const parts = key.split('_')
+        venueKey   = parts[1]
+        dateStr    = parts.slice(2).join('_')
+        templateId = null
+      } else {
+        const idx  = key.lastIndexOf('_')
+        templateId = key.slice(0, idx - 10)  // uuid is 36 chars, date is 10
+        // Actually split properly: key = templateId_date where date is last 10 chars
+        dateStr    = key.slice(-10)
+        templateId = key.slice(0, key.length - 11)
+      }
 
       if (status === null && existing) {
         deletes.push(existing.id)
@@ -524,9 +608,10 @@
           ...(existing?.id ? { id: existing.id } : {}),
           user_id:           currentUser.id,
           fortnight_id:      selectedWeek.id,
-          shift_template_id: templateId,
+          shift_template_id: isAdhoc ? null : templateId,
           shift_date:        dateStr,
           status,
+          ...(isAdhoc ? { notes: 'venue:' + venueKey } : {}),
         })
       }
     }

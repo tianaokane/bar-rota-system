@@ -125,7 +125,7 @@
     .chip-area { font-size:0.68rem; font-weight:500; }
     .chip-area.main_bar { color:var(--accent); } .chip-area.wee_bar { color:var(--amber); }
     .chip-area.mandela  { color:var(--purple); } .chip-area.floor   { color:var(--green); }
-    .chip-area.kitchen  { color:var(--green);  } .chip-area.popup   { color:var(--orange); } .chip-area.barista { color:var(--accent); } .chip-area.wee_bar { color:var(--amber); }
+    .chip-area.management { color:var(--purple); } .chip-area.kitchen  { color:var(--green);  } .chip-area.popup   { color:var(--orange); } .chip-area.barista { color:var(--accent); } .chip-area.wee_bar { color:var(--amber); }
     .chip-remove { background:none; border:none; color:var(--muted); cursor:pointer; font-size:0.9rem; padding:0; line-height:1; transition:color .15s; }
     .chip-remove:hover { color:var(--error); }
 
@@ -139,6 +139,18 @@
     .floor-switch-track::after { content:''; position:absolute; width:10px; height:10px; border-radius:50%; background:#fff; top:3px; left:3px; transition:transform .2s; }
     .floor-switch input:checked + .floor-switch-track::after { transform:translateX(12px); }
 
+    /* Management section */
+    .venue-header.management { background:rgba(167,139,250,0.05); border-left:3px solid var(--purple); }
+    .mgmt-slot-row { display:grid; grid-template-columns:180px 1fr; gap:0.75rem; align-items:start; padding:0.5rem 0; border-bottom:1px solid var(--border); }
+    .mgmt-slot-row:last-child { border-bottom:none; padding-bottom:0; }
+    .mgmt-time-wrap { display:flex; align-items:center; gap:0.4rem; margin-top:0.3rem; flex-wrap:wrap; }
+    .mgmt-time-input { background:var(--surface); border:1px solid var(--border); border-radius:6px; color:var(--accent); font-family:'DM Sans',sans-serif; font-size:0.75rem; padding:0.2rem 0.4rem; outline:none; width:88px; color-scheme:dark; cursor:pointer; }
+    .mgmt-time-input:focus { border-color:var(--accent); }
+    .mgmt-time-sep { font-size:0.72rem; color:var(--muted); }
+    .add-mgmt-slot-btn { display:inline-flex; align-items:center; gap:0.35rem; background:transparent; border:1px dashed var(--border); border-radius:20px; padding:0.25rem 0.75rem; font-size:0.75rem; color:var(--muted); cursor:pointer; transition:all .15s; font-family:'DM Sans',sans-serif; margin-top:0.5rem; }
+    .add-mgmt-slot-btn:hover { border-color:var(--purple); color:var(--purple); }
+    .remove-mgmt-slot-btn { background:none; border:none; color:var(--muted); cursor:pointer; font-size:0.85rem; padding:0.1rem 0.3rem; transition:color .15s; line-height:1; }
+    .remove-mgmt-slot-btn:hover { color:var(--error); }
     /* Add staff btn */
     .add-staff-btn { display:inline-flex; align-items:center; gap:0.4rem; background:transparent; border:1px dashed var(--border); border-radius:20px; padding:0.25rem 0.75rem; font-size:0.78rem; color:var(--muted); cursor:pointer; transition:all .15s; font-family:'DM Sans',sans-serif; }
     .add-staff-btn:hover { border-color:var(--accent); color:var(--accent); }
@@ -197,10 +209,25 @@
     .no-weeks .big { font-family:'DM Serif Display',serif; font-size:3rem; margin-bottom:0.5rem; }
     @keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
     @media (max-width:900px) { .nav { display:none; } .main { margin-left:0; padding:1.5rem 1rem 8rem; } .publish-bar { left:0; } .slot-row { grid-template-columns:1fr; } }
+
+    /* ── Mobile nav ── */
+    .hamburger { display:none; position:fixed; top:1rem; left:1rem; z-index:100; background:var(--surface); border:1px solid var(--border); border-radius:8px; width:40px; height:40px; align-items:center; justify-content:center; cursor:pointer; flex-direction:column; gap:5px; padding:10px; }
+    .hamburger span { display:block; width:18px; height:2px; background:var(--text); border-radius:2px; transition:all .2s; }
+    .nav-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9; }
+    @media (max-width:900px) {
+      .hamburger { display:flex; }
+      .nav { transform:translateX(-100%); transition:transform .25s ease; }
+      .nav.open { transform:translateX(0); }
+      .nav-overlay.open { display:block; }
+    }
   </style>
 </head>
 <body>
 <div class="app">
+<button class="hamburger" id="hamburger" onclick="toggleNav()" aria-label="Menu">
+  <span></span><span></span><span></span>
+</button>
+<div class="nav-overlay" id="nav-overlay" onclick="toggleNav()"></div>
   <nav class="nav">
     <div class="nav-logo">SU Bar <span>Rota</span></div>
     <span class="nav-section">Staff</span>
@@ -482,6 +509,9 @@ function renderGrid() {
 
     const body = panel.querySelector(`#body-${dateStr}`)
 
+    // Management section
+    renderManagementSection(body, dateStr)
+
     // Main Bar venue section
     renderMainBarSection(body, dateStr)
 
@@ -493,6 +523,243 @@ function renderGrid() {
     renderEventVenueSection(body, dateStr, 'kitchen',  'kitchen',  'Kitchen Porter', 'var(--green)')
     container.appendChild(panel)
   })
+}
+
+// ── Management section ───────────────────────────────────────
+function renderManagementSection(body, dateStr) {
+  const mgmtTpls = templates.filter(t => t.roles?.name === 'manager' && !t.is_adhoc)
+  if (mgmtTpls.length === 0) return
+
+  // Get any extra management slots from day configs (venue-keyed as mgmt_N_date)
+  const extraSlots = Object.entries(dayConfigs)
+    .filter(([k]) => k.startsWith('mgmt_') && k.endsWith('_' + dateStr))
+    .map(([k, dc]) => ({ key: k, dc }))
+
+  const section = document.createElement('div')
+  section.className = 'venue-section'
+  section.id = 'mgmt-section-' + dateStr
+  section.innerHTML = `
+    <div class="venue-header management">
+      <div class="venue-name">
+        <div class="venue-dot" style="background:var(--purple)"></div>
+        Management
+      </div>
+    </div>
+    <div class="venue-body" id="mgmt-body-${dateStr}"></div>`
+
+  const vBody = section.querySelector('#mgmt-body-' + dateStr)
+
+  // Render default template slots
+  mgmtTpls.forEach(tpl => {
+    const key      = tpl.id + '_' + dateStr
+    const dc       = dayConfigs[key]
+    const required = dc?.required_staff ?? tpl.min_staff
+    const assigned = (rotaShifts[key] ?? []).filter(s => s.status !== 'cancelled')
+    const startVal = dc?.start_time ?? tpl.start_time
+    const endVal   = dc?.end_time   ?? tpl.end_time
+    vBody.appendChild(buildMgmtSlotRow(tpl.id, startVal, endVal, dateStr, key, required, assigned, false))
+  })
+
+  // Render extra ad-hoc management slots
+  extraSlots.forEach(({ key, dc }) => {
+    const assigned = (rotaShifts[key] ?? []).filter(s => s.status !== 'cancelled')
+    vBody.appendChild(buildMgmtSlotRow(key, dc.start_time, dc.end_time, dateStr, key, dc.required_staff ?? 1, assigned, true))
+  })
+
+  // Add slot button
+  const addBtn = document.createElement('button')
+  addBtn.className = 'add-mgmt-slot-btn'
+  addBtn.textContent = '+ Add management slot'
+  addBtn.onclick = () => addMgmtSlot(dateStr)
+  vBody.appendChild(addBtn)
+
+  body.appendChild(section)
+}
+
+function buildMgmtSlotRow(templateId, startTime, endTime, dateStr, key, required, assigned, isExtra) {
+  const startDisp = (startTime || '').slice(0, 5) || '00:00'
+  const endDisp   = (endTime   || '').slice(0, 5) || '00:00'
+
+  const row = document.createElement('div')
+  row.className = 'mgmt-slot-row'
+  row.id = 'slot-' + key
+
+  row.innerHTML = `
+    <div class="slot-label">
+      <div class="mgmt-time-wrap">
+        <input type="time" class="mgmt-time-input" id="mgmt-start-${key}" value="${startDisp}"
+          onchange="saveMgmtTime('${templateId}','${dateStr}','${key}')" />
+        <span class="mgmt-time-sep">–</span>
+        <input type="time" class="mgmt-time-input" id="mgmt-end-${key}" value="${endDisp}"
+          onchange="saveMgmtTime('${templateId}','${dateStr}','${key}')" />
+        ${isExtra ? `<button class="remove-mgmt-slot-btn" onclick="removeMgmtSlot('${key}','${dateStr}')" title="Remove slot">×</button>` : ''}
+      </div>
+      <div class="slot-count" style="margin-top:0.3rem">
+        <button class="count-btn" onclick="updateRequired('${templateId}','${dateStr}',-1)">−</button>
+        <span class="count-num" id="req-${key}">${required}</span>
+        <button class="count-btn" onclick="updateRequired('${templateId}','${dateStr}',1)">+</button>
+        <span class="count-label">needed</span>
+      </div>
+    </div>
+    <div class="slot-content">
+      <div class="assigned-list" id="assigned-${key}"></div>
+      <button class="add-staff-btn" onclick="openPicker('${templateId}','${dateStr}','management',this)">+ Add manager</button>
+    </div>`
+
+  const list = row.querySelector('#assigned-' + key)
+  assigned.forEach(rs => {
+    const s = allStaff.find(x => x.id === rs.user_id)
+    if (s) list.appendChild(buildChip(rs, s, templateId, dateStr))
+  })
+
+  return row
+}
+
+// ── Add extra management slot ─────────────────────────────────
+window.addMgmtSlot = async (dateStr) => {
+  // Create a unique key for this extra slot
+  const slotIndex = Object.keys(dayConfigs).filter(k => k.startsWith('mgmt_') && k.endsWith('_' + dateStr)).length + 1
+  const key = 'mgmt_' + slotIndex + '_' + dateStr
+
+  const { data, error } = await supabase.from('shift_day_config').insert({
+    fortnight_id:      selectedWeek.id,
+    shift_template_id: null,
+    shift_date:        dateStr,
+    required_staff:    1,
+    start_time:        '18:00:00',
+    end_time:          '02:00:00',
+    notes:             'venue:' + key.replace('_' + dateStr, ''),
+  }).select().single()
+
+  if (!error && data) {
+    dayConfigs[key] = { id: data.id, required_staff: 1, start_time: '18:00:00', end_time: '02:00:00', notes: data.notes }
+  }
+  rerenderDay(dateStr)
+}
+
+// ── Remove extra management slot ──────────────────────────────
+window.removeMgmtSlot = async (key, dateStr) => {
+  const dc = dayConfigs[key]
+  if (dc) {
+    await supabase.from('shift_day_config').delete().eq('id', dc.id)
+    for (const rs of (rotaShifts[key] ?? [])) await supabase.from('rota_shifts').delete().eq('id', rs.id)
+    delete dayConfigs[key]
+    delete rotaShifts[key]
+  }
+  rerenderDay(dateStr)
+}
+
+// ── Save management slot times ────────────────────────────────
+window.saveMgmtTime = async (templateId, dateStr, key) => {
+  const startEl = document.getElementById('mgmt-start-' + key)
+  const endEl   = document.getElementById('mgmt-end-'   + key)
+  if (!startEl || !endEl) return
+
+  const startTime = startEl.value + ':00'
+  const endTime   = endEl.value   + ':00'
+
+  const dc = dayConfigs[key]
+  if (dc) {
+    await supabase.from('shift_day_config').update({ start_time: startTime, end_time: endTime }).eq('id', dc.id)
+    dayConfigs[key].start_time = startTime
+    dayConfigs[key].end_time   = endTime
+  } else {
+    // Create config for default template slot
+    const tpl = templates.find(t => t.id === templateId)
+    const { data } = await supabase.from('shift_day_config').insert({
+      fortnight_id:      selectedWeek.id,
+      shift_template_id: templateId,
+      shift_date:        dateStr,
+      required_staff:    tpl?.min_staff ?? 1,
+      start_time:        startTime,
+      end_time:          endTime,
+    }).select().single()
+    if (data) dayConfigs[key] = { id: data.id, required_staff: data.required_staff, start_time: startTime, end_time: endTime }
+  }
+}
+
+// ── Management section ───────────────────────────────────────
+
+function buildMgmtSlotRow(templateId, startTime, endTime, dateStr, key, required, assigned, isExtra) {
+  const startDisp = (startTime || '').slice(0, 5) || '00:00'
+  const endDisp   = (endTime   || '').slice(0, 5) || '00:00'
+  const row = document.createElement('div')
+  row.className = 'mgmt-slot-row'
+  row.id = 'slot-' + key
+  row.innerHTML = `
+    <div class="slot-label">
+      <div class="mgmt-time-wrap">
+        <input type="time" class="mgmt-time-input" id="mgmt-start-${key}" value="${startDisp}"
+          onchange="saveMgmtTime('${templateId}','${dateStr}','${key}')" />
+        <span class="mgmt-time-sep">–</span>
+        <input type="time" class="mgmt-time-input" id="mgmt-end-${key}" value="${endDisp}"
+          onchange="saveMgmtTime('${templateId}','${dateStr}','${key}')" />
+        ${isExtra ? '<button class="remove-mgmt-slot-btn" onclick="removeMgmtSlot(\'' + key + '\',\'' + dateStr + '\')" title="Remove">×</button>' : ''}
+      </div>
+      <div class="slot-count" style="margin-top:0.3rem">
+        <button class="count-btn" onclick="updateRequired('${templateId}','${dateStr}',-1)">−</button>
+        <span class="count-num" id="req-${key}">${required}</span>
+        <button class="count-btn" onclick="updateRequired('${templateId}','${dateStr}',1)">+</button>
+        <span class="count-label">needed</span>
+      </div>
+    </div>
+    <div class="slot-content">
+      <div class="assigned-list" id="assigned-${key}"></div>
+      <button class="add-staff-btn" onclick="openPicker('${templateId}','${dateStr}','management',this)">+ Add manager</button>
+    </div>`
+
+  const list = row.querySelector('#assigned-' + key)
+  assigned.forEach(rs => {
+    const s = allStaff.find(x => x.id === rs.user_id)
+    if (s) list.appendChild(buildChip(rs, s, templateId, dateStr))
+  })
+  return row
+}
+
+window.addMgmtSlot = async (dateStr) => {
+  const idx = Object.keys(dayConfigs).filter(k => k.startsWith('mgmt_') && k.endsWith('_' + dateStr)).length + 1
+  const key = 'mgmt_' + idx + '_' + dateStr
+  const { data, error } = await supabase.from('shift_day_config').insert({
+    fortnight_id: selectedWeek.id, shift_template_id: null,
+    shift_date: dateStr, required_staff: 1,
+    start_time: '18:00:00', end_time: '02:00:00',
+    notes: 'venue:mgmt_' + idx,
+  }).select().single()
+  if (!error && data) dayConfigs[key] = { id: data.id, required_staff: 1, start_time: '18:00:00', end_time: '02:00:00', notes: data.notes }
+  rerenderDay(dateStr)
+}
+
+window.removeMgmtSlot = async (key, dateStr) => {
+  const dc = dayConfigs[key]
+  if (dc) {
+    await supabase.from('shift_day_config').delete().eq('id', dc.id)
+    for (const rs of (rotaShifts[key] ?? [])) await supabase.from('rota_shifts').delete().eq('id', rs.id)
+    delete dayConfigs[key]
+    delete rotaShifts[key]
+  }
+  rerenderDay(dateStr)
+}
+
+window.saveMgmtTime = async (templateId, dateStr, key) => {
+  const startEl = document.getElementById('mgmt-start-' + key)
+  const endEl   = document.getElementById('mgmt-end-'   + key)
+  if (!startEl || !endEl) return
+  const startTime = startEl.value + ':00'
+  const endTime   = endEl.value + ':00'
+  const dc = dayConfigs[key]
+  if (dc) {
+    await supabase.from('shift_day_config').update({ start_time: startTime, end_time: endTime }).eq('id', dc.id)
+    dayConfigs[key].start_time = startTime
+    dayConfigs[key].end_time   = endTime
+  } else {
+    const tpl = templates.find(t => t.id === templateId)
+    const { data } = await supabase.from('shift_day_config').insert({
+      fortnight_id: selectedWeek.id, shift_template_id: templateId,
+      shift_date: dateStr, required_staff: tpl?.min_staff ?? 1,
+      start_time: startTime, end_time: endTime,
+    }).select().single()
+    if (data) dayConfigs[key] = { id: data.id, required_staff: data.required_staff, start_time: startTime, end_time: endTime }
+  }
 }
 
 // ── Main Bar section ──────────────────────────────────────────
@@ -525,11 +792,18 @@ function renderMainBarSection(body, dateStr) {
 
 // ── Event venue section (Wee Bar, Mandela, Pop-up, Kitchen Porter) ─
 function renderEventVenueSection(body, dateStr, venueKey, colorClass, label, dotColor) {
-  // All event venues use a simple venueKey_date config key
-  const configKey = venueKey + '_' + dateStr
-  const dc        = dayConfigs[configKey]
-  const active    = !!dc
-  const isPopup   = venueKey === 'popup'
+  const primaryKey = venueKey + '_' + dateStr
+  const primaryDc  = dayConfigs[primaryKey]
+  const active     = !!primaryDc
+
+  // Find extra indexed slots: venueKey_N_date
+  const indexedSlots = Object.entries(dayConfigs).filter(([k]) => {
+    if (!k.endsWith('_' + dateStr)) return false
+    const withoutDate = k.slice(0, k.length - dateStr.length - 1)
+    if (!withoutDate.startsWith(venueKey + '_')) return false
+    const suffix = withoutDate.slice(venueKey.length + 1)
+    return /^[0-9]+$/.test(suffix)
+  }).map(([k, dc]) => ({ key: k, dc }))
 
   const section = document.createElement('div')
   section.className = 'venue-section'
@@ -543,7 +817,7 @@ function renderEventVenueSection(body, dateStr, venueKey, colorClass, label, dot
       '</div>' +
       '<div style="display:flex;gap:0.5rem;align-items:center">' +
         (active
-          ? '<button class="remove-event-btn" onclick="toggleEventVenue(\'' + venueKey + '\',\'' + dateStr + '\',false)">Remove</button>'
+          ? '<button class="remove-event-btn" onclick="toggleEventVenue(\'' + venueKey + '\',\'' + dateStr + '\',false)">Remove all</button>'
           : '<button class="venue-toggle" onclick="toggleEventVenue(\'' + venueKey + '\',\'' + dateStr + '\',true)">+ Add to rota</button>'
         ) +
       '</div>' +
@@ -553,30 +827,72 @@ function renderEventVenueSection(body, dateStr, venueKey, colorClass, label, dot
     const vBody = document.createElement('div')
     vBody.className = 'venue-body'
 
-    const configRow = document.createElement('div')
-    configRow.className = 'event-config'
-    const displayNotes = dc.notes && dc.notes.startsWith('venue:') ? '' : (dc.notes || '')
-    const startVal = dc.start_time ? dc.start_time.slice(0,5) : '18:00'
-    const endVal   = dc.end_time   ? dc.end_time.slice(0,5)   : '23:00'
-    configRow.innerHTML =
-      '<label>Start</label>' +
-      '<input type="time" id="start-' + venueKey + '-' + dateStr + '" value="' + startVal + '" onchange="saveEventConfig(\'' + venueKey + '\',\'' + dateStr + '\')" />' +
-      '<label>End</label>' +
-      '<input type="time" id="end-' + venueKey + '-' + dateStr + '" value="' + endVal + '" onchange="saveEventConfig(\'' + venueKey + '\',\'' + dateStr + '\')" />' +
-      (isPopup ? '<label>Name</label><input type="text" id="name-' + venueKey + '-' + dateStr + '" value="' + (displayNotes||'Pop-up Bar') + '" placeholder="e.g. Freshers Bar" onchange="saveEventConfig(\'' + venueKey + '\',\'' + dateStr + '\')" />' : '')
-    vBody.appendChild(configRow)
+    renderEventSlot(vBody, primaryKey, primaryDc, venueKey, label, dateStr, false)
+    indexedSlots.forEach(({ key, dc }) => renderEventSlot(vBody, key, dc, venueKey, label, dateStr, true))
 
-    const assigned = (rotaShifts[configKey]||[]).filter(s=>s.status!=='cancelled')
-    const required = dc.required_staff || 1
-    const startT   = dc.start_time || '18:00'
-    const endT     = dc.end_time   || '23:00'
-    const slotName = isPopup ? (displayNotes||'Pop-up Bar') : label
+    const addBtn = document.createElement('button')
+    addBtn.className = 'add-mgmt-slot-btn'
+    addBtn.textContent = '+ Add another ' + label + ' slot'
+    addBtn.onclick = () => addEventSlot(venueKey, dateStr, label)
+    vBody.appendChild(addBtn)
 
-    vBody.appendChild(buildSlotRow(venueKey, slotName, startT, endT, dateStr, configKey, required, assigned, venueKey, true))
     section.appendChild(vBody)
   }
 
   body.appendChild(section)
+}
+
+function renderEventSlot(vBody, configKey, dc, venueKey, label, dateStr, isExtra) {
+  const isPopup      = venueKey === 'popup'
+  const displayNotes = dc.notes && dc.notes.startsWith('venue:') ? '' : (dc.notes || '')
+  const startVal     = dc.start_time ? dc.start_time.slice(0,5) : '18:00'
+  const endVal       = dc.end_time   ? dc.end_time.slice(0,5)   : '23:00'
+
+  const wrapper = document.createElement('div')
+  if (isExtra) wrapper.style.cssText = 'border-top:1px solid var(--border);padding-top:0.5rem;margin-top:0.25rem'
+
+  const configRow = document.createElement('div')
+  configRow.className = 'event-config'
+  configRow.innerHTML =
+    '<label>Start</label>' +
+    '<input type="time" id="start-' + configKey + '" value="' + startVal + '" onchange="saveEventConfig(\'' + venueKey + '\',\'' + dateStr + '\',\'' + configKey + '\')" />' +
+    '<label>End</label>' +
+    '<input type="time" id="end-' + configKey + '" value="' + endVal + '" onchange="saveEventConfig(\'' + venueKey + '\',\'' + dateStr + '\',\'' + configKey + '\')" />' +
+    (isPopup ? '<label>Name</label><input type="text" id="name-' + configKey + '" value="' + (displayNotes||'Pop-up Bar') + '" placeholder="e.g. Freshers Bar" onchange="saveEventConfig(\'' + venueKey + '\',\'' + dateStr + '\',\'' + configKey + '\')" />' : '') +
+    (isExtra ? '<button class="remove-mgmt-slot-btn" onclick="removeEventSlot(\'' + configKey + '\',\'' + dateStr + '\',\'' + venueKey + '\')" title="Remove">×</button>' : '')
+
+  wrapper.appendChild(configRow)
+
+  const assigned = (rotaShifts[configKey]||[]).filter(s => s.status !== 'cancelled')
+  const required = dc.required_staff || 1
+  const slotName = isPopup ? (displayNotes||'Pop-up Bar') : label
+  wrapper.appendChild(buildSlotRow(configKey, slotName, startVal, endVal, dateStr, configKey, required, assigned, venueKey, true))
+  vBody.appendChild(wrapper)
+}
+
+window.addEventSlot = async (venueKey, dateStr) => {
+  let idx = 1
+  while (dayConfigs[venueKey + '_' + idx + '_' + dateStr]) idx++
+  const key = venueKey + '_' + idx + '_' + dateStr
+  const { data, error } = await supabase.from('shift_day_config').insert({
+    fortnight_id: selectedWeek.id, shift_template_id: null,
+    shift_date: dateStr, required_staff: 1,
+    start_time: '20:00:00', end_time: '02:00:00',
+    notes: 'venue:' + venueKey + '_' + idx,
+  }).select().single()
+  if (!error && data) dayConfigs[key] = { id: data.id, required_staff: 1, start_time: '20:00:00', end_time: '02:00:00', notes: data.notes }
+  rerenderDay(dateStr)
+}
+
+window.removeEventSlot = async (key, dateStr, venueKey) => {
+  const dc = dayConfigs[key]
+  if (dc) {
+    await supabase.from('shift_day_config').delete().eq('id', dc.id)
+    for (const rs of (rotaShifts[key]??[])) await supabase.from('rota_shifts').delete().eq('id', rs.id)
+    delete dayConfigs[key]
+    delete rotaShifts[key]
+  }
+  rerenderDay(dateStr)
 }
 
 // ── Build a slot row ──────────────────────────────────────────
@@ -632,7 +948,7 @@ window.toggleFloor = async (shiftId, templateId, dateStr, isChecked) => {
 }
 
 function buildChip(rs, staffMember, templateId, dateStr) {
-  const areaLabels = { main_bar:'Bar', wee_bar:'Wee Bar', mandela:'Mandela', floor:'Floor', kitchen:'Kitchen Porter', popup:'Pop-up', barista:'Barista' }
+  const areaLabels = { main_bar:'Bar', wee_bar:'Wee Bar', mandela:'Mandela', floor:'Floor', kitchen:'Kitchen Porter', popup:'Pop-up', barista:'Barista', management:'Manager' }
   const isMainBar = rs.venue_area === 'main_bar' || rs.venue_area === 'floor'
   const isFloor   = rs.venue_area === 'floor'
   const chip = document.createElement('div')
@@ -680,15 +996,23 @@ window.toggleEventVenue = async (venueKey, dateStr, enable) => {
     }).select().single()
     if (!error && data) dayConfigs[key] = { id:data.id, required_staff:data.required_staff, start_time:data.start_time, end_time:data.end_time, notes:data.notes }
   } else {
-    const dc = dayConfigs[key]
-    if (dc) {
-      await supabase.from('shift_day_config').delete().eq('id', dc.id)
-      for (const rs of (rotaShifts[key]??[])) await supabase.from('rota_shifts').delete().eq('id', rs.id)
-      delete dayConfigs[key]
-      delete rotaShifts[key]
+    // Remove primary slot and all indexed slots for this venue
+    const keysToRemove = Object.keys(dayConfigs).filter(k => {
+      if (k === venueKey + '_' + dateStr) return true
+      const withoutDate = k.slice(0, k.length - dateStr.length - 1)
+      const withoutVenue = withoutDate.slice(venueKey.length + 1)
+      return withoutDate.startsWith(venueKey + '_') && /^\d+$/.test(withoutVenue) && k.endsWith('_' + dateStr)
+    })
+    for (const k of keysToRemove) {
+      const dc = dayConfigs[k]
+      if (dc) {
+        await supabase.from('shift_day_config').delete().eq('id', dc.id)
+        for (const rs of (rotaShifts[k]??[])) await supabase.from('rota_shifts').delete().eq('id', rs.id)
+        delete dayConfigs[k]
+        delete rotaShifts[k]
+      }
     }
   }
-  // Re-render just this day's body rather than full grid (prevents collapse)
   rerenderDay(dateStr)
 }
 
@@ -697,6 +1021,7 @@ function rerenderDay(dateStr) {
   const body = document.getElementById('body-' + dateStr)
   if (!body) return
   body.innerHTML = ''
+  renderManagementSection(body, dateStr)
   renderMainBarSection(body, dateStr)
   renderEventVenueSection(body, dateStr, 'barista',  'barista',  'Barista',        'var(--accent)')
   renderEventVenueSection(body, dateStr, 'wee_bar',  'wee-bar',  'Wee Bar',        'var(--amber)')
@@ -707,14 +1032,14 @@ function rerenderDay(dateStr) {
 }
 
 // ── Save event config (times/name) ───────────────────────────
-window.saveEventConfig = async (venueKey, dateStr) => {
-  const key = venueKey + '_' + dateStr
+window.saveEventConfig = async (venueKey, dateStr, configKey) => {
+  const key = configKey || (venueKey + '_' + dateStr)
   const dc  = dayConfigs[key]
   if (!dc) return
 
-  const startEl = document.getElementById('start-' + venueKey + '-' + dateStr)
-  const endEl   = document.getElementById('end-'   + venueKey + '-' + dateStr)
-  const nameEl  = document.getElementById('name-'  + venueKey + '-' + dateStr)
+  const startEl = document.getElementById('start-' + key)
+  const endEl   = document.getElementById('end-'   + key)
+  const nameEl  = document.getElementById('name-'  + key)
 
   const updates = {
     start_time: startEl?.value ? startEl.value + ':00' : dc.start_time,
@@ -728,7 +1053,7 @@ window.saveEventConfig = async (venueKey, dateStr) => {
 
 // ── Update required staff count ───────────────────────────────
 window.updateRequired = async (templateId, dateStr, delta) => {
-  const isVenueKeyed = ['popup', 'kitchen', 'mandela', 'barista', 'wee_bar'].includes(templateId)
+  const isVenueKeyed = ['popup', 'kitchen', 'mandela', 'barista', 'wee_bar'].includes(templateId) || templateId.startsWith('mgmt_')
   const key          = isVenueKeyed ? `${templateId}_${dateStr}` : `${templateId}_${dateStr}`
   const dc      = dayConfigs[key]
   const tpl     = templates.find(t => t.id === templateId)
@@ -801,9 +1126,12 @@ function buildPickerList(alreadyAssigned, search) {
   const { templateId, dateStr, defaultArea, effectiveStart, effectiveEnd } = pickerCtx
 
   // Role filter — popup/event bar staff; kitchen = kp
-  const isKitchen = defaultArea === 'kitchen' || pickerCtx.templateId === 'kitchen'
+  const isKitchen    = defaultArea === 'kitchen' || pickerCtx.templateId === 'kitchen'
+  const isManagement = defaultArea === 'management'
   const eligible  = allStaff.filter(s => {
-    const roleMatch = isKitchen
+    const roleMatch = isManagement
+      ? (s.role === 'manager' || s.role === 'admin')
+      : isKitchen
       ? s.user_roles?.some(ur => ur.roles?.name === 'kp')
       : s.user_roles?.some(ur => ur.roles?.name === 'bar')
     return roleMatch && s.name.toLowerCase().includes(search.toLowerCase())
@@ -933,7 +1261,7 @@ window.closePicker = () => {
 async function assignStaff(staffMember) {
   const { templateId, dateStr, defaultArea, configKey } = pickerCtx
   const venueArea = defaultArea === 'main_bar' || defaultArea === 'floor' ? 'main_bar' : defaultArea
-  const isVenueKeyed = ['popup', 'kitchen', 'mandela', 'barista', 'wee_bar'].includes(templateId)
+  const isVenueKeyed = ['popup', 'kitchen', 'mandela', 'barista', 'wee_bar'].includes(templateId) || templateId.startsWith('mgmt_')
 
   const { data, error } = await supabase.from('rota_shifts').insert({
     fortnight_id:      selectedWeek.id,
@@ -1082,7 +1410,7 @@ window.deleteWeek = async () => {
   await loadWeeks()
 }
 
-let modalResolve = null
+window.modalResolve = null
 window.showConfirm = (title, msg, confirmLabel='Confirm', danger=true) => {
   return new Promise(resolve => {
     document.getElementById('modal-title').textContent = title
@@ -1092,7 +1420,7 @@ window.showConfirm = (title, msg, confirmLabel='Confirm', danger=true) => {
     btn.style.background  = danger ? 'var(--error)' : 'var(--accent)'
     btn.style.color       = danger ? '#fff' : '#0d0d0d'
     document.getElementById('modal-overlay').style.display = 'flex'
-    modalResolve = (result) => {
+    window.modalResolve = (result) => {
       document.getElementById('modal-overlay').style.display = 'none'
       resolve(result)
     }

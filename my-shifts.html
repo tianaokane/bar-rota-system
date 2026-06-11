@@ -172,11 +172,26 @@
       .shift-card { grid-template-columns: 56px 1fr; }
       .shift-actions-col { display: none; }
     }
+
+    /* ── Mobile nav ── */
+    .hamburger { display:none; position:fixed; top:1rem; left:1rem; z-index:100; background:var(--surface); border:1px solid var(--border); border-radius:8px; width:40px; height:40px; align-items:center; justify-content:center; cursor:pointer; flex-direction:column; gap:5px; padding:10px; }
+    .hamburger span { display:block; width:18px; height:2px; background:var(--text); border-radius:2px; transition:all .2s; }
+    .nav-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9; }
+    @media (max-width:900px) {
+      .hamburger { display:flex; }
+      .nav { transform:translateX(-100%); transition:transform .25s ease; }
+      .nav.open { transform:translateX(0); }
+      .nav-overlay.open { display:block; }
+    }
   </style>
 </head>
 <body>
 
 <div class="app">
+<button class="hamburger" id="hamburger" onclick="toggleNav()" aria-label="Menu">
+  <span></span><span></span><span></span>
+</button>
+<div class="nav-overlay" id="nav-overlay" onclick="toggleNav()"></div>
 
   <nav class="nav">
     <div class="nav-logo">SU Bar <span>Rota</span></div>
@@ -306,8 +321,10 @@
   weekStart.setDate(today.getDate() - diffToSat)
   weekEnd.setDate(weekStart.getDate() + 6)
 
-  const weekStartStr = weekStart.toISOString().split('T')[0]
-  const weekEndStr   = weekEnd.toISOString().split('T')[0]
+  // Format without timezone shift
+  const toDateStr = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
+  const weekStartStr = toDateStr(weekStart)
+  const weekEndStr   = toDateStr(weekEnd)
 
   const thisWeekShifts = allShifts.filter(s => s.shift_date >= weekStartStr && s.shift_date <= weekEndStr)
   const upcomingShifts = allShifts.filter(s => s.shift_date >= todayStr)
@@ -361,8 +378,11 @@
 
     // Group by week
     const groups = {}
+    // Parse date safely without timezone shift
+    const parseDate = str => { const [y,m,d] = str.split('-').map(Number); return new Date(y,m-1,d) }
+
     filtered.forEach(shift => {
-      const d      = new Date(shift.shift_date)
+      const d      = parseDate(shift.shift_date)
       const sat    = new Date(d)
       const dow    = d.getDay()
       const toSat  = (dow + 1) % 7
@@ -373,8 +393,9 @@
     })
 
     Object.entries(groups).forEach(([weekKey, shifts]) => {
-      const wStart = new Date(weekKey)
-      const wEnd   = new Date(weekKey)
+      const [wy,wm,wd] = weekKey.split('-').map(Number)
+      const wStart = new Date(wy, wm-1, wd)
+      const wEnd   = new Date(wy, wm-1, wd)
       wEnd.setDate(wEnd.getDate() + 6)
 
       const fmtW    = d => d.toLocaleDateString('en-GB', { day:'numeric', month:'short' })

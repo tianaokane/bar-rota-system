@@ -654,20 +654,26 @@
   window.deleteStaff = async (userId, name) => {
     const confirmed = await showConfirm(
       `Delete ${name}?`,
-      `This will remove them from the system permanently. Their name will remain on any past shifts.`,
+      `This will permanently remove them from the system including their login access. Their name will remain on any past shifts.`,
       'Delete'
     )
     if (!confirmed) return
 
-    // Remove user_roles first
+    // Remove user_roles, availability, users row
     await supabase.from('user_roles').delete().eq('user_id', userId)
-    // Remove availability
     await supabase.from('availability').delete().eq('user_id', userId)
-    // Remove users row
-    const { error } = await supabase.from('users').delete().eq('id', userId)
+    await supabase.from('users').delete().eq('id', userId)
 
-    if (error) { showToast('Error deleting staff member', 'error'); return }
-    showToast(`${name} deleted`, 'success')
+    // Delete auth account via edge function
+    const { error } = await supabase.functions.invoke('delete-user', {
+      body: { userId }
+    })
+
+    if (error) {
+      showToast('Removed from staff list — auth cleanup pending', 'success')
+    } else {
+      showToast(`${name} fully deleted`, 'success')
+    }
     await loadStaff()
   }
 

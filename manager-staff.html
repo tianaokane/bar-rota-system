@@ -210,6 +210,8 @@
 
     .btn-sm { padding: 0.35rem 0.85rem; font-size: 0.78rem; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--muted); cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s; }
     .btn-sm:hover { border-color: var(--error); color: var(--error); }
+    .btn-delete { border-color: rgba(255,107,107,0.3); color: var(--error); }
+    .btn-delete:hover { background: rgba(255,107,107,0.1); }
 
     .staff-list-header { display: grid; grid-template-columns: 40px 1fr 120px 100px 80px; gap: 1rem; padding: 0 1rem 0.5rem; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); }
 
@@ -340,7 +342,7 @@
         <div></div>
         <div>Name / Email</div>
         <div>Role</div>
-        <div>Status</div>
+        <div></div>
         <div></div>
       </div>
       <div id="staff-loading">
@@ -527,12 +529,10 @@
         <div>
           <div class="staff-role-badge" style="background:${systemColor};color:${systemText}">${systemRole}</div>
         </div>
-        <div class="staff-status ${s.active ? 'status-active' : 'status-inactive'}">
-          ${s.active ? '● Active' : '○ Inactive'}
-        </div>
+<div></div>
         <div>
-          <button class="btn-sm" onclick="event.stopPropagation();toggleActive('${s.id}', ${s.active})">
-            ${s.active ? 'Deactivate' : 'Reactivate'}
+          <button class="btn-sm btn-delete" onclick="event.stopPropagation();deleteStaff('${s.id}','${s.name}')">
+            Delete
           </button>
         </div>`
 
@@ -639,14 +639,19 @@
     await loadStaff()
   }
 
-  window.toggleActive = async (userId, currentlyActive) => {
-    const { error } = await supabase
-      .from('users')
-      .update({ active: !currentlyActive })
-      .eq('id', userId)
+  window.deleteStaff = async (userId, name) => {
+    const confirmed = confirm(`Delete ${name}? This will remove them from the system permanently. Their name will remain on any past shifts.`)
+    if (!confirmed) return
 
-    if (error) { showToast('Error updating staff member', 'error'); return }
-    showToast(currentlyActive ? 'Staff member deactivated' : 'Staff member reactivated', 'success')
+    // Remove user_roles first
+    await supabase.from('user_roles').delete().eq('user_id', userId)
+    // Remove availability
+    await supabase.from('availability').delete().eq('user_id', userId)
+    // Remove users row
+    const { error } = await supabase.from('users').delete().eq('id', userId)
+
+    if (error) { showToast('Error deleting staff member', 'error'); return }
+    showToast(`${name} deleted`, 'success')
     await loadStaff()
   }
 

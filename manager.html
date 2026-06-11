@@ -680,88 +680,6 @@ window.saveMgmtTime = async (templateId, dateStr, key) => {
 
 // ── Management section ───────────────────────────────────────
 
-function buildMgmtSlotRow(templateId, startTime, endTime, dateStr, key, required, assigned, isExtra) {
-  const startDisp = (startTime || '').slice(0, 5) || '00:00'
-  const endDisp   = (endTime   || '').slice(0, 5) || '00:00'
-  const row = document.createElement('div')
-  row.className = 'mgmt-slot-row'
-  row.id = 'slot-' + key
-  row.innerHTML = `
-    <div class="slot-label">
-      <div class="mgmt-time-wrap">
-        <input type="time" class="mgmt-time-input" id="mgmt-start-${key}" value="${startDisp}"
-          onchange="saveMgmtTime('${templateId}','${dateStr}','${key}')" />
-        <span class="mgmt-time-sep">–</span>
-        <input type="time" class="mgmt-time-input" id="mgmt-end-${key}" value="${endDisp}"
-          onchange="saveMgmtTime('${templateId}','${dateStr}','${key}')" />
-        ${isExtra ? '<button class="remove-mgmt-slot-btn" onclick="removeMgmtSlot(\'' + key + '\',\'' + dateStr + '\')" title="Remove">×</button>' : ''}
-      </div>
-      <div class="slot-count" style="margin-top:0.3rem">
-        <button class="count-btn" onclick="updateRequired('${templateId}','${dateStr}',-1)">−</button>
-        <span class="count-num" id="req-${key}">${required}</span>
-        <button class="count-btn" onclick="updateRequired('${templateId}','${dateStr}',1)">+</button>
-        <span class="count-label">needed</span>
-      </div>
-    </div>
-    <div class="slot-content">
-      <div class="assigned-list" id="assigned-${key}"></div>
-      <button class="add-staff-btn" onclick="openPicker('${templateId}','${dateStr}','management',this)">+ Add manager</button>
-    </div>`
-
-  const list = row.querySelector('#assigned-' + key)
-  assigned.forEach(rs => {
-    const s = allStaff.find(x => x.id === rs.user_id)
-    if (s) list.appendChild(buildChip(rs, s, templateId, dateStr))
-  })
-  return row
-}
-
-window.addMgmtSlot = async (dateStr) => {
-  const idx = Object.keys(dayConfigs).filter(k => k.startsWith('mgmt_') && k.endsWith('_' + dateStr)).length + 1
-  const key = 'mgmt_' + idx + '_' + dateStr
-  const { data, error } = await supabase.from('shift_day_config').insert({
-    fortnight_id: selectedWeek.id, shift_template_id: null,
-    shift_date: dateStr, required_staff: 1,
-    start_time: '18:00:00', end_time: '02:00:00',
-    notes: 'venue:mgmt_' + idx,
-  }).select().single()
-  if (!error && data) dayConfigs[key] = { id: data.id, required_staff: 1, start_time: '18:00:00', end_time: '02:00:00', notes: data.notes }
-  rerenderDay(dateStr)
-}
-
-window.removeMgmtSlot = async (key, dateStr) => {
-  const dc = dayConfigs[key]
-  if (dc) {
-    await supabase.from('shift_day_config').delete().eq('id', dc.id)
-    for (const rs of (rotaShifts[key] ?? [])) await supabase.from('rota_shifts').delete().eq('id', rs.id)
-    delete dayConfigs[key]
-    delete rotaShifts[key]
-  }
-  rerenderDay(dateStr)
-}
-
-window.saveMgmtTime = async (templateId, dateStr, key) => {
-  const startEl = document.getElementById('mgmt-start-' + key)
-  const endEl   = document.getElementById('mgmt-end-'   + key)
-  if (!startEl || !endEl) return
-  const startTime = startEl.value + ':00'
-  const endTime   = endEl.value + ':00'
-  const dc = dayConfigs[key]
-  if (dc) {
-    await supabase.from('shift_day_config').update({ start_time: startTime, end_time: endTime }).eq('id', dc.id)
-    dayConfigs[key].start_time = startTime
-    dayConfigs[key].end_time   = endTime
-  } else {
-    const tpl = templates.find(t => t.id === templateId)
-    const { data } = await supabase.from('shift_day_config').insert({
-      fortnight_id: selectedWeek.id, shift_template_id: templateId,
-      shift_date: dateStr, required_staff: tpl?.min_staff ?? 1,
-      start_time: startTime, end_time: endTime,
-    }).select().single()
-    if (data) dayConfigs[key] = { id: data.id, required_staff: data.required_staff, start_time: startTime, end_time: endTime }
-  }
-}
-
 // ── Main Bar section ──────────────────────────────────────────
 function renderMainBarSection(body, dateStr) {
   const mainBarTpls = templates.filter(t => !t.is_adhoc && t.roles?.name === 'bar')
@@ -1377,6 +1295,8 @@ window.showConfirm = (title, msg, confirmLabel='Confirm', danger=true) => {
       document.getElementById('modal-overlay').style.display = 'none'
       resolve(result)
     }
+  })
+}
 
 window.publishRota = async () => {
   if (!selectedWeek) return
@@ -1423,9 +1343,6 @@ window.deleteWeek = async () => {
   await supabase.from('fortnights').delete().eq('id', selectedWeek.id)
   showToast('Week deleted')
   await loadWeeks()
-}
-
-  })
 }
 
 function showToast(msg, isError=false) {

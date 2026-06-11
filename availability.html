@@ -351,11 +351,52 @@
     window.location.href = '/login.html'
   }
 
+  // ── Auto-create next 6 weeks if not exist ──
+  const ensureUpcomingWeeks = async () => {
+    const today = new Date()
+    const day = today.getDay()
+    // Find next Saturday (start of week)
+    const daysToSat = (6 - day + 7) % 7 || 0
+    const firstSat = new Date(today)
+    firstSat.setDate(today.getDate() - daysToSat) // current week's Saturday
+    // If we're past Wednesday, start from next Saturday
+    if (day > 3) firstSat.setDate(firstSat.getDate() + 7)
+
+    const toStr = d => d.toISOString().split('T')[0]
+
+    for (let i = 0; i < 6; i++) {
+      const start = new Date(firstSat)
+      start.setDate(firstSat.getDate() + i * 7)
+      const end = new Date(start)
+      end.setDate(start.getDate() + 6)
+      const startStr = toStr(start)
+      const endStr   = toStr(end)
+
+      // Check if this week already exists
+      const { data: existing } = await supabase
+        .from('fortnights')
+        .select('id')
+        .eq('start_date', startStr)
+        .single()
+
+      if (!existing) {
+        await supabase.from('fortnights').insert({
+          start_date: startStr,
+          end_date:   endStr,
+          status:     'draft'
+        })
+      }
+    }
+  }
+
+  await ensureUpcomingWeeks()
+
   // ── Load weeks ──
   const { data: weekData } = await supabase
     .from('fortnights')
     .select('*')
     .in('status', ['draft', 'published'])
+    .gte('start_date', new Date(new Date().setDate(new Date().getDate() - 7)).toISOString().split('T')[0])
     .order('start_date', { ascending: true })
 
   weeks = weekData ?? []
@@ -396,12 +437,22 @@
     pendingChanges = {}
     updateSaveBar()
 
-    // Deadline pill
-    const end      = new Date(selectedWeek.end_date)
-    const daysLeft = Math.ceil((end - new Date()) / 86400000)
-    const pill     = document.getElementById('deadline-pill')
-    pill.textContent  = daysLeft > 0 ? `${daysLeft} days remaining` : 'Week in progress'
-    pill.style.color  = daysLeft <= 2 ? 'var(--error)' : ''
+    // Deadline pill — days until the rota week starts
+    const [sy,sm,sd] = selectedWeek.start_date.split('-').map(Number)
+    const startDate  = new Date(sy, sm-1, sd)
+    const today2     = new Date(); today2.setHours(0,0,0,0)
+    const daysLeft   = Math.ceil((startDate - today2) / 86400000)
+    const pill       = document.getElementById('deadline-pill')
+    if (daysLeft > 0) {
+      pill.textContent = `${daysLeft} day${daysLeft === 1 ? '' : 's'} to submit`
+      pill.style.color = daysLeft <= 3 ? 'var(--error)' : daysLeft <= 7 ? 'var(--amber)' : ''
+    } else if (daysLeft === 0) {
+      pill.textContent = 'Starts today'
+      pill.style.color = 'var(--amber)'
+    } else {
+      pill.textContent = 'Week in progress'
+      pill.style.color = 'var(--muted)'
+    }
 
     // Load existing availability
     const { data: avail } = await supabase

@@ -709,5 +709,20 @@
   }
 </script>
 
+
+<script>
+  function toggleNav() {
+    document.querySelector('.nav').classList.toggle('open')
+    document.getElementById('nav-overlay').classList.toggle('open')
+  }
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.nav-link').forEach(link => {
+      link.addEventListener('click', () => {
+        document.querySelector('.nav').classList.remove('open')
+        document.getElementById('nav-overlay').classList.remove('open')
+      })
+    })
+  })
+</script>
 </body>
 </html>

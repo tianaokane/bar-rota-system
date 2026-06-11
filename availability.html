@@ -354,19 +354,22 @@
   // ── Auto-create next 6 weeks if not exist ──
   const ensureUpcomingWeeks = async () => {
     const today = new Date()
-    const day = today.getDay()
-    // Find next Saturday (start of week)
-    const daysToSat = (6 - day + 7) % 7 || 0
-    const firstSat = new Date(today)
-    firstSat.setDate(today.getDate() - daysToSat) // current week's Saturday
-    // If we're past Wednesday, start from next Saturday
-    if (day > 3) firstSat.setDate(firstSat.getDate() + 7)
+    const day = today.getDay() // 0=Sun, 1=Mon ... 6=Sat
+    // Find this week's Monday (Mon–Sun)
+    const daysToMon = (day === 0) ? -6 : 1 - day
+    const firstMon = new Date(today)
+    firstMon.setDate(today.getDate() + daysToMon)
 
-    const toStr = d => d.toISOString().split('T')[0]
+    const toStr = d => {
+      const y = d.getFullYear()
+      const m = String(d.getMonth()+1).padStart(2,'0')
+      const dd = String(d.getDate()).padStart(2,'0')
+      return `${y}-${m}-${dd}`
+    }
 
     for (let i = 0; i < 6; i++) {
-      const start = new Date(firstSat)
-      start.setDate(firstSat.getDate() + i * 7)
+      const start = new Date(firstMon)
+      start.setDate(firstMon.getDate() + i * 7)
       const end = new Date(start)
       end.setDate(start.getDate() + 6)
       const startStr = toStr(start)
@@ -377,7 +380,7 @@
         .from('fortnights')
         .select('id')
         .eq('start_date', startStr)
-        .single()
+        .maybeSingle()
 
       if (!existing) {
         await supabase.from('fortnights').insert({
@@ -406,8 +409,8 @@
   if (weeks.length === 0) {
     document.getElementById('grid-container').innerHTML = `
       <div class="no-weeks">
-        <div class="big">📭</div>
-        <p>No upcoming weeks are open for availability yet.<br>Check back soon or ask your manager.</p>
+        <div class="big">📅</div>
+        <p>No upcoming weeks found. Try refreshing the page.</p>
       </div>`
   } else {
     weeks.forEach(w => {
@@ -441,7 +444,7 @@
     const [sy,sm,sd] = selectedWeek.start_date.split('-').map(Number)
     const startDate  = new Date(sy, sm-1, sd)
     const today2     = new Date(); today2.setHours(0,0,0,0)
-    const daysLeft   = Math.ceil((startDate - today2) / 86400000)
+    const daysLeft   = Math.round((startDate - today2) / 86400000)
     const pill       = document.getElementById('deadline-pill')
     if (daysLeft > 0) {
       pill.textContent = `${daysLeft} day${daysLeft === 1 ? '' : 's'} to submit`
@@ -573,16 +576,6 @@
   }
 
   function calcDuration(start, end) {
-    const [sh, sm] = start.slice(0,5).split(':').map(Number)
-    let   [eh, em] = end.slice(0,5).split(':').map(Number)
-    let mins = (eh * 60 + em) - (sh * 60 + sm)
-    if (mins < 0) mins += 24 * 60
-    const h = Math.floor(mins / 60)
-    const m = mins % 60
-    return m > 0 ? `${h}h ${m}m` : `${h}h`
-  }
-
-  function calcDuration(start, end) {
     const [sh, sm] = (start||'00:00').slice(0,5).split(':').map(Number)
     let   [eh, em] = (end||'00:00').slice(0,5).split(':').map(Number)
     let mins = (eh * 60 + em) - (sh * 60 + sm)
@@ -633,12 +626,19 @@
     return el
   }
 
+  let autoSaveTimer = null
+
   window.setStatus = (key, status, templateId, dateStr) => {
     const current   = pendingChanges[key] ?? existingAvail[key]?.status ?? null
     const newStatus = current === status ? null : status
 
-    if (newStatus === null) delete pendingChanges[key]
-    else pendingChanges[key] = newStatus
+    if (newStatus === null) {
+      // If it existed in DB, mark for deletion; otherwise just remove from pending
+      if (existingAvail[key]) pendingChanges[key] = null
+      else delete pendingChanges[key]
+    } else {
+      pendingChanges[key] = newStatus
+    }
 
     const slot = document.getElementById(`slot-${key}`)
     slot.className = `slot${newStatus ? ` is-${newStatus}` : ''}`
@@ -652,18 +652,26 @@
     })
 
     updateSaveBar()
+
+    // Auto-save after 1 second of no changes
+    clearTimeout(autoSaveTimer)
+    autoSaveTimer = setTimeout(() => {
+      if (Object.keys(pendingChanges).length > 0 || Object.values(pendingChanges).some(v => v === null)) saveAvailability(true)
+    }, 1000)
   }
 
   function updateSaveBar() {
     const count = Object.keys(pendingChanges).length
     document.getElementById('changed-count').textContent = count
     document.getElementById('save-bar').classList.toggle('visible', count > 0)
+    // Update save button label
+    const btn = document.getElementById('btn-save')
+    if (btn) btn.textContent = count > 0 ? `Save ${count} change${count===1?'':'s'}` : 'Save availability'
   }
 
-  window.saveAvailability = async () => {
+  window.saveAvailability = async (silent = false) => {
     const btn = document.getElementById('btn-save')
-    btn.disabled    = true
-    btn.textContent = 'Saving…'
+    if (!silent) { btn.disabled = true; btn.textContent = 'Saving…' }
 
     const upserts = []
     const deletes = []
@@ -703,7 +711,7 @@
     }
 
     if (upserts.length > 0) {
-      const { error } = await supabase.from('availability').upsert(upserts)
+      const { error } = await supabase.from('availability').upsert(upserts, { onConflict: 'user_id,shift_template_id,shift_date,fortnight_id' })
       if (error) {
         console.error(error)
         alert('Error saving — please try again.')
@@ -740,5 +748,20 @@
   }
 </script>
 
+
+<script>
+  function toggleNav() {
+    document.querySelector('.nav').classList.toggle('open')
+    document.getElementById('nav-overlay').classList.toggle('open')
+  }
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.nav-link').forEach(link => {
+      link.addEventListener('click', () => {
+        document.querySelector('.nav').classList.remove('open')
+        document.getElementById('nav-overlay').classList.remove('open')
+      })
+    })
+  })
+</script>
 </body>
 </html>

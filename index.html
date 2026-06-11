@@ -671,13 +671,16 @@
       swap_rejected:        '❌',
       adhoc_posted:         '⚡',
       swap_approval_needed: '⏳',
+      urgent_gap:           '🚨',
     }
 
     notifs.forEach(n => {
       const icon = icons[n.type] ?? '🔔'
       const time = new Date(n.created_at).toLocaleDateString('en-GB', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' })
+      const isUrgent = n.type === 'urgent_gap'
       notifList.innerHTML += `
-        <div class="notif-item ${n.read ? '' : 'unread'}" data-id="${n.id}" onclick="markRead('${n.id}', this)">
+        <div class="notif-item ${n.read ? '' : 'unread'}" data-id="${n.id}" onclick="markRead('${n.id}', this)"
+          style="${isUrgent ? 'border-left:3px solid var(--error);background:rgba(255,107,107,0.04)' : ''}">
           <div class="notif-icon">${icon}</div>
           <div class="notif-text">
             <div class="notif-msg">${n.message}</div>
@@ -720,5 +723,20 @@
   }
 </script>
 
+
+<script>
+  function toggleNav() {
+    document.querySelector('.nav').classList.toggle('open')
+    document.getElementById('nav-overlay').classList.toggle('open')
+  }
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.nav-link').forEach(link => {
+      link.addEventListener('click', () => {
+        document.querySelector('.nav').classList.remove('open')
+        document.getElementById('nav-overlay').classList.remove('open')
+      })
+    })
+  })
+</script>
 </body>
 </html>

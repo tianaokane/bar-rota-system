@@ -315,10 +315,10 @@
   const weekStart = new Date(today)
   const weekEnd   = new Date(today)
 
-  // Find current week bounds (Sat–Fri)
+  // Find current week bounds (Mon–Sun)
   const dayOfWeek = today.getDay()
-  const diffToSat = (dayOfWeek + 1) % 7
-  weekStart.setDate(today.getDate() - diffToSat)
+  const diffToMon = dayOfWeek === 0 ? -6 : 1 - dayOfWeek
+  weekStart.setDate(today.getDate() + diffToMon)
   weekEnd.setDate(weekStart.getDate() + 6)
 
   // Format without timezone shift
@@ -383,11 +383,11 @@
 
     filtered.forEach(shift => {
       const d      = parseDate(shift.shift_date)
-      const sat    = new Date(d)
+      const mon    = new Date(d)
       const dow    = d.getDay()
-      const toSat  = (dow + 1) % 7
-      sat.setDate(d.getDate() - toSat)
-      const key = sat.toISOString().split('T')[0]
+      const toMon  = dow === 0 ? -6 : 1 - dow
+      mon.setDate(d.getDate() + toMon)
+      const key = toDateStr(mon)
       if (!groups[key]) groups[key] = []
       groups[key].push(shift)
     })
@@ -468,5 +468,20 @@
   renderShifts()
 </script>
 
+
+<script>
+  function toggleNav() {
+    document.querySelector('.nav').classList.toggle('open')
+    document.getElementById('nav-overlay').classList.toggle('open')
+  }
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.nav-link').forEach(link => {
+      link.addEventListener('click', () => {
+        document.querySelector('.nav').classList.remove('open')
+        document.getElementById('nav-overlay').classList.remove('open')
+      })
+    })
+  })
+</script>
 </body>
 </html>

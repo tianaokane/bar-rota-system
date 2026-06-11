@@ -211,8 +211,23 @@
     .btn-sm { padding: 0.35rem 0.85rem; font-size: 0.78rem; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--muted); cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s; }
     .btn-sm:hover { border-color: var(--error); color: var(--error); }
     .btn-delete { border-color: rgba(255,107,107,0.3); color: var(--error); }
+    .student-badge { font-size:0.68rem; padding:0.15rem 0.5rem; border-radius:10px; background:rgba(251,191,36,0.12); color:var(--amber); margin-left:0.4rem; }
+    .term-banner { display:flex; align-items:center; justify-content:space-between; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:1rem 1.25rem; margin-bottom:1.5rem; flex-wrap:wrap; gap:0.75rem; }
+    .term-banner-left { display:flex; flex-direction:column; gap:0.2rem; }
+    .term-banner-label { font-size:0.78rem; text-transform:uppercase; letter-spacing:0.07em; color:var(--muted); }
+    .term-banner-status { font-size:0.95rem; }
+    .term-on  { color:var(--amber); }
+    .term-off { color:var(--green); }
+    .toggle-wrap { display:flex; align-items:center; gap:0.75rem; }
+    .toggle-label { font-size:0.85rem; color:var(--muted); }
+    .big-switch { position:relative; width:48px; height:26px; flex-shrink:0; cursor:pointer; }
+    .big-switch input { opacity:0; width:0; height:0; position:absolute; }
+    .big-switch-track { position:absolute; inset:0; background:var(--border); border-radius:20px; transition:background .2s; }
+    .big-switch input:checked + .big-switch-track { background:var(--amber); }
+    .big-switch-track::after { content:''; position:absolute; width:18px; height:18px; border-radius:50%; background:#fff; top:4px; left:4px; transition:transform .2s; }
+    .big-switch input:checked + .big-switch-track::after { transform:translateX(22px); }
     .btn-delete:hover { background: rgba(255,107,107,0.1); }
-
+    .student-badge { font-size:0.68rem; padding:0.15rem 0.5rem; border-radius:10px; background:rgba(251,191,36,0.12); color:var(--amber); margin-left:0.4rem; }
     .staff-list-header { display: grid; grid-template-columns: 40px 1fr 120px 100px 80px; gap: 1rem; padding: 0 1rem 0.5rem; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); }
 
     .search-bar { display: flex; gap: 0.75rem; margin-bottom: 1rem; }
@@ -250,8 +265,7 @@
     .edit-field input, .edit-field select { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.85rem; padding: 0.5rem 0.75rem; outline: none; width: 100%; }
     .edit-field input:focus, .edit-field select:focus { border-color: var(--accent); }
     .edit-actions { display: flex; gap: 0.5rem; margin-top: 0.25rem; }
-    .btn-save { background: var(--accent); color: #0d0d0d; border: none; border-radius: 6px; padding: 0.45rem 1rem; font-size: 0.82rem; font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all .15s; }
-    .btn-save:hover { background: #d4f96e; }
+
     .btn-cancel-edit { background: transparent; color: var(--muted); border: 1px solid var(--border); border-radius: 6px; padding: 0.45rem 1rem; font-size: 0.82rem; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all .15s; }
     .btn-cancel-edit:hover { border-color: var(--text); color: var(--text); }
     .staff-row { cursor: pointer; }
@@ -267,8 +281,7 @@
     .edit-field input, .edit-field select { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.85rem; padding: 0.5rem 0.75rem; outline: none; width: 100%; }
     .edit-field input:focus, .edit-field select:focus { border-color: var(--accent); }
     .edit-actions { display: flex; gap: 0.5rem; margin-top: 0.25rem; }
-    .btn-save { background: var(--accent); color: #0d0d0d; border: none; border-radius: 6px; padding: 0.45rem 1rem; font-size: 0.82rem; font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all .15s; }
-    .btn-save:hover { background: #d4f96e; }
+
     .btn-cancel-edit { background: transparent; color: var(--muted); border: 1px solid var(--border); border-radius: 6px; padding: 0.45rem 1rem; font-size: 0.82rem; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all .15s; }
     .btn-cancel-edit:hover { border-color: var(--text); color: var(--text); }
     .staff-row { cursor: pointer; }
@@ -341,6 +354,22 @@
       </div>
     </div>
 
+    <!-- Term time banner -->
+    <div class="term-banner" id="term-banner">
+      <div class="term-banner-left">
+        <span class="term-banner-label">Term time</span>
+        <span class="term-banner-status" id="term-status-text">Loading…</span>
+      </div>
+      <div class="toggle-wrap">
+        <span class="toggle-label" id="term-toggle-label" style="font-size:0.82rem;color:var(--muted)">Toggle to switch</span>
+        <label class="big-switch" title="Toggle term time">
+          <input type="checkbox" id="term-toggle" onchange="toggleTermTime(this.checked)" />
+          <div class="big-switch-track"></div>
+        </label>
+      </div>
+    </div>
+
+    <!-- Term time banner -->
     <div class="tabs">
       <button class="tab active" onclick="switchTab('list', this)">All staff <span id="staff-count" style="color:var(--muted);margin-left:0.3rem"></span></button>
       <button class="tab" onclick="switchTab('add', this)">Add single</button>
@@ -394,6 +423,27 @@
             <select id="add-role">
               <option value="staff">Staff</option>
               <option value="manager">Manager</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Staff type</label>
+            <select id="add-student">
+              <option value="true">Student (20hr term time cap)</option>
+              <option value="false">Non-student (no cap)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Staff type</label>
+            <select id="add-student">
+              <option value="true">Student (20hr term time cap)</option>
+              <option value="false">Non-student (no cap)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Staff type</label>
+            <select id="add-student">
+              <option value="true">Student (20hr term time cap)</option>
+              <option value="false">Non-student (no cap)</option>
             </select>
           </div>
 
@@ -501,6 +551,35 @@
 
 
   // ── Load staff ──
+  // ── Load term time setting ──
+  let termTime = true
+
+  const loadTermTime = async () => {
+    const { data } = await supabase.from('bar_settings').select('value').eq('key','term_time').single()
+    termTime = data?.value === 'true'
+    const toggle = document.getElementById('term-toggle')
+    const statusText = document.getElementById('term-status-text')
+    const label = document.getElementById('term-toggle-label')
+    if (toggle) toggle.checked = termTime
+    if (statusText) {
+      statusText.textContent = termTime ? 'Term time is ON — students capped at 20hrs/week' : 'Term time is OFF — no hour caps apply'
+      statusText.className = `term-banner-status ${termTime ? 'term-on' : 'term-off'}`
+    }
+    if (label) label.textContent = termTime ? 'Term time' : 'Non-term'
+  }
+
+  window.toggleTermTime = async (isOn) => {
+    const { error } = await supabase.from('bar_settings')
+      .update({ value: isOn ? 'true' : 'false', updated_at: new Date().toISOString() })
+      .eq('key', 'term_time')
+    if (error) { showToast('Error updating term time', 'error'); return }
+    termTime = isOn
+    await loadTermTime()
+    showToast(isOn ? 'Term time enabled — student 20hr cap active' : 'Term time disabled — no caps apply', 'success')
+  }
+
+  await loadTermTime()
+
   window.loadStaff = async () => {
     document.getElementById('staff-loading').style.display = 'block'
     document.getElementById('staff-list').innerHTML = ''
@@ -555,6 +634,7 @@
         </div>
         <div>
           <div class="staff-role-badge" style="background:${systemColor};color:${systemText}">${systemRole}</div>
+          ${s.is_student ? '<span class="student-badge">Student</span>' : ''}
         </div>
 <div></div>
         <div>
@@ -581,6 +661,13 @@
             <select id="edit-role-${s.id}">
               <option value="staff"   ${s.role === 'staff'   ? 'selected' : ''}>Bar Staff</option>
               <option value="manager" ${s.role === 'manager' ? 'selected' : ''}>Manager</option>
+            </select>
+          </div>
+          <div class="edit-field">
+            <label>Staff type</label>
+            <select id="edit-student-${s.id}">
+              <option value="true"  ${s.is_student ? 'selected' : ''}>Student (20hr cap)</option>
+              <option value="false" ${!s.is_student ? 'selected' : ''}>Non-student</option>
             </select>
           </div>
           <div class="edit-field">
@@ -638,31 +725,24 @@
     const email = document.getElementById(`edit-email-${userId}`)?.value.trim()
     const role  = document.getElementById(`edit-role-${userId}`)?.value
 
-
     if (!name || !email) { showToast('Name and email are required', 'error'); return }
 
-    // Update users table
+    const btn = document.querySelector(`#wrap-${userId} .btn-save`)
+    if (btn) { btn.disabled = true; btn.textContent = 'Saving…' }
+
+    const isStudent = document.getElementById(`edit-student-${userId}`)?.value === 'true'
     const { error } = await supabase
       .from('users')
-      .update({ name, email, role })
+      .update({ name, email, role, is_student: isStudent })
       .eq('id', userId)
 
-    if (error) { showToast('Error saving changes', 'error'); return }
-
-    // Send password reset email if requested
-    if (pw === 'RESET') {
-      // Find email for this user
-      const staffMember = allStaff.find(s => s.id === userId)
-      if (staffMember) {
-        await supabase.auth.resetPasswordForEmail(staffMember.email, {
-          redirectTo: window.location.origin + '/reset.html'
-        })
-        showToast('Password reset email sent to ' + staffMember.email, 'success')
-      }
-    } else {
-      showToast('Details saved!', 'success')
+    if (error) {
+      showToast('Error saving changes', 'error')
+      if (btn) { btn.disabled = false; btn.textContent = 'Save changes' }
+      return
     }
 
+    showToast('Details saved!', 'success')
     await loadStaff()
   }
 
@@ -694,10 +774,11 @@
 
   // ── Add single staff ──
   window.addSingleStaff = async () => {
-    const first  = document.getElementById('add-first').value.trim()
-    const last   = document.getElementById('add-last').value.trim()
-    const email  = document.getElementById('add-email').value.trim()
-    const role   = document.getElementById('add-role').value
+    const first     = document.getElementById('add-first').value.trim()
+    const last      = document.getElementById('add-last').value.trim()
+    const email     = document.getElementById('add-email').value.trim()
+    const role      = document.getElementById('add-role').value
+    const isStudent = document.getElementById('add-student').value === 'true'
     const hours  = parseInt(document.getElementById('add-hours').value) || 0
     const msg    = document.getElementById('add-msg')
     msg.className = 'msg'
@@ -712,7 +793,7 @@
     btn.disabled    = true
     btn.textContent = 'Creating account…'
 
-    const result = await createStaffMember({ name, email, role, contracted_hours: hours, roleIds: selectedRoles })
+    const result = await createStaffMember({ name, email, role, contracted_hours: hours, roleIds: selectedRoles, isStudent })
 
     if (result.error) {
       msg.className   = 'msg error'
@@ -750,7 +831,7 @@
     const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
       email,
       password: tempPass,
-      options: { emailRedirectTo: `${window.location.origin}/reset.html` }
+      options: { emailRedirectTo: `${window.location.origin}/welcome.html` }
     })
 
     if (signUpError) {
@@ -763,7 +844,7 @@
 
     // Insert into public users table
     const { error: userError } = await supabase.from('users').insert({
-      id: userId, name, email, role, contracted_hours, active: true
+      id: userId, name, email, role, contracted_hours, active: true, is_student: isStudent ?? true
     })
 
     if (userError) return { error: userError.message }
@@ -963,5 +1044,20 @@
   }
 </script>
 
+
+<script>
+  function toggleNav() {
+    document.querySelector('.nav').classList.toggle('open')
+    document.getElementById('nav-overlay').classList.toggle('open')
+  }
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.nav-link').forEach(link => {
+      link.addEventListener('click', () => {
+        document.querySelector('.nav').classList.remove('open')
+        document.getElementById('nav-overlay').classList.remove('open')
+      })
+    })
+  })
+</script>
 </body>
 </html>

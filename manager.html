@@ -151,6 +151,20 @@
     .add-mgmt-slot-btn:hover { border-color:var(--purple); color:var(--purple); }
     .remove-mgmt-slot-btn { background:none; border:none; color:var(--muted); cursor:pointer; font-size:0.85rem; padding:0.1rem 0.3rem; transition:color .15s; line-height:1; }
     .remove-mgmt-slot-btn:hover { color:var(--error); }
+    /* Urgent shift */
+    .urgent-banner { display:flex; align-items:center; gap:0.75rem; background:rgba(255,107,107,0.08); border:1px solid rgba(255,107,107,0.25); border-radius:8px; padding:0.6rem 1rem; margin-top:0.5rem; }
+    .urgent-dot { width:8px; height:8px; border-radius:50%; background:var(--error); animation:pulse 1.5s infinite; flex-shrink:0; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+    .urgent-label { font-size:0.78rem; color:var(--error); flex:1; }
+    .btn-urgent { font-size:0.75rem; padding:0.3rem 0.85rem; border-radius:6px; background:rgba(255,107,107,0.15); border:1px solid rgba(255,107,107,0.4); color:var(--error); cursor:pointer; font-family:'DM Sans',sans-serif; transition:all .15s; white-space:nowrap; }
+    .btn-urgent:hover { background:rgba(255,107,107,0.25); }
+
+    /* Urgent shift */
+    .urgent-dot { width:8px; height:8px; border-radius:50%; background:var(--error); animation:pulse 1.5s infinite; flex-shrink:0; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+    .btn-urgent { font-size:0.75rem; padding:0.3rem 0.85rem; border-radius:6px; background:rgba(255,107,107,0.15); border:1px solid rgba(255,107,107,0.4); color:var(--error); cursor:pointer; font-family:'DM Sans',sans-serif; transition:all .15s; }
+    .btn-urgent:hover { background:rgba(255,107,107,0.25); }
+
     /* Add staff btn */
     .add-staff-btn { display:inline-flex; align-items:center; gap:0.4rem; background:transparent; border:1px dashed var(--border); border-radius:20px; padding:0.25rem 0.75rem; font-size:0.78rem; color:var(--muted); cursor:pointer; transition:all .15s; font-family:'DM Sans',sans-serif; }
     .add-staff-btn:hover { border-color:var(--accent); color:var(--accent); }
@@ -266,7 +280,7 @@
       <h3>Create a new week</h3>
       <div class="form-row">
         <div class="form-field">
-          <label>Start date (Saturday)</label>
+          <label>Start date (Monday)</label>
           <input type="date" id="new-start-date" onchange="updateEndDate()" />
         </div>
         <div class="form-field">
@@ -368,6 +382,38 @@ templates = tplData ?? []
 
 const { data:staffData } = await supabase.from('users').select('*,user_roles(*,roles(*))').eq('active',true).order('name')
 allStaff = staffData ?? []
+
+// Load term time setting
+let termTime = true
+const { data: termData } = await supabase.from('bar_settings').select('value').eq('key','term_time').maybeSingle()
+if (termData) termTime = termData.value === 'true'
+
+// Calculate hours assigned this week for a user
+function getWeeklyHours(userId, dateStr) {
+  let totalMins = 0
+  // Get all shifts for this user in the selected week
+  Object.entries(rotaShifts).forEach(([key, shifts]) => {
+    if (!key.endsWith('_' + dateStr.slice(0,7))) {
+      // Check if this shift is in the selected week
+      const shiftDate = key.slice(-10)
+      if (!shiftDate || shiftDate < selectedWeek?.start_date || shiftDate > selectedWeek?.end_date) return
+    }
+    shifts.forEach(rs => {
+      if (rs.user_id !== userId || rs.status === 'cancelled') return
+      // Find template or config for this shift
+      const tpl = templates.find(t => t.id === key.slice(0, key.length - 11))
+      const dc  = dayConfigs[key]
+      const start = dc?.start_time ?? tpl?.start_time ?? '00:00'
+      const end   = dc?.end_time   ?? tpl?.end_time   ?? '00:00'
+      const [sh,sm] = (start||'00:00').slice(0,5).split(':').map(Number)
+      let [eh,em]   = (end||'00:00').slice(0,5).split(':').map(Number)
+      let mins = (eh*60+em) - (sh*60+sm)
+      if (mins < 0) mins += 1440
+      totalMins += mins
+    })
+  })
+  return totalMins / 60
+}
 
 // ── Load week ─────────────────────────────────────────────────
 window.loadWeek = async (weekId) => {
@@ -1130,21 +1176,62 @@ function buildPickerList(alreadyAssigned, search) {
       return timesOverlap(effectiveStart, effectiveEnd, dc2.start_time??'', dc2.end_time??'')
     })
 
-    const hasClash = !already && (!!clashTpl || clashEvent)
-    const blocked  = already || hasClash
+    const hasClash      = !already && (!!clashTpl || clashEvent)
+    const isUnavailable = status === 'unavailable'
+    const noResponse    = status === null
 
-    const statusLabel = already    ? '<span class="avail-none">Added</span>'
-                      : hasClash   ? '<span class="avail-unavailable">⚠ Clash</span>'
-                      : status==='preferred'   ? '<span class="avail-preferred">★ Preferred</span>'
-                      : status==='available'   ? '<span class="avail-available">✓ Available</span>'
-                      : status==='unavailable' ? '<span class="avail-unavailable">✕ Unavailable</span>'
-                      : '<span class="avail-none">No response</span>'
+    // Skip staff with no response entirely
+    if (noResponse && !already) return
 
-    // Show how early they submitted (first submit time for this date)
+    // Check 20hr student cap in term time
+    let overHourCap = false
+    let hoursUsed = 0
+    if (termTime && s.is_student && !already) {
+      // Estimate hours for this shift
+      const dc  = dayConfigs[pickerCtx.configKey]
+      const tpl = templates.find(t => t.id === templateId)
+      const start = dc?.start_time ?? tpl?.start_time ?? '00:00'
+      const end   = dc?.end_time   ?? tpl?.end_time   ?? '00:00'
+      const [sh,sm] = (start||'00:00').slice(0,5).split(':').map(Number)
+      let [eh,em]   = (end||'00:00').slice(0,5).split(':').map(Number)
+      let shiftMins = (eh*60+em) - (sh*60+sm)
+      if (shiftMins < 0) shiftMins += 1440
+      // Count existing hours this week
+      hoursUsed = 0
+      Object.entries(rotaShifts).forEach(([key, shifts]) => {
+        const shiftDate = key.slice(-10)
+        if (!shiftDate || shiftDate < selectedWeek?.start_date || shiftDate > selectedWeek?.end_date) return
+        shifts.forEach(rs => {
+          if (rs.user_id !== s.id || rs.status === 'cancelled') return
+          const t2  = templates.find(t => t.id === key.slice(0, key.length - 11))
+          const dc2 = dayConfigs[key]
+          const s2  = dc2?.start_time ?? t2?.start_time ?? '00:00'
+          const e2  = dc2?.end_time   ?? t2?.end_time   ?? '00:00'
+          const [sh2,sm2] = (s2||'00:00').slice(0,5).split(':').map(Number)
+          let [eh2,em2]   = (e2||'00:00').slice(0,5).split(':').map(Number)
+          let m2 = (eh2*60+em2) - (sh2*60+sm2)
+          if (m2 < 0) m2 += 1440
+          hoursUsed += m2 / 60
+        })
+      })
+      overHourCap = (hoursUsed + shiftMins/60) > 20
+    }
+
+    const blocked = already || hasClash || isUnavailable || overHourCap
+
+    const statusLabel = already         ? '<span class="avail-none">Added</span>'
+                      : hasClash        ? '<span class="avail-unavailable">⚠ Clash</span>'
+                      : isUnavailable   ? '<span class="avail-unavailable">✕ Unavailable</span>'
+                      : status==='preferred' ? '<span class="avail-preferred">★ Preferred</span>'
+                      : '<span class="avail-available">✓ Available</span>'
+
+    // Show submission time for available/preferred
     const firstSubmit = availabilityFirstSubmit[s.id + '_' + dateStr]
     const submitHint  = firstSubmit && (status === 'preferred' || status === 'available')
       ? `<span style="font-size:0.65rem;color:var(--muted)">${new Date(firstSubmit).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})} ${new Date(firstSubmit).toLocaleDateString('en-GB',{day:'numeric',month:'short'})}</span>`
       : ''
+
+    const blockedReason = already ? 'Added' : hasClash ? 'Clash' : isUnavailable ? 'Unavailable' : overHourCap ? `${hoursUsed.toFixed(1)}h / 20h cap` : ''
 
     const item = document.createElement('div')
     item.className = `picker-item${status==='preferred'&&!blocked?' preferred':''}${blocked?' blocked':''}`
@@ -1153,10 +1240,9 @@ function buildPickerList(alreadyAssigned, search) {
         <div class="picker-name">${s.name}</div>
         <div class="picker-avail" style="display:flex;gap:0.5rem;align-items:center">${statusLabel}${submitHint}</div>
       </div>
-      ${blocked ? `<span style="font-size:0.72rem;color:var(--muted)">${already?'Added':'Clash'}</span>` : ''}`
+      ${blocked ? `<span style="font-size:0.72rem;color:var(--muted)">${blockedReason}</span>` : ''}`
 
     if (!blocked) {
-      // Pre-select area based on venue context
       item.addEventListener('click', () => assignStaff(s))
     }
     list.appendChild(item)
@@ -1205,15 +1291,96 @@ async function assignStaff(staffMember) {
 
 // ── Remove shift ──────────────────────────────────────────────
 window.removeShift = async (shiftId, templateId, dateStr) => {
+  // Ask if this is due to sickness and should be posted as urgent
+  const isPublished = selectedWeek?.status === 'published'
+  let markUrgent = false
+
+  if (isPublished) {
+    markUrgent = await showConfirm(
+      'Remove from shift?',
+      'Is this due to sickness or an emergency? If so, we can post it as an urgent gap and notify available staff.',
+      'Post as urgent gap',
+      true
+    )
+    // If they cancel entirely — do nothing
+    if (markUrgent === null) return
+  }
+
   const { error } = await supabase.from('rota_shifts').delete().eq('id', shiftId)
   if (error) { showToast('Error removing shift', true); return }
 
-  const isPopup   = templateId === 'popup'
-  const isKitchen = templateId === 'kitchen'
-  const configKey = (isPopup || isKitchen) ? `${templateId}_${dateStr}` : `${templateId}_${dateStr}`
+  const configKey = `${templateId}_${dateStr}`
   rotaShifts[configKey] = (rotaShifts[configKey]??[]).filter(rs=>rs.id!==shiftId)
   document.getElementById(`chip-${shiftId}`)?.remove()
   updateDayCoverage(dateStr)
+
+  if (markUrgent) {
+    await postUrgentGap(templateId, dateStr, configKey)
+  }
+}
+
+async function postUrgentGap(templateId, dateStr, configKey) {
+  const tpl = templates.find(t => t.id === templateId)
+  const dc  = dayConfigs[configKey]
+  const startT = (dc?.start_time ?? tpl?.start_time ?? '').slice(0,5)
+  const endT   = (dc?.end_time   ?? tpl?.end_time   ?? '').slice(0,5)
+  const name   = tpl?.name ?? 'Shift'
+  const dateDisp = new Date(dateStr).toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short' })
+  const timeDisp = startT && endT ? ` ${startT}–${endT}` : ''
+  const shiftMins = (() => {
+    if (!startT || !endT) return 0
+    const [sh,sm] = startT.split(':').map(Number)
+    let [eh,em]   = endT.split(':').map(Number)
+    let m = (eh*60+em) - (sh*60+sm)
+    if (m < 0) m += 1440
+    return m
+  })()
+  const shiftHrs = shiftMins / 60
+
+  // Get all staff who have hours available this week
+  const { data: staffData } = await supabase.from('users')
+    .select('id, is_student, contracted_hours')
+    .eq('active', true)
+    .neq('role', 'manager')
+    .neq('role', 'admin')
+
+  if (!staffData?.length) { showToast('No staff to notify', true); return }
+
+  // Calculate hours already assigned this week per staff member
+  const staffHours = {}
+  Object.entries(rotaShifts).forEach(([key, shifts]) => {
+    const shiftDate = key.slice(-10)
+    if (!shiftDate || shiftDate < selectedWeek.start_date || shiftDate > selectedWeek.end_date) return
+    shifts.forEach(rs => {
+      if (rs.status === 'cancelled') return
+      const t2  = templates.find(t => t.id === key.slice(0, key.length - 11))
+      const dc2 = dayConfigs[key]
+      const s2  = (dc2?.start_time ?? t2?.start_time ?? '00:00').slice(0,5)
+      const e2  = (dc2?.end_time   ?? t2?.end_time   ?? '00:00').slice(0,5)
+      const [sh2,sm2] = s2.split(':').map(Number)
+      let [eh2,em2]   = e2.split(':').map(Number)
+      let m2 = (eh2*60+em2) - (sh2*60+sm2)
+      if (m2 < 0) m2 += 1440
+      staffHours[rs.user_id] = (staffHours[rs.user_id] ?? 0) + m2/60
+    })
+  })
+
+  // Filter to staff with hours available
+  const eligible = staffData.filter(s => {
+    const hoursUsed = staffHours[s.id] ?? 0
+    if (termTime && s.is_student) return (hoursUsed + shiftHrs) <= 20
+    return true
+  })
+
+  if (!eligible.length) { showToast('No staff with available hours to notify', true); return }
+
+  // Send notifications
+  const msg = `🚨 Urgent gap: ${name}${timeDisp} on ${dateDisp} needs cover. Can you help?`
+  await supabase.from('notifications').insert(
+    eligible.map(s => ({ user_id: s.id, type: 'urgent_gap', message: msg, read: false }))
+  )
+
+  showToast(`Urgent gap posted — ${eligible.length} staff notified!`)
 }
 
 // ── Coverage update ───────────────────────────────────────────
@@ -1254,8 +1421,11 @@ window.toggleNewWeekForm = () => {
   form.classList.toggle('visible')
   if (form.classList.contains('visible')) {
     const d=new Date(), day=d.getDay()
-    d.setDate(d.getDate() + ((6-day+7)%7||7))
-    document.getElementById('new-start-date').value = d.toISOString().split('T')[0]
+    // Next Monday
+    const daysToMon = day === 0 ? 1 : day === 1 ? 7 : 8 - day
+    d.setDate(d.getDate() + daysToMon)
+    const y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,'0'), dd = String(d.getDate()).padStart(2,'0')
+    document.getElementById('new-start-date').value = `${y}-${m}-${dd}`
     updateEndDate()
   }
 }
@@ -1350,6 +1520,21 @@ function showToast(msg, isError=false) {
   t.textContent=msg; t.className=`toast${isError?' error':''} show`
   setTimeout(()=>t.classList.remove('show'),3000)
 }
+</script>
+
+<script>
+  function toggleNav() {
+    document.querySelector('.nav').classList.toggle('open')
+    document.getElementById('nav-overlay').classList.toggle('open')
+  }
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.nav-link').forEach(link => {
+      link.addEventListener('click', () => {
+        document.querySelector('.nav').classList.remove('open')
+        document.getElementById('nav-overlay').classList.remove('open')
+      })
+    })
+  })
 </script>
 </body>
 </html>

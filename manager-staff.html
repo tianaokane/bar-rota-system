@@ -263,37 +263,6 @@
     .staff-row:hover { background: var(--surface2); }
     .staff-row-wrap { margin-bottom: 0.5rem; }
 
-    /* Edit panel */
-    .edit-panel { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; display: none; animation: fadeUp 0.2s ease both; }
-    .edit-panel.open { display: block; }
-    .edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem; }
-    .edit-field { display: flex; flex-direction: column; gap: 0.35rem; }
-    .edit-field label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); }
-    .edit-field input, .edit-field select { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.85rem; padding: 0.5rem 0.75rem; outline: none; width: 100%; }
-    .edit-field input:focus, .edit-field select:focus { border-color: var(--accent); }
-    .edit-actions { display: flex; gap: 0.5rem; margin-top: 0.25rem; }
-
-    .btn-cancel-edit { background: transparent; color: var(--muted); border: 1px solid var(--border); border-radius: 6px; padding: 0.45rem 1rem; font-size: 0.82rem; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all .15s; }
-    .btn-cancel-edit:hover { border-color: var(--text); color: var(--text); }
-    .staff-row { cursor: pointer; }
-    .staff-row:hover { background: rgba(200,245,87,0.03); }
-    .staff-row-wrap { margin-bottom: 0.5rem; }
-
-    /* Edit panel */
-    .edit-panel { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; display: none; animation: fadeUp 0.2s ease both; }
-    .edit-panel.open { display: block; }
-    .edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem; }
-    .edit-field { display: flex; flex-direction: column; gap: 0.35rem; }
-    .edit-field label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); }
-    .edit-field input, .edit-field select { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.85rem; padding: 0.5rem 0.75rem; outline: none; width: 100%; }
-    .edit-field input:focus, .edit-field select:focus { border-color: var(--accent); }
-    .edit-actions { display: flex; gap: 0.5rem; margin-top: 0.25rem; }
-
-    .btn-cancel-edit { background: transparent; color: var(--muted); border: 1px solid var(--border); border-radius: 6px; padding: 0.45rem 1rem; font-size: 0.82rem; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all .15s; }
-    .btn-cancel-edit:hover { border-color: var(--text); color: var(--text); }
-    .staff-row { cursor: pointer; }
-    .staff-row:hover { background: rgba(200,245,87,0.03); }
-    .staff-row-wrap { margin-bottom: 0.5rem; }
     .toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(20px); padding: 0.65rem 1.5rem; border-radius: 8px; font-size: 0.88rem; font-weight: 500; opacity: 0; transition: all 0.3s ease; pointer-events: none; z-index: 100; }
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
     .toast.success { background: var(--green); color: #0d0d0d; }
@@ -434,27 +403,23 @@
           </div>
           <div class="field">
             <label>Staff type</label>
-            <select id="add-student">
+            <select id="add-student" title="Select staff type">
               <option value="true">Student (20hr term time cap)</option>
               <option value="false">Non-student (no cap)</option>
             </select>
           </div>
           <div class="field">
-            <label>Staff type</label>
-            <select id="add-student">
-              <option value="true">Student (20hr term time cap)</option>
-              <option value="false">Non-student (no cap)</option>
-            </select>
+            <label>Contracted hours</label>
+            <input type="number" id="add-hours" placeholder="e.g. 16" min="0" max="40" />
           </div>
           <div class="field">
-            <label>Staff type</label>
-            <select id="add-student">
-              <option value="true">Student (20hr term time cap)</option>
-              <option value="false">Non-student (no cap)</option>
+            <label>Bar role</label>
+            <select id="add-bar-role" title="Select bar role">
+              <option value="bar">Bar staff</option>
+              <option value="kp">Kitchen Porter</option>
+              <option value="both">Both</option>
             </select>
           </div>
-
-
         </div>
 
         <button class="btn btn-primary" id="add-btn" onclick="addSingleStaff()">Add staff member</button>
@@ -524,7 +489,7 @@
 <div class="toast" id="toast"></div>
 
 <!-- Confirm modal -->
-<div id="modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;display:none;align-items:center;justify-content:center">
+<div id="modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;align-items:center;justify-content:center">
   <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:2rem;max-width:400px;width:90%;animation:fadeUp 0.2s ease both">
     <div id="modal-title" style="font-family:'DM Serif Display',serif;font-size:1.2rem;margin-bottom:0.75rem"></div>
     <div id="modal-msg" style="color:var(--muted);font-size:0.88rem;line-height:1.6;margin-bottom:1.5rem"></div>
@@ -586,6 +551,10 @@
   }
 
   await loadTermTime()
+
+  let allRoles = []
+  const { data: rolesData } = await supabase.from('roles').select('*')
+  allRoles = rolesData ?? []
 
   window.loadStaff = async () => {
     document.getElementById('staff-loading').style.display = 'block'
@@ -794,7 +763,10 @@
     if (!first || !last) { msg.className = 'msg error'; msg.textContent = 'Please enter first and last name.'; return }
     if (!email)          { msg.className = 'msg error'; msg.textContent = 'Please enter an email address.'; return }
 
+    const barRoleVal = document.getElementById('add-bar-role').value
     const selectedRoles = []
+    if (barRoleVal === 'bar' || barRoleVal === 'both') { const r = allRoles.find(r => r.name === 'bar'); if (r) selectedRoles.push(r.id) }
+    if (barRoleVal === 'kp'  || barRoleVal === 'both') { const r = allRoles.find(r => r.name === 'kp');  if (r) selectedRoles.push(r.id) }
 
     const btn = document.getElementById('add-btn')
     btn.disabled    = true
@@ -824,7 +796,7 @@
   }
 
   // ── Core create function (used by both single and bulk) ──
-  async function createStaffMember({ name, email, role, contracted_hours, roleIds }) {
+  async function createStaffMember({ name, email, role, contracted_hours, roleIds, isStudent }) {
     // Generate a temp password — user will reset via email
     const tempPass = Math.random().toString(36).slice(-10) + 'Aa1!'
 

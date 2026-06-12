@@ -615,14 +615,6 @@
 
       const upsertedRows = allUpserted
 
-      if (error) {
-        console.error(error)
-        alert('Error saving — please try again.')
-        btn.disabled    = false
-        btn.textContent = 'Save availability'
-        return
-      }
-
       ;(upsertedRows ?? []).forEach(row => {
         const k = row.shift_template_id
           ? `${row.shift_template_id}_${row.shift_date}`

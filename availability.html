@@ -573,10 +573,40 @@
     }
 
     if (upserts.length > 0) {
-      const { data: upsertedRows, error } = await supabase
-        .from('availability')
-        .upsert(upserts, { onConflict: 'user_id,shift_template_id,shift_date,fortnight_id' })
-        .select()
+      const regularUpserts = upserts.filter(u => u.shift_template_id != null)
+      const adhocUpserts   = upserts.filter(u => u.shift_template_id == null)
+
+      const allUpserted = []
+
+      if (regularUpserts.length > 0) {
+        const { data, error } = await supabase
+          .from('availability')
+          .upsert(regularUpserts, { onConflict: 'user_id,shift_template_id,shift_date,fortnight_id' })
+          .select()
+        if (error) {
+          console.error(error)
+          alert('Error saving — please try again.')
+          btn.disabled = false; btn.textContent = 'Save availability'
+          return
+        }
+        allUpserted.push(...(data ?? []))
+      }
+
+      if (adhocUpserts.length > 0) {
+        const { data, error } = await supabase
+          .from('availability')
+          .upsert(adhocUpserts, { onConflict: 'user_id,shift_date,fortnight_id,notes' })
+          .select()
+        if (error) {
+          console.error(error)
+          alert('Error saving — please try again.')
+          btn.disabled = false; btn.textContent = 'Save availability'
+          return
+        }
+        allUpserted.push(...(data ?? []))
+      }
+
+      const upsertedRows = allUpserted
 
       if (error) {
         console.error(error)

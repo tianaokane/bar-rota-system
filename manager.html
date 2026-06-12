@@ -20,7 +20,6 @@
     body::before { content:''; position:fixed; inset:0; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); opacity:.03; pointer-events:none; z-index:0; }
     .app { position:relative; z-index:1; display:flex; min-height:100vh; }
 
-    /* Nav */
     .nav { width:var(--nav-w); background:var(--surface); border-right:1px solid var(--border); display:flex; flex-direction:column; position:fixed; top:0; left:0; bottom:0; padding:1.75rem 1rem; z-index:10; }
     .nav-logo { font-family:'DM Serif Display',serif; font-size:1rem; padding:0 0.5rem; margin-bottom:2rem; }
     .nav-logo span { color:var(--accent); }
@@ -35,14 +34,13 @@
     .nav-user-name { font-size:0.85rem; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .nav-user-role { font-size:0.72rem; color:var(--muted); text-transform:capitalize; }
 
-    /* Layout */
-    .main { margin-left:var(--nav-w); flex:1; padding:2.5rem 2.5rem 8rem; }
+    .main { margin-left:var(--nav-w); flex:1; padding:2.5rem 2.5rem 8rem; transition:padding-right .25s ease; }
+    .main.panel-open { padding-right: 316px; }
     .page-header { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:2rem; animation:fadeUp .4s ease both; flex-wrap:wrap; gap:1rem; }
     .page-title { font-family:'DM Serif Display',serif; font-size:2rem; font-weight:400; }
     .page-subtitle { color:var(--muted); font-size:0.9rem; margin-top:0.25rem; }
-    .header-actions { display:flex; gap:0.75rem; }
+    .header-actions { display:flex; gap:0.75rem; align-items:center; }
 
-    /* Buttons */
     .btn { padding:0.6rem 1.25rem; border-radius:8px; font-family:'DM Sans',sans-serif; font-size:0.88rem; font-weight:500; cursor:pointer; border:none; transition:all .15s; }
     .btn-primary { background:var(--accent); color:#0d0d0d; }
     .btn-primary:hover { background:#d4f96e; }
@@ -52,7 +50,6 @@
     .btn-danger { background:rgba(255,107,107,0.12); color:var(--error); border:1px solid rgba(255,107,107,0.3); }
     .btn-danger:hover { background:rgba(255,107,107,0.2); }
 
-    /* Week bar */
     .week-bar { display:flex; align-items:center; gap:1rem; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:1rem 1.5rem; margin-bottom:1.5rem; animation:fadeUp .4s .05s ease both; flex-wrap:wrap; }
     .week-bar label { font-size:0.78rem; text-transform:uppercase; letter-spacing:0.07em; color:var(--muted); white-space:nowrap; }
     .week-select { background:var(--surface2); border:1px solid var(--border); border-radius:8px; color:var(--text); font-family:'DM Sans',sans-serif; font-size:0.9rem; padding:0.5rem 0.85rem; outline:none; cursor:pointer; }
@@ -62,7 +59,6 @@
     .status-published{ background:rgba(74,222,128,0.12); color:var(--green); }
     .status-archived { background:rgba(107,107,107,0.12); color:var(--muted); }
 
-    /* New week form */
     .new-week-form { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:1.25rem 1.5rem; margin-bottom:1.5rem; display:none; }
     .new-week-form.visible { display:block; }
     .new-week-form h3 { font-size:0.88rem; font-weight:500; margin-bottom:1rem; }
@@ -73,7 +69,6 @@
     .form-field input:focus { border-color:var(--accent); }
     .form-field input[readonly] { color:var(--muted); cursor:not-allowed; }
 
-    /* Day panels */
     .rota-grid { animation:fadeUp .4s .1s ease both; }
     .day-panel { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); margin-bottom:1rem; overflow:hidden; }
     .day-header { display:flex; align-items:center; justify-content:space-between; padding:0.85rem 1.25rem; border-bottom:1px solid var(--border); cursor:pointer; user-select:none; }
@@ -88,7 +83,6 @@
     .coverage-text { font-size:0.78rem; color:var(--muted); }
     .day-body { padding:1rem 1.25rem 1.25rem; display:flex; flex-direction:column; gap:1rem; }
 
-    /* Venue sections */
     .venue-section { border:1px solid var(--border); border-radius:8px; overflow:hidden; }
     .venue-header { display:flex; align-items:center; justify-content:space-between; padding:0.65rem 1rem; border-bottom:1px solid var(--border); }
     .venue-header.main-bar { background:rgba(200,245,87,0.05); border-left:3px solid var(--accent); }
@@ -97,19 +91,17 @@
     .venue-header.barista  { background:rgba(200,245,87,0.05);  border-left:3px solid var(--accent); }
     .venue-header.popup    { background:rgba(249,115,22,0.05); border-left:3px solid var(--orange); }
     .venue-header.kitchen  { background:rgba(74,222,128,0.05); border-left:3px solid var(--green); }
+    .venue-header.management { background:rgba(167,139,250,0.05); border-left:3px solid var(--purple); }
     .venue-name { font-size:0.82rem; font-weight:500; display:flex; align-items:center; gap:0.5rem; }
     .venue-dot { width:7px; height:7px; border-radius:50%; }
     .venue-body { padding:0.75rem 1rem; display:flex; flex-direction:column; gap:0.6rem; }
 
-    /* Venue toggle buttons */
     .venue-toggle-row { display:flex; gap:0.5rem; flex-wrap:wrap; }
     .venue-toggle { display:inline-flex; align-items:center; gap:0.35rem; font-size:0.78rem; color:var(--muted); cursor:pointer; background:var(--surface2); border:1px dashed var(--border); border-radius:20px; padding:0.3rem 0.85rem; transition:all .15s; font-family:'DM Sans',sans-serif; }
     .venue-toggle:hover { border-color:var(--accent); color:var(--accent); }
 
-    /* Shift slots */
     .slot-row { display:grid; grid-template-columns:130px 1fr; gap:0.75rem; align-items:start; padding:0.5rem 0; border-bottom:1px solid var(--border); }
     .slot-row:last-child { border-bottom:none; padding-bottom:0; }
-    .slot-label { }
     .slot-name { font-size:0.85rem; font-weight:400; }
     .slot-time { font-size:0.72rem; color:var(--muted); margin-top:0.1rem; }
     .slot-count { display:inline-flex; align-items:center; gap:0.3rem; margin-top:0.35rem; }
@@ -120,16 +112,14 @@
     .slot-content { display:flex; flex-direction:column; gap:0.4rem; }
     .assigned-list { display:flex; flex-wrap:wrap; gap:0.4rem; min-height:28px; }
 
-    /* Staff chips */
     .staff-chip { display:flex; align-items:center; gap:0.4rem; border-radius:20px; padding:0.25rem 0.5rem 0.25rem 0.75rem; font-size:0.8rem; border:1px solid var(--border); background:var(--surface2); }
     .chip-area { font-size:0.68rem; font-weight:500; }
     .chip-area.main_bar { color:var(--accent); } .chip-area.wee_bar { color:var(--amber); }
     .chip-area.mandela  { color:var(--purple); } .chip-area.floor   { color:var(--green); }
-    .chip-area.management { color:var(--purple); } .chip-area.kitchen  { color:var(--green);  } .chip-area.popup   { color:var(--orange); } .chip-area.barista { color:var(--accent); } .chip-area.wee_bar { color:var(--amber); }
+    .chip-area.management { color:var(--purple); } .chip-area.kitchen { color:var(--green); } .chip-area.popup { color:var(--orange); } .chip-area.barista { color:var(--accent); }
     .chip-remove { background:none; border:none; color:var(--muted); cursor:pointer; font-size:0.9rem; padding:0; line-height:1; transition:color .15s; }
     .chip-remove:hover { color:var(--error); }
 
-    /* Floor toggle on chip */
     .chip-floor-wrap { display:flex; align-items:center; gap:0.3rem; }
     .chip-floor-label { font-size:0.65rem; color:var(--muted); }
     .floor-switch { position:relative; width:28px; height:16px; flex-shrink:0; }
@@ -139,8 +129,6 @@
     .floor-switch-track::after { content:''; position:absolute; width:10px; height:10px; border-radius:50%; background:#fff; top:3px; left:3px; transition:transform .2s; }
     .floor-switch input:checked + .floor-switch-track::after { transform:translateX(12px); }
 
-    /* Management section */
-    .venue-header.management { background:rgba(167,139,250,0.05); border-left:3px solid var(--purple); }
     .mgmt-slot-row { display:grid; grid-template-columns:180px 1fr; gap:0.75rem; align-items:start; padding:0.5rem 0; border-bottom:1px solid var(--border); }
     .mgmt-slot-row:last-child { border-bottom:none; padding-bottom:0; }
     .mgmt-time-wrap { display:flex; align-items:center; gap:0.4rem; margin-top:0.3rem; flex-wrap:wrap; }
@@ -151,7 +139,7 @@
     .add-mgmt-slot-btn:hover { border-color:var(--purple); color:var(--purple); }
     .remove-mgmt-slot-btn { background:none; border:none; color:var(--muted); cursor:pointer; font-size:0.85rem; padding:0.1rem 0.3rem; transition:color .15s; line-height:1; }
     .remove-mgmt-slot-btn:hover { color:var(--error); }
-    /* Urgent shift */
+
     .urgent-banner { display:flex; align-items:center; gap:0.75rem; background:rgba(255,107,107,0.08); border:1px solid rgba(255,107,107,0.25); border-radius:8px; padding:0.6rem 1rem; margin-top:0.5rem; }
     .urgent-dot { width:8px; height:8px; border-radius:50%; background:var(--error); animation:pulse 1.5s infinite; flex-shrink:0; }
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
@@ -159,38 +147,23 @@
     .btn-urgent { font-size:0.75rem; padding:0.3rem 0.85rem; border-radius:6px; background:rgba(255,107,107,0.15); border:1px solid rgba(255,107,107,0.4); color:var(--error); cursor:pointer; font-family:'DM Sans',sans-serif; transition:all .15s; white-space:nowrap; }
     .btn-urgent:hover { background:rgba(255,107,107,0.25); }
 
-    /* Urgent shift */
-    .urgent-dot { width:8px; height:8px; border-radius:50%; background:var(--error); animation:pulse 1.5s infinite; flex-shrink:0; }
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
-    .btn-urgent { font-size:0.75rem; padding:0.3rem 0.85rem; border-radius:6px; background:rgba(255,107,107,0.15); border:1px solid rgba(255,107,107,0.4); color:var(--error); cursor:pointer; font-family:'DM Sans',sans-serif; transition:all .15s; }
-    .btn-urgent:hover { background:rgba(255,107,107,0.25); }
-
-    /* Add staff btn */
     .add-staff-btn { display:inline-flex; align-items:center; gap:0.4rem; background:transparent; border:1px dashed var(--border); border-radius:20px; padding:0.25rem 0.75rem; font-size:0.78rem; color:var(--muted); cursor:pointer; transition:all .15s; font-family:'DM Sans',sans-serif; }
     .add-staff-btn:hover { border-color:var(--accent); color:var(--accent); }
 
-    /* Event config row */
     .event-config { display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap; padding:0.5rem 0; border-bottom:1px solid var(--border); }
     .event-config label { font-size:0.72rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.06em; }
-    .event-config input[type="time"] {
-      background:var(--surface2); border:1px solid var(--border); border-radius:6px;
-      color:var(--accent); font-family:'DM Sans',sans-serif; font-size:0.82rem;
-      padding:0.3rem 0.6rem; outline:none; width:110px; cursor:pointer;
-      color-scheme: dark;
-    }
+    .event-config input[type="time"] { background:var(--surface2); border:1px solid var(--border); border-radius:6px; color:var(--accent); font-family:'DM Sans',sans-serif; font-size:0.82rem; padding:0.3rem 0.6rem; outline:none; width:110px; cursor:pointer; color-scheme:dark; }
     .event-config input[type="time"]:focus { border-color:var(--accent); box-shadow:0 0 0 2px rgba(200,245,87,0.1); }
     .event-config input[type="text"] { background:var(--surface2); border:1px solid var(--border); border-radius:6px; color:var(--text); font-family:'DM Sans',sans-serif; font-size:0.82rem; padding:0.3rem 0.6rem; outline:none; width:140px; }
     .event-config input[type="text"]:focus { border-color:var(--accent); }
-    .event-config-saved { font-size:0.72rem; color:var(--muted); }
     .save-event-btn { font-size:0.75rem; padding:0.3rem 0.75rem; border-radius:6px; background:rgba(200,245,87,0.1); border:1px solid rgba(200,245,87,0.3); color:var(--accent); cursor:pointer; font-family:'DM Sans',sans-serif; transition:all .15s; }
     .save-event-btn:hover { background:rgba(200,245,87,0.2); }
     .remove-event-btn { font-size:0.75rem; padding:0.3rem 0.75rem; border-radius:6px; background:transparent; border:1px solid var(--border); color:var(--muted); cursor:pointer; font-family:'DM Sans',sans-serif; transition:all .15s; }
     .remove-event-btn:hover { border-color:var(--error); color:var(--error); }
 
-    /* Picker */
     .picker-overlay { position:fixed; inset:0; z-index:50; display:none; }
     .picker-overlay.open { display:block; }
-    .picker { position:fixed; z-index:51; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); width:320px; max-height:420px; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 8px 32px rgba(0,0,0,0.4); }
+    .picker { position:fixed; z-index:51; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); width:320px; max-height:500px; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 8px 32px rgba(0,0,0,0.4); }
     .picker-header { padding:0.85rem 1rem; border-bottom:1px solid var(--border); }
     .picker-title { font-size:0.85rem; font-weight:500; }
     .picker-subtitle { font-size:0.72rem; color:var(--muted); margin-top:0.2rem; }
@@ -206,10 +179,8 @@
     .picker-avail { font-size:0.72rem; }
     .avail-preferred { color:var(--accent); } .avail-available { color:var(--green); }
     .avail-unavailable { color:var(--error); } .avail-none { color:var(--muted); }
-    .picker-area-select { font-size:0.78rem; background:var(--surface); border:1px solid var(--border); border-radius:6px; color:var(--text); padding:0.25rem 0.5rem; cursor:pointer; outline:none; }
     .picker-empty { padding:1.5rem; text-align:center; color:var(--muted); font-size:0.85rem; }
 
-    /* Publish bar */
     .publish-bar { position:fixed; bottom:0; left:var(--nav-w); right:0; background:var(--surface); border-top:1px solid var(--border); padding:1rem 2.5rem; display:flex; align-items:center; justify-content:space-between; z-index:20; }
     .publish-bar-left { display:flex; flex-direction:column; gap:0.2rem; }
     .publish-bar-label { font-size:0.78rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.06em; }
@@ -222,9 +193,8 @@
     .no-weeks { text-align:center; padding:4rem 2rem; color:var(--muted); }
     .no-weeks .big { font-family:'DM Serif Display',serif; font-size:3rem; margin-bottom:0.5rem; }
     @keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
-    @media (max-width:900px) { .nav { display:none; } .main { margin-left:0; padding:1.5rem 1rem 8rem; } .publish-bar { left:0; } .slot-row { grid-template-columns:1fr; } }
+    @media (max-width:900px) { .nav { display:none; } .main { margin-left:0; padding:1.5rem 1rem 8rem; } .publish-bar { left:0; } .slot-row { grid-template-columns:1fr; } .main.panel-open { padding-right:1rem; } }
 
-    /* ── Mobile nav ── */
     .hamburger { display:none; position:fixed; top:1rem; left:1rem; z-index:100; background:var(--surface); border:1px solid var(--border); border-radius:8px; width:40px; height:40px; align-items:center; justify-content:center; cursor:pointer; flex-direction:column; gap:5px; padding:10px; }
     .hamburger span { display:block; width:18px; height:2px; background:var(--text); border-radius:2px; transition:all .2s; }
     .nav-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9; }
@@ -234,6 +204,63 @@
       .nav.open { transform:translateX(0); }
       .nav-overlay.open { display:block; }
     }
+
+    /* ── Fairness panel ── */
+    .fairness-panel {
+      position: fixed;
+      top: 0; right: 0; bottom: 0;
+      width: 300px;
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      z-index: 30;
+      display: flex;
+      flex-direction: column;
+      transform: translateX(100%);
+      transition: transform 0.25s ease;
+    }
+    .fairness-panel.open { transform: translateX(0); }
+    .fairness-panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.25rem 1rem;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .fairness-panel-title { font-size: 0.82rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); }
+    .fairness-panel-close { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 1.1rem; padding: 0; line-height: 1; transition: color .15s; }
+    .fairness-panel-close:hover { color: var(--text); }
+    .fairness-panel-list { overflow-y: auto; flex: 1; padding: 0.5rem 0; }
+    .fairness-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.65rem 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .fairness-row:last-child { border-bottom: none; }
+    .fairness-rank { font-size: 0.65rem; color: var(--muted); min-width: 1rem; }
+    .fairness-name { font-size: 0.85rem; }
+    .fairness-time { font-size: 0.7rem; color: var(--muted); margin-top: 0.1rem; }
+    .fairness-hours { font-size: 0.82rem; font-weight: 500; text-align: right; }
+    .fairness-empty { padding: 2rem 1rem; text-align: center; color: var(--muted); font-size: 0.85rem; }
+    .btn-fairness {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.6rem 1rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--muted);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .btn-fairness:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-fairness.active { background: rgba(200,245,87,0.1); border-color: var(--accent); color: var(--accent); }
   </style>
 </head>
 <body>
@@ -273,6 +300,8 @@
       </div>
       <div class="header-actions">
         <button class="btn btn-outline" onclick="toggleNewWeekForm()">+ New week</button>
+        <!-- CHANGE 3: fairness panel toggle button -->
+        <button class="btn-fairness" id="btn-fairness" onclick="toggleFairnessPanel()">⚖ Availability order</button>
       </div>
     </div>
 
@@ -301,6 +330,17 @@
 
     <div class="rota-grid" id="rota-grid"></div>
   </main>
+
+  <!-- CHANGE 2: fairness panel HTML -->
+  <div class="fairness-panel" id="fairness-panel">
+    <div class="fairness-panel-header">
+      <span class="fairness-panel-title">Availability order</span>
+      <button class="fairness-panel-close" onclick="toggleFairnessPanel()">×</button>
+    </div>
+    <div class="fairness-panel-list" id="fairness-list">
+      <div class="fairness-empty">Select a week to see submission order.</div>
+    </div>
+  </div>
 </div>
 
 <div class="picker-overlay" id="picker-overlay" onclick="closePicker()"></div>
@@ -328,7 +368,6 @@
 
 <div class="toast" id="toast"></div>
 
-<!-- Confirm modal -->
 <div id="modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;align-items:center;justify-content:center">
   <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:2rem;max-width:400px;width:90%;animation:fadeUp 0.2s ease both">
     <div id="modal-title" style="font-family:'DM Serif Display',serif;font-size:1.2rem;margin-bottom:0.75rem"></div>
@@ -344,21 +383,19 @@
 <script type="module">
 import { supabase, requireManager } from './src/lib/supabase.js'
 
-// ── State ──────────────────────────────────────────────────────
 let currentUser  = null
 let weeks        = []
 let selectedWeek = null
-let templates    = []   // all shift_templates
+let templates    = []
 let allStaff     = []
-let availability = {}   // `${userId}_${templateId}_${date}` → status
-let rotaShifts   = {}   // `${templateId}_${date}` → [{id,user_id,venue_area,status}]
-let dayConfigs   = {}   // `${templateId}_${date}` → {id,required_staff,start_time,end_time,notes}
-let pickerCtx           = null // {templateId,dateStr,customStart,customEnd,venueKey}
-let availabilityMeta    = {}   // `${userId}_${templateId}_${date}` → {status, submitted_at}
-let availabilityFirstSubmit = {} // `${userId}_${date}` → earliest submitted_at
+let availability = {}
+let rotaShifts   = {}
+let dayConfigs   = {}
+let pickerCtx           = null
+let availabilityMeta    = {}
+let availabilityFirstSubmit = {}
 const todayStr   = new Date().toISOString().split('T')[0]
 
-// Venue definitions — order matters for display
 const VENUES = [
   { key:'main_bar', label:'Main Bar',  colorClass:'main-bar', dot:'var(--accent)',  area:'main_bar', adhoc:false },
   { key:'wee_bar',  label:'Wee Bar',   colorClass:'wee-bar',  dot:'var(--amber)',   area:'wee_bar',  adhoc:true  },
@@ -367,7 +404,6 @@ const VENUES = [
   { key:'kitchen',  label:'Kitchen',   colorClass:'kitchen',  dot:'var(--green)',   area:'kitchen',  adhoc:false },
 ]
 
-// ── Auth ───────────────────────────────────────────────────────
 currentUser = await requireManager()
 if (!currentUser) throw new Error('Not a manager')
 const initials = currentUser.name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2)
@@ -376,37 +412,30 @@ document.getElementById('nav-name').textContent   = currentUser.name
 document.getElementById('nav-role').textContent   = currentUser.role
 window.handleSignOut = async () => { await supabase.auth.signOut(); window.location.href='/login.html' }
 
-// ── Load templates & staff ─────────────────────────────────────
 const { data:tplData } = await supabase.from('shift_templates').select('*,roles(*)').order('start_time')
 templates = tplData ?? []
 
 const { data:staffData } = await supabase.from('users').select('*,user_roles(*,roles(*))').eq('active',true).order('name')
 allStaff = staffData ?? []
 
-// Load term time setting
 let termTime = true
 const { data: termData } = await supabase.from('bar_settings').select('value').eq('key','term_time').maybeSingle()
 if (termData) termTime = termData.value === 'true'
 
-// Calculate hours assigned this week for a user
-function getWeeklyHours(userId, dateStr) {
+function getWeeklyHours(userId) {
   let totalMins = 0
-  // Get all shifts for this user in the selected week
   Object.entries(rotaShifts).forEach(([key, shifts]) => {
-    if (!key.endsWith('_' + dateStr.slice(0,7))) {
-      // Check if this shift is in the selected week
-      const shiftDate = key.slice(-10)
-      if (!shiftDate || shiftDate < selectedWeek?.start_date || shiftDate > selectedWeek?.end_date) return
-    }
+    const shiftDate = key.slice(-10)
+    if (!shiftDate || shiftDate < selectedWeek.start_date || shiftDate > selectedWeek.end_date) return
     shifts.forEach(rs => {
       if (rs.user_id !== userId || rs.status === 'cancelled') return
-      // Find template or config for this shift
-      const tpl = templates.find(t => t.id === key.slice(0, key.length - 11))
-      const dc  = dayConfigs[key]
-      const start = dc?.start_time ?? tpl?.start_time ?? '00:00'
-      const end   = dc?.end_time   ?? tpl?.end_time   ?? '00:00'
-      const [sh,sm] = (start||'00:00').slice(0,5).split(':').map(Number)
-      let [eh,em]   = (end||'00:00').slice(0,5).split(':').map(Number)
+      const dc    = dayConfigs[key]
+      const tplId = key.slice(0, key.length - 11)
+      const tpl   = templates.find(t => t.id === tplId)
+      const start = (dc?.start_time ?? tpl?.start_time ?? '00:00').slice(0,5)
+      const end   = (dc?.end_time   ?? tpl?.end_time   ?? '00:00').slice(0,5)
+      const [sh,sm] = start.split(':').map(Number)
+      const [eh,em] = end.split(':').map(Number)
       let mins = (eh*60+em) - (sh*60+sm)
       if (mins < 0) mins += 1440
       totalMins += mins
@@ -415,7 +444,6 @@ function getWeeklyHours(userId, dateStr) {
   return totalMins / 60
 }
 
-// ── Load week ─────────────────────────────────────────────────
 window.loadWeek = async (weekId) => {
   selectedWeek = weeks.find(w => w.id === weekId)
   if (!selectedWeek) return
@@ -432,7 +460,6 @@ window.loadWeek = async (weekId) => {
   const publishBtn = document.getElementById('btn-publish')
   publishBtn.textContent = selectedWeek.status === 'published' ? 'Republish' : 'Publish rota'
 
-  // Load availability — store status AND first submitted_at for fair ordering
   const { data:avData } = await supabase.from('availability').select('*').eq('fortnight_id', weekId)
   availability = {}
   availabilityMeta = {}
@@ -440,14 +467,12 @@ window.loadWeek = async (weekId) => {
   ;(avData ?? []).forEach(a => {
     const key = a.user_id + '_' + a.shift_template_id + '_' + a.shift_date
     availability[key] = a.status
-    // Track earliest submission per user per date (re-submissions don't reset priority)
     const dateKey = a.user_id + '_' + a.shift_date
     if (!availabilityFirstSubmit[dateKey] || a.submitted_at < availabilityFirstSubmit[dateKey]) {
       availabilityFirstSubmit[dateKey] = a.submitted_at
     }
   })
 
-  // Load rota shifts
   const { data:rsData } = await supabase.from('rota_shifts').select('*').eq('fortnight_id', weekId)
   rotaShifts = {}
   ;(rsData ?? []).forEach(rs => {
@@ -456,7 +481,6 @@ window.loadWeek = async (weekId) => {
     rotaShifts[key].push({ id:rs.id, user_id:rs.user_id, venue_area:rs.venue_area, status:rs.status })
   })
 
-  // Load day configs — venue-keyed records store 'venue:key' in notes
   const { data:dcData } = await supabase.from('shift_day_config').select('*').eq('fortnight_id', weekId)
   dayConfigs = {}
   ;(dcData ?? []).forEach(dc => {
@@ -468,21 +492,19 @@ window.loadWeek = async (weekId) => {
     } else {
       configKey = dc.shift_template_id + '_' + dc.shift_date
     }
-    dayConfigs[configKey] = {
-      id: dc.id, required_staff: dc.required_staff,
-      start_time: dc.start_time, end_time: dc.end_time, notes: dc.notes
-    }
+    dayConfigs[configKey] = { id: dc.id, required_staff: dc.required_staff, start_time: dc.start_time, end_time: dc.end_time, notes: dc.notes }
   })
 
   renderGrid()
+  // CHANGE 6: re-render fairness panel on week load
+  if (document.getElementById('fairness-panel').classList.contains('open')) renderFairnessPanel()
 }
 
-// ── Load weeks ────────────────────────────────────────────────
-window.loadWeek = window.loadWeek  // hoisting safety
+window.loadWeek = window.loadWeek
 
 await loadWeeks()
 async function loadWeeks() {
-  const { data } = await supabase.from('fortnights').select('*').order('start_date',{ascending:false})
+  const { data } = await supabase.from('fortnights').select('*').order('start_date',{ascending:true})
   weeks = data ?? []
   const sel = document.getElementById('week-select')
   sel.innerHTML = ''
@@ -501,7 +523,6 @@ async function loadWeeks() {
   await window.loadWeek(weeks[0].id)
 }
 
-// ── Render grid ───────────────────────────────────────────────
 function renderGrid() {
   const container = document.getElementById('rota-grid')
   container.innerHTML = ''
@@ -515,17 +536,14 @@ function renderGrid() {
     const dayShort = date.toLocaleDateString('en-GB',{day:'numeric',month:'short'})
     const isToday  = dateStr === todayStr
 
-    // Coverage
     let assigned=0, needed=0
     templates.forEach(t => {
       const key = `${t.id}_${dateStr}`
       const dc  = dayConfigs[key]
-      // Regular slots always show; adhoc only if config exists
       if (t.is_adhoc && !dc) return
       assigned += (rotaShifts[key]??[]).filter(s=>s.status!=='cancelled').length
       needed   += dc?.required_staff ?? t.min_staff
     })
-    // venue-keyed configs (popup, kitchen, mandela)
     for (const vk of ['popup', 'kitchen', 'mandela', 'barista', 'wee_bar']) {
       const vKey = `${vk}_${dateStr}`
       if (dayConfigs[vKey]) {
@@ -554,14 +572,8 @@ function renderGrid() {
       <div class="day-body" id="body-${dateStr}" style="${isToday ? '' : 'display:none'}"></div>`
 
     const body = panel.querySelector(`#body-${dateStr}`)
-
-    // Management section
     renderManagementSection(body, dateStr)
-
-    // Main Bar venue section
     renderMainBarSection(body, dateStr)
-
-    // Wee Bar, Mandela, Pop-up — togglable event venues
     renderEventVenueSection(body, dateStr, 'barista',  'barista',  'Barista',        'var(--accent)')
     renderEventVenueSection(body, dateStr, 'wee_bar',  'wee-bar',  'Wee Bar',        'var(--amber)')
     renderEventVenueSection(body, dateStr, 'mandela',  'mandela',  'Mandela',        'var(--purple)')
@@ -571,12 +583,10 @@ function renderGrid() {
   })
 }
 
-// ── Management section ───────────────────────────────────────
 function renderManagementSection(body, dateStr) {
   const mgmtTpls = templates.filter(t => t.roles?.name === 'manager' && !t.is_adhoc)
   if (mgmtTpls.length === 0) return
 
-  // Get any extra management slots from day configs (venue-keyed as mgmt_N_date)
   const extraSlots = Object.entries(dayConfigs)
     .filter(([k]) => k.startsWith('mgmt_') && k.endsWith('_' + dateStr))
     .map(([k, dc]) => ({ key: k, dc }))
@@ -586,16 +596,12 @@ function renderManagementSection(body, dateStr) {
   section.id = 'mgmt-section-' + dateStr
   section.innerHTML = `
     <div class="venue-header management">
-      <div class="venue-name">
-        <div class="venue-dot" style="background:var(--purple)"></div>
-        Management
-      </div>
+      <div class="venue-name"><div class="venue-dot" style="background:var(--purple)"></div>Management</div>
     </div>
     <div class="venue-body" id="mgmt-body-${dateStr}"></div>`
 
   const vBody = section.querySelector('#mgmt-body-' + dateStr)
 
-  // Render default template slots
   mgmtTpls.forEach(tpl => {
     const key      = tpl.id + '_' + dateStr
     const dc       = dayConfigs[key]
@@ -606,13 +612,11 @@ function renderManagementSection(body, dateStr) {
     vBody.appendChild(buildMgmtSlotRow(tpl.id, startVal, endVal, dateStr, key, required, assigned, false))
   })
 
-  // Render extra ad-hoc management slots
   extraSlots.forEach(({ key, dc }) => {
     const assigned = (rotaShifts[key] ?? []).filter(s => s.status !== 'cancelled')
     vBody.appendChild(buildMgmtSlotRow(key, dc.start_time, dc.end_time, dateStr, key, dc.required_staff ?? 1, assigned, true))
   })
 
-  // Add slot button
   const addBtn = document.createElement('button')
   addBtn.className = 'add-mgmt-slot-btn'
   addBtn.textContent = '+ Add management slot'
@@ -661,9 +665,7 @@ function buildMgmtSlotRow(templateId, startTime, endTime, dateStr, key, required
   return row
 }
 
-// ── Add extra management slot ─────────────────────────────────
 window.addMgmtSlot = async (dateStr) => {
-  // Create a unique key for this extra slot
   const slotIndex = Object.keys(dayConfigs).filter(k => k.startsWith('mgmt_') && k.endsWith('_' + dateStr)).length + 1
   const key = 'mgmt_' + slotIndex + '_' + dateStr
 
@@ -683,7 +685,6 @@ window.addMgmtSlot = async (dateStr) => {
   rerenderDay(dateStr)
 }
 
-// ── Remove extra management slot ──────────────────────────────
 window.removeMgmtSlot = async (key, dateStr) => {
   const dc = dayConfigs[key]
   if (dc) {
@@ -695,7 +696,6 @@ window.removeMgmtSlot = async (key, dateStr) => {
   rerenderDay(dateStr)
 }
 
-// ── Save management slot times ────────────────────────────────
 window.saveMgmtTime = async (templateId, dateStr, key) => {
   const startEl = document.getElementById('mgmt-start-' + key)
   const endEl   = document.getElementById('mgmt-end-'   + key)
@@ -710,7 +710,6 @@ window.saveMgmtTime = async (templateId, dateStr, key) => {
     dayConfigs[key].start_time = startTime
     dayConfigs[key].end_time   = endTime
   } else {
-    // Create config for default template slot
     const tpl = templates.find(t => t.id === templateId)
     const { data } = await supabase.from('shift_day_config').insert({
       fortnight_id:      selectedWeek.id,
@@ -724,9 +723,6 @@ window.saveMgmtTime = async (templateId, dateStr, key) => {
   }
 }
 
-// ── Management section ───────────────────────────────────────
-
-// ── Main Bar section ──────────────────────────────────────────
 function renderMainBarSection(body, dateStr) {
   const mainBarTpls = templates.filter(t => !t.is_adhoc && t.roles?.name === 'bar')
   if (mainBarTpls.length === 0) return
@@ -735,10 +731,7 @@ function renderMainBarSection(body, dateStr) {
   section.className = 'venue-section'
   section.innerHTML = `
     <div class="venue-header main-bar">
-      <div class="venue-name">
-        <div class="venue-dot" style="background:var(--accent)"></div>
-        Main Bar
-      </div>
+      <div class="venue-name"><div class="venue-dot" style="background:var(--accent)"></div>Main Bar</div>
     </div>
     <div class="venue-body" id="main-bar-body-${dateStr}"></div>`
   const vBody = section.querySelector(`#main-bar-body-${dateStr}`)
@@ -754,13 +747,11 @@ function renderMainBarSection(body, dateStr) {
   body.appendChild(section)
 }
 
-// ── Event venue section (Wee Bar, Mandela, Pop-up, Kitchen Porter) ─
 function renderEventVenueSection(body, dateStr, venueKey, colorClass, label, dotColor) {
   const primaryKey = venueKey + '_' + dateStr
   const primaryDc  = dayConfigs[primaryKey]
   const active     = !!primaryDc
 
-  // Find extra indexed slots: venueKey_N_date
   const indexedSlots = Object.entries(dayConfigs).filter(([k]) => {
     if (!k.endsWith('_' + dateStr)) return false
     const withoutDate = k.slice(0, k.length - dateStr.length - 1)
@@ -775,31 +766,24 @@ function renderEventVenueSection(body, dateStr, venueKey, colorClass, label, dot
 
   section.innerHTML =
     '<div class="venue-header ' + colorClass + '">' +
-      '<div class="venue-name">' +
-        '<div class="venue-dot" style="background:' + dotColor + '"></div>' +
-        label +
-      '</div>' +
+      '<div class="venue-name"><div class="venue-dot" style="background:' + dotColor + '"></div>' + label + '</div>' +
       '<div style="display:flex;gap:0.5rem;align-items:center">' +
         (active
           ? '<button class="remove-event-btn" onclick="toggleEventVenue(\'' + venueKey + '\',\'' + dateStr + '\',false)">Remove all</button>'
           : '<button class="venue-toggle" onclick="toggleEventVenue(\'' + venueKey + '\',\'' + dateStr + '\',true)">+ Add to rota</button>'
         ) +
-      '</div>' +
-    '</div>'
+      '</div></div>'
 
   if (active) {
     const vBody = document.createElement('div')
     vBody.className = 'venue-body'
-
     renderEventSlot(vBody, primaryKey, primaryDc, venueKey, label, dateStr, false)
     indexedSlots.forEach(({ key, dc }) => renderEventSlot(vBody, key, dc, venueKey, label, dateStr, true))
-
     const addBtn = document.createElement('button')
     addBtn.className = 'add-mgmt-slot-btn'
     addBtn.textContent = '+ Add another ' + label + ' slot'
     addBtn.onclick = () => addEventSlot(venueKey, dateStr, label)
     vBody.appendChild(addBtn)
-
     section.appendChild(vBody)
   }
 
@@ -859,7 +843,6 @@ window.removeEventSlot = async (key, dateStr, venueKey) => {
   rerenderDay(dateStr)
 }
 
-// ── Build a slot row ──────────────────────────────────────────
 function buildSlotRow(templateId, name, startTime, endTime, dateStr, key, required, assigned, defaultArea, isEvent) {
   const row = document.createElement('div')
   row.className = 'slot-row'
@@ -893,18 +876,12 @@ function buildSlotRow(templateId, name, startTime, endTime, dateStr, key, requir
   return row
 }
 
-// ── Chip ──────────────────────────────────────────────────────
-// ── Toggle floor/bar for a main bar chip ─────────────────────
 window.toggleFloor = async (shiftId, templateId, dateStr, isChecked) => {
-  // isChecked = true means Floor switch is ON
   const newArea = isChecked ? 'floor' : 'main_bar'
   const { error } = await supabase.from('rota_shifts').update({ venue_area: newArea }).eq('id', shiftId)
   if (error) { showToast('Error updating', true); return }
 
-  // Update local state
-  const configKey = ['popup','kitchen','mandela'].includes(templateId)
-    ? templateId + '_' + dateStr
-    : templateId + '_' + dateStr
+  const configKey = templateId + '_' + dateStr
   if (rotaShifts[configKey]) {
     const rs = rotaShifts[configKey].find(r => r.id === shiftId)
     if (rs) rs.venue_area = newArea
@@ -928,16 +905,14 @@ function buildChip(rs, staffMember, templateId, dateStr) {
             onchange="toggleFloor('${rs.id}','${templateId}','${dateStr}',this.checked)" />
           <div class="floor-switch-track"></div>
         </label>
-      </div>` 
+      </div>`
       : `<span class="chip-area ${rs.venue_area}">${areaLabels[rs.venue_area]??rs.venue_area}</span>`
     }
     <button class="chip-remove" onclick="removeShift('${rs.id}','${templateId}','${dateStr}')">×</button>`
   return chip
 }
 
-// ── Toggle event venue on/off ─────────────────────────────────
 window.toggleEventVenue = async (venueKey, dateStr, enable) => {
-  // All event venues use a simple venueKey_date config key
   const key = `${venueKey}_${dateStr}`
   const tpl = venueKey === 'kitchen'
     ? templates.find(t => t.roles?.name === 'kp')
@@ -948,7 +923,6 @@ window.toggleEventVenue = async (venueKey, dateStr, enable) => {
   if (enable) {
     const defaultStart = tpl?.start_time ?? '18:00:00'
     const defaultEnd   = tpl?.end_time   ?? '23:00:00'
-    const isPopup      = venueKey === 'popup'
     const { data, error } = await supabase.from('shift_day_config').insert({
       fortnight_id:      selectedWeek.id,
       shift_template_id: null,
@@ -960,7 +934,6 @@ window.toggleEventVenue = async (venueKey, dateStr, enable) => {
     }).select().single()
     if (!error && data) dayConfigs[key] = { id:data.id, required_staff:data.required_staff, start_time:data.start_time, end_time:data.end_time, notes:data.notes }
   } else {
-    // Remove primary slot and all indexed slots for this venue
     const keysToRemove = Object.keys(dayConfigs).filter(k => {
       if (k === venueKey + '_' + dateStr) return true
       const withoutDate = k.slice(0, k.length - dateStr.length - 1)
@@ -980,7 +953,6 @@ window.toggleEventVenue = async (venueKey, dateStr, enable) => {
   rerenderDay(dateStr)
 }
 
-// ── Re-render a single day ────────────────────────────────────
 function rerenderDay(dateStr) {
   const body = document.getElementById('body-' + dateStr)
   if (!body) return
@@ -995,7 +967,6 @@ function rerenderDay(dateStr) {
   updateDayCoverage(dateStr)
 }
 
-// ── Save event config (times/name) ───────────────────────────
 window.saveEventConfig = async (venueKey, dateStr, configKey) => {
   const key = configKey || (venueKey + '_' + dateStr)
   const dc  = dayConfigs[key]
@@ -1015,10 +986,8 @@ window.saveEventConfig = async (venueKey, dateStr, configKey) => {
   Object.assign(dayConfigs[key], updates)
 }
 
-// ── Update required staff count ───────────────────────────────
 window.updateRequired = async (templateId, dateStr, delta) => {
-  const isVenueKeyed = ['popup', 'kitchen', 'mandela', 'barista', 'wee_bar'].includes(templateId) || templateId.startsWith('mgmt_')
-  const key          = isVenueKeyed ? `${templateId}_${dateStr}` : `${templateId}_${dateStr}`
+  const key     = `${templateId}_${dateStr}`
   const dc      = dayConfigs[key]
   const tpl     = templates.find(t => t.id === templateId)
   const current = dc?.required_staff ?? tpl?.min_staff ?? 1
@@ -1041,21 +1010,18 @@ window.updateRequired = async (templateId, dateStr, delta) => {
   updateDayCoverage(dateStr)
 }
 
-// ── Picker ────────────────────────────────────────────────────
 window.openPicker = (templateId, dateStr, defaultArea, btn) => {
-  const isPopup   = templateId === 'popup'
-  const isKitchen = templateId === 'kitchen'
-  const configKey = (isPopup || isKitchen) ? `${templateId}_${dateStr}` : `${templateId}_${dateStr}`
+  const configKey = `${templateId}_${dateStr}`
   const dc        = dayConfigs[configKey]
   const tpl       = templates.find(t => t.id === templateId)
 
-  // Get effective start/end for overlap check
   const effectiveStart = dc?.start_time ?? tpl?.start_time ?? '00:00'
   const effectiveEnd   = dc?.end_time   ?? tpl?.end_time   ?? '23:59'
 
   pickerCtx = { templateId, dateStr, defaultArea, configKey, effectiveStart, effectiveEnd }
 
   const already = (rotaShifts[configKey]??[]).map(rs=>rs.user_id)
+  const isPopup = templateId === 'popup'
   const title   = isPopup ? (dc?.notes||'Pop-up Bar') : (tpl?.name ?? defaultArea)
 
   document.getElementById('picker-title').textContent    = `Add to ${title}`
@@ -1065,7 +1031,7 @@ window.openPicker = (templateId, dateStr, defaultArea, btn) => {
   const rect   = btn.getBoundingClientRect()
   const picker = document.getElementById('picker')
   picker.style.display = 'flex'
-  picker.style.top  = `${Math.min(rect.bottom+8, window.innerHeight-440)}px`
+  picker.style.top  = `${Math.min(rect.bottom+8, window.innerHeight-520)}px`
   picker.style.left = `${Math.min(rect.left, window.innerWidth-340)}px`
   document.getElementById('picker-overlay').classList.add('open')
 
@@ -1089,85 +1055,72 @@ function buildPickerList(alreadyAssigned, search) {
   list.innerHTML = ''
   const { templateId, dateStr, defaultArea, effectiveStart, effectiveEnd } = pickerCtx
 
-  // Role filter — popup/event bar staff; kitchen = kp
   const isKitchen    = defaultArea === 'kitchen' || pickerCtx.templateId === 'kitchen'
   const isManagement = defaultArea === 'management'
   const eligible  = allStaff.filter(s => {
     const roleMatch = isManagement
       ? (s.role === 'manager' || s.role === 'admin')
       : isKitchen
-      ? s.user_roles?.some(ur => ur.roles?.name === 'kp')
+      ? s.user_roles?.some(ur => ur.roles?.name === 'kp' || ur.roles?.name === 'bar')
       : s.user_roles?.some(ur => ur.roles?.name === 'bar')
     return roleMatch && s.name.toLowerCase().includes(search.toLowerCase())
   })
 
   if (eligible.length === 0) { list.innerHTML='<div class="picker-empty">No matching staff found</div>'; return }
 
-  // For ad-hoc venues, look up availability by time overlap with main bar slots
   const isVenueKeyed = ['popup','kitchen','mandela','barista','wee_bar'].includes(templateId)
 
   function getAvailabilityForUser(userId) {
-    // Try direct template match first
     const direct = availability[userId + '_' + templateId + '_' + dateStr]
     if (direct) return direct
 
-    // For ad-hoc venues — find best matching main bar slot by time overlap
     if (isVenueKeyed) {
       const dc = dayConfigs[templateId + '_' + dateStr]
       if (!dc?.start_time || !dc?.end_time) return null
-      // Find the main bar template that overlaps most
       let bestStatus = null
       templates.filter(t => !t.is_adhoc).forEach(t => {
         const avKey = userId + '_' + t.id + '_' + dateStr
         const avStatus = availability[avKey]
         if (!avStatus) return
         if (timesOverlap(dc.start_time, dc.end_time, t.start_time, t.end_time)) {
-          // Prefer preferred > available > unavailable
           const order = { preferred:0, available:1, unavailable:2 }
           if (bestStatus === null || (order[avStatus]??3) < (order[bestStatus]??3)) {
             bestStatus = avStatus
           }
         }
       })
-      return bestStatus
+      if (bestStatus) return bestStatus
+      const anyForDay = templates.filter(t => !t.is_adhoc).some(t => {
+        const avKey = userId + '_' + t.id + '_' + dateStr
+        return availability[avKey] && availability[avKey] !== 'unavailable'
+      })
+      return anyForDay ? 'available' : null
     }
     return null
   }
 
-  // Sort by: 1) availability status, 2) first submission time (earlier = higher priority)
   const order = { preferred:0, available:1, null:2, unavailable:3 }
   eligible.sort((a,b) => {
     const ak      = getAvailabilityForUser(a.id) ?? null
     const bk      = getAvailabilityForUser(b.id) ?? null
     const statusDiff = (order[ak]??2) - (order[bk]??2)
     if (statusDiff !== 0) return statusDiff
-
-    // Same status — sort by earliest submission time
     const aFirst = availabilityFirstSubmit[a.id + '_' + dateStr] ?? '9999'
     const bFirst = availabilityFirstSubmit[b.id + '_' + dateStr] ?? '9999'
     return aFirst < bFirst ? -1 : aFirst > bFirst ? 1 : 0
   })
 
-  // Area options
-  const areaOptions = isKitchen
-    ? '<option value="kitchen">Kitchen Porter</option>'
-    : pickerCtx?.defaultArea === 'mandela' ? '<option value="mandela">Mandela</option>'
-    : pickerCtx?.defaultArea === 'wee_bar' ? '<option value="wee_bar">Wee Bar</option>'
-    : pickerCtx?.defaultArea === 'popup'   ? '<option value="popup">Pop-up Bar</option>'
-    : pickerCtx?.defaultArea === 'barista' ? '<option value="barista">Barista</option>'
-    : '<option value="main_bar">Main Bar</option>'
-
   eligible.forEach(s => {
     const status = getAvailabilityForUser(s.id) ?? null
     const already = alreadyAssigned.includes(s.id)
 
-    // Check shift clashes using effective times
+    // CHANGE 1: fixed dc variable shadowing — use tplDc inside clash check
     const clashTpl = templates.find(t => {
       const k = `${t.id}_${dateStr}`
+      const tplDc = dayConfigs[k]
       return (rotaShifts[k]??[]).some(rs => rs.user_id===s.id && rs.status!=='cancelled')
-        && timesOverlap(effectiveStart, effectiveEnd, dc?.start_time??t.start_time, dc?.end_time??t.end_time)
+        && timesOverlap(effectiveStart, effectiveEnd, tplDc?.start_time??t.start_time, tplDc?.end_time??t.end_time)
     })
-    // Also check event venues
     const clashEvent = !clashTpl && Object.entries(rotaShifts).some(([k, shifts]) => {
       if (!k.endsWith(`_${dateStr}`)) return false
       if (!shifts.some(rs => rs.user_id===s.id)) return false
@@ -1180,14 +1133,11 @@ function buildPickerList(alreadyAssigned, search) {
     const isUnavailable = status === 'unavailable'
     const noResponse    = status === null
 
-    // Skip staff with no response entirely
     if (noResponse && !already) return
 
-    // Check 20hr student cap in term time
     let overHourCap = false
     let hoursUsed = 0
     if (termTime && s.is_student && !already) {
-      // Estimate hours for this shift
       const dc  = dayConfigs[pickerCtx.configKey]
       const tpl = templates.find(t => t.id === templateId)
       const start = dc?.start_time ?? tpl?.start_time ?? '00:00'
@@ -1196,24 +1146,7 @@ function buildPickerList(alreadyAssigned, search) {
       let [eh,em]   = (end||'00:00').slice(0,5).split(':').map(Number)
       let shiftMins = (eh*60+em) - (sh*60+sm)
       if (shiftMins < 0) shiftMins += 1440
-      // Count existing hours this week
-      hoursUsed = 0
-      Object.entries(rotaShifts).forEach(([key, shifts]) => {
-        const shiftDate = key.slice(-10)
-        if (!shiftDate || shiftDate < selectedWeek?.start_date || shiftDate > selectedWeek?.end_date) return
-        shifts.forEach(rs => {
-          if (rs.user_id !== s.id || rs.status === 'cancelled') return
-          const t2  = templates.find(t => t.id === key.slice(0, key.length - 11))
-          const dc2 = dayConfigs[key]
-          const s2  = dc2?.start_time ?? t2?.start_time ?? '00:00'
-          const e2  = dc2?.end_time   ?? t2?.end_time   ?? '00:00'
-          const [sh2,sm2] = (s2||'00:00').slice(0,5).split(':').map(Number)
-          let [eh2,em2]   = (e2||'00:00').slice(0,5).split(':').map(Number)
-          let m2 = (eh2*60+em2) - (sh2*60+sm2)
-          if (m2 < 0) m2 += 1440
-          hoursUsed += m2 / 60
-        })
-      })
+      hoursUsed = getWeeklyHours(s.id)
       overHourCap = (hoursUsed + shiftMins/60) > 20
     }
 
@@ -1225,13 +1158,16 @@ function buildPickerList(alreadyAssigned, search) {
                       : status==='preferred' ? '<span class="avail-preferred">★ Preferred</span>'
                       : '<span class="avail-available">✓ Available</span>'
 
-    // Show submission time for available/preferred
     const firstSubmit = availabilityFirstSubmit[s.id + '_' + dateStr]
     const submitHint  = firstSubmit && (status === 'preferred' || status === 'available')
       ? `<span style="font-size:0.65rem;color:var(--muted)">${new Date(firstSubmit).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})} ${new Date(firstSubmit).toLocaleDateString('en-GB',{day:'numeric',month:'short'})}</span>`
       : ''
 
     const blockedReason = already ? 'Added' : hasClash ? 'Clash' : isUnavailable ? 'Unavailable' : overHourCap ? `${hoursUsed.toFixed(1)}h / 20h cap` : ''
+
+    const weekHours = getWeeklyHours(s.id)
+    const hoursColor = weekHours >= 35 ? 'var(--error)' : weekHours >= 20 ? 'var(--amber)' : 'var(--green)'
+    const hoursLabel = `${weekHours % 1 === 0 ? weekHours : weekHours.toFixed(1)}h`
 
     const item = document.createElement('div')
     item.className = `picker-item${status==='preferred'&&!blocked?' preferred':''}${blocked?' blocked':''}`
@@ -1240,7 +1176,10 @@ function buildPickerList(alreadyAssigned, search) {
         <div class="picker-name">${s.name}</div>
         <div class="picker-avail" style="display:flex;gap:0.5rem;align-items:center">${statusLabel}${submitHint}</div>
       </div>
-      ${blocked ? `<span style="font-size:0.72rem;color:var(--muted)">${blockedReason}</span>` : ''}`
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.2rem">
+        <span style="font-size:0.82rem;font-weight:500;color:${hoursColor}">${hoursLabel}</span>
+        ${blocked ? `<span style="font-size:0.72rem;color:var(--muted)">${blockedReason}</span>` : ''}
+      </div>`
 
     if (!blocked) {
       item.addEventListener('click', () => assignStaff(s))
@@ -1261,7 +1200,6 @@ window.closePicker = () => {
   pickerCtx = null
 }
 
-// ── Assign staff ──────────────────────────────────────────────
 async function assignStaff(staffMember) {
   const { templateId, dateStr, defaultArea, configKey } = pickerCtx
   const venueArea = defaultArea === 'main_bar' || defaultArea === 'floor' ? 'main_bar' : defaultArea
@@ -1287,23 +1225,18 @@ async function assignStaff(staffMember) {
 
   closePicker()
   updateDayCoverage(dateStr)
+  // CHANGE 4: update fairness panel after assigning
+  if (document.getElementById('fairness-panel').classList.contains('open')) renderFairnessPanel()
 }
 
-// ── Remove shift ──────────────────────────────────────────────
 window.removeShift = async (shiftId, templateId, dateStr) => {
-  // Ask if this is due to sickness and should be posted as urgent
   const isPublished = selectedWeek?.status === 'published'
   let markUrgent = false
 
   if (isPublished) {
-    markUrgent = await showConfirm(
-      'Remove from shift?',
-      'Is this due to sickness or an emergency? If so, we can post it as an urgent gap and notify available staff.',
-      'Post as urgent gap',
-      true
-    )
-    // If they cancel entirely — do nothing
-    if (markUrgent === null) return
+    const choice = await showRemoveChoice()
+    if (choice === 'cancel') return
+    markUrgent = choice === 'urgent'
   }
 
   const { error } = await supabase.from('rota_shifts').delete().eq('id', shiftId)
@@ -1313,6 +1246,9 @@ window.removeShift = async (shiftId, templateId, dateStr) => {
   rotaShifts[configKey] = (rotaShifts[configKey]??[]).filter(rs=>rs.id!==shiftId)
   document.getElementById(`chip-${shiftId}`)?.remove()
   updateDayCoverage(dateStr)
+
+  // CHANGE 5: update fairness panel after removing
+  if (document.getElementById('fairness-panel').classList.contains('open')) renderFairnessPanel()
 
   if (markUrgent) {
     await postUrgentGap(templateId, dateStr, configKey)
@@ -1337,7 +1273,6 @@ async function postUrgentGap(templateId, dateStr, configKey) {
   })()
   const shiftHrs = shiftMins / 60
 
-  // Get all staff who have hours available this week
   const { data: staffData } = await supabase.from('users')
     .select('id, is_student, contracted_hours')
     .eq('active', true)
@@ -1346,7 +1281,6 @@ async function postUrgentGap(templateId, dateStr, configKey) {
 
   if (!staffData?.length) { showToast('No staff to notify', true); return }
 
-  // Calculate hours already assigned this week per staff member
   const staffHours = {}
   Object.entries(rotaShifts).forEach(([key, shifts]) => {
     const shiftDate = key.slice(-10)
@@ -1365,7 +1299,6 @@ async function postUrgentGap(templateId, dateStr, configKey) {
     })
   })
 
-  // Filter to staff with hours available
   const eligible = staffData.filter(s => {
     const hoursUsed = staffHours[s.id] ?? 0
     if (termTime && s.is_student) return (hoursUsed + shiftHrs) <= 20
@@ -1374,7 +1307,6 @@ async function postUrgentGap(templateId, dateStr, configKey) {
 
   if (!eligible.length) { showToast('No staff with available hours to notify', true); return }
 
-  // Send notifications
   const msg = `🚨 Urgent gap: ${name}${timeDisp} on ${dateDisp} needs cover. Can you help?`
   await supabase.from('notifications').insert(
     eligible.map(s => ({ user_id: s.id, type: 'urgent_gap', message: msg, read: false }))
@@ -1383,7 +1315,6 @@ async function postUrgentGap(templateId, dateStr, configKey) {
   showToast(`Urgent gap posted — ${eligible.length} staff notified!`)
 }
 
-// ── Coverage update ───────────────────────────────────────────
 function updateDayCoverage(dateStr) {
   let assigned=0, needed=0
   templates.forEach(t => {
@@ -1409,19 +1340,16 @@ function updateDayCoverage(dateStr) {
   })
 }
 
-// ── Toggle day ────────────────────────────────────────────────
 window.toggleDay = (id) => {
   const el = document.getElementById(id)
   el.style.display = el.style.display==='none' ? '' : 'none'
 }
 
-// ── New week form ─────────────────────────────────────────────
 window.toggleNewWeekForm = () => {
   const form = document.getElementById('new-week-form')
   form.classList.toggle('visible')
   if (form.classList.contains('visible')) {
     const d=new Date(), day=d.getDay()
-    // Next Monday
     const daysToMon = day === 0 ? 1 : day === 1 ? 7 : 8 - day
     d.setDate(d.getDate() + daysToMon)
     const y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,'0'), dd = String(d.getDate()).padStart(2,'0')
@@ -1450,8 +1378,8 @@ window.createWeek = async () => {
   await window.loadWeek(data.id)
 }
 
-// ── Publish rota ──────────────────────────────────────────────
 window.modalResolve = null
+
 window.showConfirm = (title, msg, confirmLabel='Confirm', danger=true) => {
   return new Promise(resolve => {
     document.getElementById('modal-title').textContent = title
@@ -1463,6 +1391,35 @@ window.showConfirm = (title, msg, confirmLabel='Confirm', danger=true) => {
     document.getElementById('modal-overlay').style.display = 'flex'
     window.modalResolve = (result) => {
       document.getElementById('modal-overlay').style.display = 'none'
+      resolve(result)
+    }
+  })
+}
+
+window.showRemoveChoice = () => {
+  return new Promise(resolve => {
+    document.getElementById('modal-title').textContent = 'Remove from shift?'
+    document.getElementById('modal-msg').textContent   = 'Choose how to handle this removal.'
+    const actionsEl = document.querySelector('#modal-overlay > div > div:last-child')
+    actionsEl.innerHTML = `
+      <button onclick="window.modalResolve('cancel')"
+        style="background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:0.55rem 1.25rem;font-family:'DM Sans',sans-serif;font-size:0.88rem;cursor:pointer">
+        Cancel
+      </button>
+      <button onclick="window.modalResolve('quiet')"
+        style="background:transparent;border:1px solid var(--border);color:var(--text);border-radius:8px;padding:0.55rem 1.25rem;font-family:'DM Sans',sans-serif;font-size:0.88rem;cursor:pointer">
+        Remove quietly
+      </button>
+      <button onclick="window.modalResolve('urgent')"
+        style="background:var(--error);border:none;color:#fff;border-radius:8px;padding:0.55rem 1.25rem;font-family:'DM Sans',sans-serif;font-size:0.88rem;font-weight:500;cursor:pointer">
+        Post as urgent gap
+      </button>`
+    document.getElementById('modal-overlay').style.display = 'flex'
+    window.modalResolve = (result) => {
+      document.getElementById('modal-overlay').style.display = 'none'
+      actionsEl.innerHTML = `
+        <button onclick="modalResolve(false)" style="background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:0.55rem 1.25rem;font-family:'DM Sans',sans-serif;font-size:0.88rem;cursor:pointer">Cancel</button>
+        <button id="modal-confirm-btn" onclick="modalResolve(true)" style="background:var(--error);border:none;color:#fff;border-radius:8px;padding:0.55rem 1.25rem;font-family:'DM Sans',sans-serif;font-size:0.88rem;font-weight:500;cursor:pointer">Confirm</button>`
       resolve(result)
     }
   })
@@ -1502,7 +1459,6 @@ window.publishRota = async () => {
   showToast(`Rota published! ${assignedIds.length} staff notified.`)
 }
 
-// ── Delete week ───────────────────────────────────────────────
 window.deleteWeek = async () => {
   if (!selectedWeek) return
   const delConfirmed = await showConfirm('Delete this week?', `This will remove all shifts for the week of ${selectedWeek.start_date}. This cannot be undone.`, 'Delete')
@@ -1513,6 +1469,70 @@ window.deleteWeek = async () => {
   await supabase.from('fortnights').delete().eq('id', selectedWeek.id)
   showToast('Week deleted')
   await loadWeeks()
+}
+
+// CHANGE 4+5: fairness panel toggle and render
+window.toggleFairnessPanel = () => {
+  const panel = document.getElementById('fairness-panel')
+  const btn   = document.getElementById('btn-fairness')
+  const main  = document.querySelector('.main')
+  const isOpen = panel.classList.toggle('open')
+  btn.classList.toggle('active', isOpen)
+  main.classList.toggle('panel-open', isOpen)
+  if (isOpen) renderFairnessPanel()
+}
+
+function renderFairnessPanel() {
+  const list = document.getElementById('fairness-list')
+  if (!selectedWeek) {
+    list.innerHTML = '<div class="fairness-empty">No week selected.</div>'
+    return
+  }
+
+  // Collect unique users with their earliest submission across all dates this week
+  const userEarliest = {}
+  Object.entries(availabilityFirstSubmit).forEach(([key, submittedAt]) => {
+    const userId = key.slice(0, key.lastIndexOf('_'))
+    if (!userEarliest[userId] || submittedAt < userEarliest[userId]) {
+      userEarliest[userId] = submittedAt
+    }
+  })
+
+  if (Object.keys(userEarliest).length === 0) {
+    list.innerHTML = '<div class="fairness-empty">No availability submitted yet.</div>'
+    return
+  }
+
+  const sorted = Object.entries(userEarliest)
+    .sort(([, a], [, b]) => a < b ? -1 : a > b ? 1 : 0)
+
+  list.innerHTML = ''
+  sorted.forEach(([userId, submittedAt], i) => {
+    const staffMember = allStaff.find(s => s.id === userId)
+    if (!staffMember) return
+
+    const hours      = getWeeklyHours(userId)
+    const hoursColor = hours >= 35 ? 'var(--error)' : hours >= 20 ? 'var(--amber)' : hours > 0 ? 'var(--green)' : 'var(--muted)'
+    const hoursLabel = hours === 0 ? '0h' : hours % 1 === 0 ? `${hours}h` : `${hours.toFixed(1)}h`
+
+    const timeStr = new Date(submittedAt).toLocaleString('en-GB', {
+      day: 'numeric', month: 'short',
+      hour: '2-digit', minute: '2-digit'
+    })
+
+    const row = document.createElement('div')
+    row.className = 'fairness-row'
+    row.innerHTML = `
+      <div>
+        <div style="display:flex;align-items:center;gap:0.4rem">
+          <span class="fairness-rank">${i + 1}</span>
+          <span class="fairness-name">${staffMember.name}</span>
+        </div>
+        <div class="fairness-time">${timeStr}</div>
+      </div>
+      <div class="fairness-hours" style="color:${hoursColor}">${hoursLabel}</div>`
+    list.appendChild(row)
+  })
 }
 
 function showToast(msg, isError=false) {

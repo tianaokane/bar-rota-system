@@ -529,8 +529,8 @@ function buildShiftSlot(name, startTime, endTime, configKey, templateId, dateStr
   const isKitchen = defaultArea === 'kitchen'
   const myRoles   = currentUser.user_roles?.map(ur => ur.roles?.name) ?? []
   const canWork   = isKitchen
-    ? myRoles.includes('kp')
-    : myRoles.includes('bar')
+  ? (myRoles.includes('kp') || myRoles.includes('bar'))
+  : myRoles.includes('bar')
 
   // Check for time clash with existing shifts
   const hasClash  = !myShift && canWork && checkClash(currentUser.id, dateStr, startTime, endTime, configKey)
@@ -629,7 +629,8 @@ window.claimShift = async (templateId, dateStr, configKey, defaultArea, slotEl) 
   const dc      = dayConfigs[configKey]
   const startT  = dc?.start_time ?? tpl?.start_time ?? ''
   const endT    = dc?.end_time   ?? tpl?.end_time   ?? ''
-  const name    = tpl?.name ?? defaultArea
+  const areaLabels = { main_bar:'Main Bar', wee_bar:'Wee Bar', mandela:'Mandela', floor:'Floor', kitchen:'Kitchen Porter', popup:'Pop-up Bar', barista:'Barista', management:'Manager' }
+  const name    = tpl?.name ?? areaLabels[defaultArea] ?? defaultArea
   const dateDisp = new Date(dateStr).toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long' })
   const timeDisp = startT && endT ? ` · ${startT.slice(0,5)}–${endT.slice(0,5)}` : ''
 
@@ -657,7 +658,7 @@ window.claimShift = async (templateId, dateStr, configKey, defaultArea, slotEl) 
   }).select().single()
 
   if (error) {
-    console.error(error)
+    console.error('Claim error:', JSON.stringify(error))
     showToast('Error claiming shift', 'error')
     slotEl.className = 'open-slot can-claim'
     slotEl.textContent = '+ Pick up'

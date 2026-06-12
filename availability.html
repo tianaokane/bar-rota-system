@@ -64,48 +64,17 @@
     .page-subtitle { color: var(--muted); font-size: 0.9rem; margin-top: 0.25rem; }
 
     .week-bar {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 1rem 1.5rem;
-      margin-bottom: 1.5rem;
-      animation: fadeUp 0.4s 0.05s ease both;
+      display: flex; align-items: center; gap: 1rem;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1rem 1.5rem;
+      margin-bottom: 1.5rem; animation: fadeUp 0.4s 0.05s ease both;
     }
-
     .week-bar label { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); white-space: nowrap; }
-
-    .week-select {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: var(--text);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 0.9rem;
-      padding: 0.5rem 0.85rem;
-      outline: none;
-      cursor: pointer;
-      flex: 1;
-    }
+    .week-select { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.9rem; padding: 0.5rem 0.85rem; outline: none; cursor: pointer; flex: 1; }
     .week-select:focus { border-color: var(--accent); }
+    .deadline-pill { font-size: 0.75rem; padding: 0.3rem 0.75rem; border-radius: 20px; background: rgba(251,191,36,0.12); color: var(--amber); white-space: nowrap; }
 
-    .deadline-pill {
-      font-size: 0.75rem;
-      padding: 0.3rem 0.75rem;
-      border-radius: 20px;
-      background: rgba(251,191,36,0.12);
-      color: var(--amber);
-      white-space: nowrap;
-    }
-
-    .legend {
-      display: flex;
-      gap: 1.5rem;
-      margin-bottom: 1.5rem;
-      animation: fadeUp 0.4s 0.08s ease both;
-    }
+    .legend { display: flex; gap: 1.5rem; margin-bottom: 1.5rem; animation: fadeUp 0.4s 0.08s ease both; }
     .legend-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; color: var(--muted); }
     .legend-dot { width: 12px; height: 12px; border-radius: 50%; }
     .dot-available   { background: var(--green); }
@@ -115,45 +84,16 @@
 
     .week-grid { animation: fadeUp 0.4s 0.1s ease both; }
 
-    .day-row {
-      display: grid;
-      grid-template-columns: 120px 1fr;
-      gap: 0.5rem;
-      margin-bottom: 0.5rem;
-      align-items: start;
-    }
-
-    .day-label {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      padding: 0.6rem 0.75rem;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      min-height: 56px;
-    }
+    .day-row { display: grid; grid-template-columns: 120px 1fr; gap: 0.5rem; margin-bottom: 0.5rem; align-items: start; }
+    .day-label { display: flex; flex-direction: column; justify-content: center; padding: 0.6rem 0.75rem; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; min-height: 56px; }
     .day-label.today { border-color: var(--accent); }
-
     .day-name { font-size: 0.78rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
     .day-date { font-family: 'DM Serif Display', serif; font-size: 1.2rem; line-height: 1.1; }
     .day-today-tag { font-size: 0.62rem; color: var(--accent); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 0.1rem; }
 
     .shift-slots { display: flex; flex-direction: column; gap: 0.4rem; }
 
-    .slot {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      align-items: center;
-      gap: 0.75rem;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-left: 3px solid var(--border);
-      border-radius: 8px;
-      padding: 0.6rem 0.85rem;
-      transition: border-color 0.15s;
-    }
-
+    .slot { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 0.75rem; background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--border); border-radius: 8px; padding: 0.6rem 0.85rem; transition: border-color 0.15s; }
     .slot.is-available   { border-left-color: var(--green); }
     .slot.is-preferred   { border-left-color: var(--accent); }
     .slot.is-unavailable { border-left-color: var(--error); }
@@ -163,77 +103,25 @@
     .slot-time { font-size: 0.72rem; color: var(--muted); margin-top: 0.1rem; }
 
     .slot-controls { display: flex; gap: 0.4rem; }
-
-    .slot-btn {
-      width: 32px; height: 32px;
-      border-radius: 6px;
-      border: 1px solid var(--border);
-      background: var(--surface2);
-      color: var(--muted);
-      cursor: pointer;
-      font-size: 0.85rem;
-      display: flex; align-items: center; justify-content: center;
-      transition: all 0.15s;
-    }
+    .slot-btn { width: 32px; height: 32px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface2); color: var(--muted); cursor: pointer; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
     .slot-btn:hover { border-color: var(--text); color: var(--text); }
     .slot-btn.active-available   { background: rgba(74,222,128,0.15);  border-color: var(--green);  color: var(--green); }
     .slot-btn.active-preferred   { background: rgba(200,245,87,0.15);  border-color: var(--accent); color: var(--accent); }
     .slot-btn.active-unavailable { background: rgba(255,107,107,0.15); border-color: var(--error);  color: var(--error); }
 
-    .save-bar {
-      position: fixed;
-      bottom: 0; left: var(--nav-w); right: 0;
-      background: var(--surface);
-      border-top: 1px solid var(--border);
-      padding: 1rem 2.5rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      z-index: 20;
-      transform: translateY(100%);
-      transition: transform 0.25s ease;
-    }
+    .save-bar { position: fixed; bottom: 0; left: var(--nav-w); right: 0; background: var(--surface); border-top: 1px solid var(--border); padding: 1rem 2.5rem; display: flex; align-items: center; justify-content: space-between; z-index: 20; transform: translateY(100%); transition: transform 0.25s ease; }
     .save-bar.visible { transform: translateY(0); }
     .save-bar-text { font-size: 0.88rem; color: var(--muted); }
     .save-bar-text strong { color: var(--text); }
 
-    .btn-save {
-      padding: 0.65rem 1.75rem;
-      background: var(--accent);
-      color: #0d0d0d;
-      border: none;
-      border-radius: 8px;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 0.9rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background 0.15s;
-    }
+    .btn-save { padding: 0.65rem 1.75rem; background: var(--accent); color: #0d0d0d; border: none; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 500; cursor: pointer; transition: background 0.15s; }
     .btn-save:hover { background: #d4f96e; }
     .btn-save:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; }
 
-    .toast {
-      position: fixed;
-      bottom: 5rem; left: 50%;
-      transform: translateX(-50%) translateY(20px);
-      background: var(--green);
-      color: #0d0d0d;
-      padding: 0.65rem 1.5rem;
-      border-radius: 8px;
-      font-size: 0.88rem;
-      font-weight: 500;
-      opacity: 0;
-      transition: all 0.3s ease;
-      pointer-events: none;
-      z-index: 100;
-    }
+    .toast { position: fixed; bottom: 5rem; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--green); color: #0d0d0d; padding: 0.65rem 1.5rem; border-radius: 8px; font-size: 0.88rem; font-weight: 500; opacity: 0; transition: all 0.3s ease; pointer-events: none; z-index: 100; }
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-    .no-weeks {
-      text-align: center;
-      padding: 4rem 2rem;
-      color: var(--muted);
-    }
+    .no-weeks { text-align: center; padding: 4rem 2rem; color: var(--muted); }
     .no-weeks .big { font-family: 'DM Serif Display', serif; font-size: 3rem; margin-bottom: 0.5rem; }
 
     @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
@@ -245,7 +133,6 @@
       .day-row { grid-template-columns: 72px 1fr; }
     }
 
-    /* ── Mobile nav ── */
     .hamburger { display:none; position:fixed; top:1rem; left:1rem; z-index:100; background:var(--surface); border:1px solid var(--border); border-radius:8px; width:40px; height:40px; align-items:center; justify-content:center; cursor:pointer; flex-direction:column; gap:5px; padding:10px; }
     .hamburger span { display:block; width:18px; height:2px; background:var(--text); border-radius:2px; transition:all .2s; }
     .nav-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9; }
@@ -325,7 +212,7 @@
   let currentUser    = null
   let weeks          = []
   let templates      = []
-  let weekDayConfigs = {}   // venueKey_date → {start_time, end_time}
+  let weekDayConfigs = {}
   let existingAvail  = {}
   let pendingChanges = {}
   let selectedWeek   = null
@@ -343,7 +230,7 @@
   if (isManager(currentUser)) {
     document.getElementById('manager-nav-section').style.display = 'block'
     document.getElementById('nav-manager').style.display         = 'flex'
-    document.getElementById('nav-staff').style.display            = 'flex'
+    document.getElementById('nav-staff').style.display           = 'flex'
   }
 
   window.handleSignOut = async () => {
@@ -354,8 +241,7 @@
   // ── Auto-create next 6 weeks if not exist ──
   const ensureUpcomingWeeks = async () => {
     const today = new Date()
-    const day = today.getDay() // 0=Sun, 1=Mon ... 6=Sat
-    // Find this week's Monday (Mon–Sun)
+    const day = today.getDay()
     const daysToMon = (day === 0) ? -6 : 1 - day
     const firstMon = new Date(today)
     firstMon.setDate(today.getDate() + daysToMon)
@@ -375,7 +261,6 @@
       const startStr = toStr(start)
       const endStr   = toStr(end)
 
-      // Check if this week already exists
       const { data: existing } = await supabase
         .from('fortnights')
         .select('id')
@@ -423,7 +308,6 @@
 
     sel.addEventListener('change', () => loadWeek(sel.value))
 
-    // ── Load shift templates (all including adhoc for overlap matching) ──
     const { data: tplData } = await supabase
       .from('shift_templates')
       .select('*, roles(*)')
@@ -440,7 +324,6 @@
     pendingChanges = {}
     updateSaveBar()
 
-    // Deadline pill — days until the rota week starts
     const [sy,sm,sd] = selectedWeek.start_date.split('-').map(Number)
     const startDate  = new Date(sy, sm-1, sd)
     const today2     = new Date(); today2.setHours(0,0,0,0)
@@ -457,7 +340,6 @@
       pill.style.color = 'var(--muted)'
     }
 
-    // Load existing availability
     const { data: avail } = await supabase
       .from('availability')
       .select('*')
@@ -469,7 +351,6 @@
       existingAvail[`${a.shift_template_id}_${a.shift_date}`] = { id: a.id, status: a.status }
     })
 
-    // Load day configs to know which ad-hoc venues are active this week
     const { data: dcData } = await supabase
       .from('shift_day_config')
       .select('*')
@@ -508,12 +389,10 @@
     const isBar = userRoleNames.includes('bar')
     const isKP  = userRoleNames.includes('kp')
 
-    // Regular templates for this user's role (non-adhoc)
     const regularTpls = templates.filter(t =>
       !t.is_adhoc && (userRoleNames.length === 0 || userRoleNames.includes(t.roles?.name))
     )
 
-    // Ad-hoc venue keys that bar staff should see
     const adHocVenues = isBar
       ? ['barista','wee_bar','mandela','popup']
       : isKP ? ['kitchen'] : []
@@ -545,25 +424,22 @@
 
       const slotsEl = row.querySelector(`#slots-${dateStr}`)
 
-      // Regular slots
       regularTpls.forEach(tpl => {
         const key     = `${tpl.id}_${dateStr}`
         const current = pendingChanges[key] ?? existingAvail[key]?.status ?? null
         slotsEl.appendChild(buildSlot(tpl, dateStr, key, current))
       })
 
-      // Ad-hoc venue slots — only show if manager has enabled them this day
       adHocVenues.forEach(venueKey => {
         const dcKey = `${venueKey}_${dateStr}`
         const dc    = weekDayConfigs[dcKey]
-        if (!dc) return // not active this day
+        if (!dc) return
 
         const venueLabels = { barista:'Barista', wee_bar:'Wee Bar', mandela:'Mandela', popup:'Pop-up Bar', kitchen:'Kitchen Porter' }
         const label       = venueKey === 'popup' && dc.notes && !dc.notes.startsWith('venue:') ? dc.notes : venueLabels[venueKey]
         const startDisp   = (dc.start_time||'').slice(0,5)
         const endDisp     = (dc.end_time||'').slice(0,5)
 
-        // Use venueKey as fake template id for availability key
         const key     = `adhoc_${venueKey}_${dateStr}`
         const current = pendingChanges[key] ?? existingAvail[key]?.status ?? null
 
@@ -605,7 +481,6 @@
     return el
   }
 
-  // ── Build an ad-hoc venue slot (Barista, Wee Bar etc) ──
   function buildAdHocSlot(label, startTime, endTime, dateStr, key, currentStatus, venueKey) {
     const el = document.createElement('div')
     el.className = `slot adhoc-slot${currentStatus ? ` is-${currentStatus}` : ''}`
@@ -626,14 +501,11 @@
     return el
   }
 
-  let autoSaveTimer = null
-
   window.setStatus = (key, status, templateId, dateStr) => {
     const current   = pendingChanges[key] ?? existingAvail[key]?.status ?? null
     const newStatus = current === status ? null : status
 
     if (newStatus === null) {
-      // If it existed in DB, mark for deletion; otherwise just remove from pending
       if (existingAvail[key]) pendingChanges[key] = null
       else delete pendingChanges[key]
     } else {
@@ -652,26 +524,20 @@
     })
 
     updateSaveBar()
-
-    // Auto-save after 1 second of no changes
-    clearTimeout(autoSaveTimer)
-    autoSaveTimer = setTimeout(() => {
-      if (Object.keys(pendingChanges).length > 0 || Object.values(pendingChanges).some(v => v === null)) saveAvailability(true)
-    }, 1000)
   }
 
   function updateSaveBar() {
     const count = Object.keys(pendingChanges).length
     document.getElementById('changed-count').textContent = count
     document.getElementById('save-bar').classList.toggle('visible', count > 0)
-    // Update save button label
     const btn = document.getElementById('btn-save')
     if (btn) btn.textContent = count > 0 ? `Save ${count} change${count===1?'':'s'}` : 'Save availability'
   }
 
-  window.saveAvailability = async (silent = false) => {
+  window.saveAvailability = async () => {
     const btn = document.getElementById('btn-save')
-    if (!silent) { btn.disabled = true; btn.textContent = 'Saving…' }
+    btn.disabled    = true
+    btn.textContent = 'Saving…'
 
     const upserts = []
     const deletes = []
@@ -682,15 +548,11 @@
 
       let templateId, dateStr, venueKey
       if (isAdhoc) {
-        // key format: adhoc_venueKey_date
         const parts = key.split('_')
         venueKey   = parts[1]
         dateStr    = parts.slice(2).join('_')
         templateId = null
       } else {
-        const idx  = key.lastIndexOf('_')
-        templateId = key.slice(0, idx - 10)  // uuid is 36 chars, date is 10
-        // Actually split properly: key = templateId_date where date is last 10 chars
         dateStr    = key.slice(-10)
         templateId = key.slice(0, key.length - 11)
       }
@@ -711,7 +573,11 @@
     }
 
     if (upserts.length > 0) {
-      const { error } = await supabase.from('availability').upsert(upserts, { onConflict: 'user_id,shift_template_id,shift_date,fortnight_id' })
+      const { data: upsertedRows, error } = await supabase
+        .from('availability')
+        .upsert(upserts, { onConflict: 'user_id,shift_template_id,shift_date,fortnight_id' })
+        .select()
+
       if (error) {
         console.error(error)
         alert('Error saving — please try again.')
@@ -719,19 +585,26 @@
         btn.textContent = 'Save availability'
         return
       }
+
+      ;(upsertedRows ?? []).forEach(row => {
+        const k = row.shift_template_id
+          ? `${row.shift_template_id}_${row.shift_date}`
+          : `adhoc_${(row.notes ?? '').replace('venue:', '')}_${row.shift_date}`
+        existingAvail[k] = { id: row.id, status: row.status }
+      })
     }
 
     if (deletes.length > 0) {
-      await supabase.from('availability').delete().in('id', deletes)
+      const { error: delError } = await supabase
+        .from('availability')
+        .delete()
+        .in('id', deletes)
+      if (delError) console.error('Delete error:', delError)
     }
 
-    upserts.forEach(u => {
-      const key = `${u.shift_template_id}_${u.shift_date}`
-      existingAvail[key] = { id: existingAvail[key]?.id ?? u.id, status: u.status }
-    })
     deletes.forEach(id => {
-      const key = Object.keys(existingAvail).find(k => existingAvail[k].id === id)
-      if (key) delete existingAvail[key]
+      const k = Object.keys(existingAvail).find(k => existingAvail[k].id === id)
+      if (k) delete existingAvail[k]
     })
 
     pendingChanges = {}
@@ -747,7 +620,6 @@
     setTimeout(() => t.classList.remove('show'), 2500)
   }
 </script>
-
 
 <script>
   function toggleNav() {

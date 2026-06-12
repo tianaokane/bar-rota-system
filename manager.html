@@ -1105,9 +1105,14 @@ function buildPickerList(alreadyAssigned, search) {
     const bk      = getAvailabilityForUser(b.id) ?? null
     const statusDiff = (order[ak]??2) - (order[bk]??2)
     if (statusDiff !== 0) return statusDiff
+
+    // Same status — earlier submission wins
     const aFirst = availabilityFirstSubmit[a.id + '_' + dateStr] ?? '9999'
     const bFirst = availabilityFirstSubmit[b.id + '_' + dateStr] ?? '9999'
-    return aFirst < bFirst ? -1 : aFirst > bFirst ? 1 : 0
+    if (aFirst !== bFirst) return aFirst < bFirst ? -1 : 1
+
+    // Same submission time — fewer hours this week wins (fairer distribution)
+    return getWeeklyHours(a.id) - getWeeklyHours(b.id)
   })
 
   eligible.forEach(s => {
